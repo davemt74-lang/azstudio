@@ -83,7 +83,9 @@ def run():
       assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+2'),('page overflow',width)
       assert page.locator('.azh-smart-shipping-dialog').evaluate('(d)=>d.scrollWidth<=d.clientWidth+2'),('modal width',width)
       page.get_by_role('button',name='Choose UPS').click()
-      page.get_by_text('Fixture stops before real payment.').wait_for(timeout=8000)
+      page.wait_for_function(
+          "document.getElementById('azh-smart-shipping-status').textContent.includes('Fixture stops before real payment.')",
+          timeout=8000)
       assert len([x for x in events if x[0]=='quote'])==1,width
       assert len([x for x in events if x[0]==''])==1 or any('shippingRateId' in x[1] for x in events),events
       assert not errors,(width,errors)
