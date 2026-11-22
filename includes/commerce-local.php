@@ -87,9 +87,10 @@ function az_local_zips(mixed $input): array
     $zips=[];
     foreach($parts as $zip){
         if(!is_string($zip)||!preg_match('/^[0-9]{5}$/D',$zip))throw new AzHttpError(400,'Use five-digit US ZIP codes.','invalid_zips');
-        $zips[$zip]=true;
+        $zips[]=$zip;
     }
-    $result=array_keys($zips);sort($result,SORT_STRING);
+    // Preserve leading zeroes and string type. PHP casts numeric array keys to ints.
+    $result=array_values(array_unique($zips,SORT_STRING));sort($result,SORT_STRING);
     return $result;
 }
 function az_local_clean(mixed $value,int $limit,string $field,bool $required=false): string
