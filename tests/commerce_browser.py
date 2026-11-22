@@ -26,7 +26,7 @@ def html_for(role):
     if admin:
         parts.append('''<form id="commerce-product-form" class="azh-commerce-form"><input name="id"><input name="revision">
 <input name="title" required><textarea name="description"></textarea>
-<input name="priceDollars" type="number"><input name="commissionPercent" type="number">
+<input name="priceDollars" type="number" step="0.01"><input name="commissionPercent" type="number" step="0.01">
 <input name="checkoutUrl"><select name="checkoutMode"><option value="external">External</option><option value="stripe">Stripe</option></select><select name="state"><option value="active">Active</option></select>
 <details id="azh-product-local-settings"><summary>Cash and local fulfillment per product</summary>
 <input name="localRevision" value="0">
