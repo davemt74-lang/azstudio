@@ -1,3 +1,11 @@
+AZHottie Studio v1.35.0 — Smart Checkout Shipping
+- Back up entire database, private storage/config.php, uploads and media. Deploy application files only; do not rerun install.php.
+- First installed application boot upgrades schema 40 to 41 for customer carrier quotes and Stripe checkout selections.
+- Configure matching Stripe TEST and EasyPost TEST credentials privately. Edit a product's Shipping Price setting to Live Carrier Rates and configure actual package dimensions and stock.
+- Buyers choose real carrier rates before entering Stripe. Stripe re-collects the address. A different address triggers PAID shipment exception and blocks dispatch pending staff review.
+- Carrier label purchase remains staff-approved; real carrier prices can change by fulfillment time. Test Stripe tax, carrier quotes, signed webhooks and actual hosted MySQL before selling.
+- See docs/RELEASE_1_35_0.txt for full acceptance and security details.
+
 AZHottie Studio v1.34.0 — EasyPost Carrier Integration
 - Back up the database, entire application, protected config, media and uploads. Deploy ZIP over application code, preserving storage/config.php and private uploads. Do not rerun install.php.
 - First database boot upgrades schema 39→40 with carrier quotes, pending/purchased labels and signed tracking event deduplication.

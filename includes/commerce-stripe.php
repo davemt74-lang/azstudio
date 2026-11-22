@@ -186,9 +186,11 @@ function az_stripe_session_payload(array $attempt,array $product,array $config):
     if(($attempt['fulfillment_method']??'none')==='shipping'){
         $fee=(int)$attempt['shipping_fee_cents'];
         $data['shipping_address_collection']=['allowed_countries'=>['US']];
+        $selected=az_customer_ship_selection($attempt['id']);
+        $shippingName=$selected!==null?mb_safe_trim($selected['carrier'].' '.$selected['service'],90)
+            :($fee===0?'Free shipping':'Standard US shipping');
         $data['shipping_options']=[['shipping_rate_data'=>[
-            'type'=>'fixed_amount',
-            'display_name'=>$fee===0?'Free shipping':'Standard US shipping',
+            'type'=>'fixed_amount','display_name'=>$shippingName,
             'fixed_amount'=>['amount'=>$fee,'currency'=>'usd']]]];
     }
     $data['expires_at']=time()+1800; // 30 minutes; outstanding stock holds need a signed expiry event.
@@ -212,7 +214,8 @@ function az_stripe_checkout_start(array $body): array
     [$promotionId,$channel,$sourceRef,$attributed]=az_stripe_attribution($id,$body);
     $stock=az_fulfillment_row($id);
     $ship=(int)$stock['shipping_enabled']===1?'shipping':'none';
-    $shippingFee=$ship==='shipping'?az_fulfillment_shipping_fee($id,(int)$product['price_cents']*$qty):0;
+    $needsQuote=$ship==='shipping'&&$stock['shipping_rate']==='carrier';
+    $shippingFee=$needsQuote?0:($ship==='shipping'?az_fulfillment_shipping_fee($id,(int)$product['price_cents']*$qty):0);
     $identity=session_id();
     if($identity==='')throw new AzHttpError(403,'A browser session is required.','session_required');
     $attemptKey=hash('sha256',$identity.'|'.$token);
@@ -227,6 +230,13 @@ function az_stripe_checkout_start(array $body): array
                     ||$old['promotion_id']!==$promotionId||$old['channel']!==$channel
                     ||$old['source_ref']!==$sourceRef)
                     throw new AzHttpError(409,'This checkout token was used for another cart.','token_reused');
+                $selection=az_customer_ship_selection($old['id']);
+                if($needsQuote){
+                    if($selection===null||$selection['quote_id']!==($body['shippingQuoteId']??null)
+                        ||$selection['rate_id']!==($body['shippingRateId']??null))
+                        throw new AzHttpError(409,'Checkout token belongs to a different shipping quote or rate.','token_reused');
+                }elseif($selection!==null)
+                    throw new AzHttpError(409,'Checkout token belongs to a carrier shipping order.','token_reused');
                 $attempt=$old;
             }else{
                 $now=az_now();$attemptId=az_id();$mode=$c['mode'];
@@ -238,6 +248,12 @@ function az_stripe_checkout_start(array $body): array
                 $q->execute([$attemptId,$attemptKey,$id,$promotionId,$channel,$sourceRef,$qty,
                     (int)$product['price_cents'],(int)$product['price_cents']*$qty,
                     $commission,'USD',$mode,$shippingFee,$ship,$now,$now]);
+                if($needsQuote){
+                    $selected=az_customer_ship_select($db,$attemptId,$product,$stock,$qty,$body,$mode);
+                    $shippingFee=(int)$selected['rateCents'];
+                    $db->prepare('UPDATE commerce_checkout_attempts SET shipping_fee_cents=? WHERE id=?')
+                       ->execute([$shippingFee,$attemptId]);
+                }
                 az_inventory_reserve($db,$id,$qty,hash('sha256','stripe|'.$attemptId),'stripe',null,$attemptId);
                 $q=$db->prepare('SELECT * FROM commerce_checkout_attempts WHERE id=?');$q->execute([$attemptId]);
                 $attempt=$q->fetch();
@@ -372,6 +388,7 @@ function az_stripe_apply_payment(PDO $db,array $session): void
     // This entire payment, stock, shipping, and notification change commits or rolls back together.
     az_inventory_resolve($db,hash('sha256','stripe|'.$attempt['id']),'consumed');
     az_fulfillment_create_shipment($db,$orderId,$attempt,$session,(string)$product['title']);
+    az_customer_ship_inspect_address($db,$orderId,$attempt,$session,(string)$product['title'],(int)$product['owner_id']);
     $db->prepare("UPDATE commerce_checkout_attempts SET state='paid',updated_at=? WHERE id=?")->execute([az_now(),$attempt['id']]);
     az_commerce_queue_admins('stripe-paid:'.$attempt['id'],(int)$product['owner_id'],'stripe_paid',
         'Verified Stripe sale',$product['title'].' · A signed provider event confirmed a paid checkout. Review fulfillment. ',true);

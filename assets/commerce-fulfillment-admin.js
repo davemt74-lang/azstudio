@@ -43,6 +43,13 @@ if(shippingRoot){
       add(card,'h3',row.title);
       add(card,'p',row.quantity+' item(s) · '+row.provider+' '+row.paymentState+
         ' · Shipping charged '+money(row.shippingFeeCents)+' · '+row.id.slice(0,10).toUpperCase());
+      if(row.customerSelectedRate){
+        const rate=row.customerSelectedRate;
+        add(card,'p','Customer selected '+rate.carrier+' '+rate.service+
+          ' · Shipping charged '+money(rate.selectedCents)+
+          ' · Quote is a checkout snapshot, not a guaranteed current label price.',
+          'azh-carrier-hint');
+      }
       if(row.trackingNumber){
         const line=add(card,'p','Carrier: '+(row.carrier||'other').toUpperCase()+
           ' · Tracking: '+row.trackingNumber);
@@ -105,7 +112,9 @@ if(shippingRoot){
         control(controls,'Flag an exception',()=>action(row,'exception',{},true));
       }
       if(row.status==='exception'){
-        add(card,'p','Requires manual review. Verify the carrier and customer before reopening.');
+        add(card,'p',row.customerSelectedRate?
+          'Potential address or carrier-rate discrepancy: compare the Stripe-paid destination with the selected carrier service. Re-quote and resolve with the customer before purchasing postage.':
+          'Requires manual review. Verify the carrier and customer before reopening.');
         control(controls,'Reopen for packing',()=>action(row,'reopen',{},true));
       }
       const providerBox=add(card,'section','','azh-carrier-workflow');

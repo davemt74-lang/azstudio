@@ -129,7 +129,8 @@ function az_fulfillment_public(array $product): array
         'shippingRate'=>$row['shipping_rate'],
         'shippingFeeCents'=>(int)$row['shipping_fee_cents'],
         'freeAboveCents'=>(int)$row['free_above_cents'],
-        'shipCountry'=>$row['ship_country']];
+        'shipCountry'=>$row['ship_country'],
+        'carrierCheckoutAvailable'=>$row['shipping_rate']==='carrier'?az_customer_ship_ready():false];
 }
 function az_fulfillment_admin(array $user,string $productId): array
 {
@@ -153,7 +154,7 @@ function az_fulfillment_prepare(array $body): array
         throw new AzHttpError(400,'SKU must use letters, numbers, dots, dashes or underscores.','invalid_sku');
     $ship=az_bool($body['shippingEnabled']??false,'Shipping available');
     $rate=az_text($body['shippingRate']??'flat',12,'Shipping price method');
-    if(!in_array($rate,['flat','free'],true))throw new AzHttpError(400,'Choose flat or free shipping.','invalid_shipping_rate');
+    if(!in_array($rate,['flat','free','carrier'],true))throw new AzHttpError(400,'Choose flat, free or live carrier shipping.','invalid_shipping_rate');
     $country=az_text($body['shipCountry']??'US',2,'Shipping country');
     if($country!=='US')throw new AzHttpError(400,'This release only supports US shipping.','unsupported_country');
     $fields=[
@@ -261,6 +262,7 @@ function az_fulfillment_shipping_fee(string $productId,int $subtotal): int
 {
     $r=az_fulfillment_row($productId);
     if((int)$r['shipping_enabled']!==1)throw new AzHttpError(409,'Shipping is not enabled for this product.','shipping_unavailable');
+    if($r['shipping_rate']==='carrier')throw new AzHttpError(409,'A server-verified live carrier quote is required before checkout.','carrier_rate_required');
     if($r['shipping_rate']==='free')return 0;
     if((int)$r['free_above_cents']>0&&$subtotal>=(int)$r['free_above_cents'])return 0;
     return (int)$r['shipping_fee_cents'];
@@ -318,7 +320,8 @@ function az_fulfillment_shipments(array $user): array
         'carrierTrackingStatus'=>$r['carrier_tracking_status'],
         'carrierTrackingUpdatedAt'=>$r['carrier_tracking_updated_at'],
         'carrierIntegration'=>az_carrier_order_snapshot($r['order_id']),
-        'parcel'=>az_carrier_default_parcel($r['order_id'])
+        'parcel'=>az_carrier_default_parcel($r['order_id']),
+        'customerSelectedRate'=>az_customer_ship_order_summary($r['order_id'])
     ],$q->fetchAll(PDO::FETCH_ASSOC));
 }
 function az_fulfillment_shipment_details(array $user,string $orderId): array

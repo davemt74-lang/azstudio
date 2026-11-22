@@ -61,6 +61,7 @@ function az_commerce_analytics(array $user): array
     ksort($days);$byChannel=array_values($channels);
     usort($byChannel,static fn($a,$b)=>$b['netCents']<=>$a['netCents']);
     return ['periodDays'=>30,'verified'=>$verified,'manual'=>$manual,'cash'=>$cash,
+        'customerCarrier'=>az_customer_ship_metrics($user),
         'checkout'=>['started'=>$started,'paid'=>$completed,
             'paymentRatePercent'=>$started?round(100*$completed/$started,1):null,
             'basis'=>'Stripe paid Checkout Sessions divided by started Checkout Sessions, not product-page impressions.'],
@@ -78,6 +79,7 @@ function az_commerce_analytics_chat(array $user): array
         'cashCollectedOrders'=>$a['cash']['orders'],
         'cashNetProductCents'=>$a['cash']['netCents'],
         'cashCommissionCents'=>$a['cash']['commissionCents'],
+        'customerCarrier'=>$a['customerCarrier'],
         'checkoutStarts'=>$a['checkout']['started'],
         'paidCheckoutSessions'=>$a['checkout']['paid'],
         'topProducts'=>array_map(static fn($p)=>['title'=>mb_safe_trim($p['title'],100),

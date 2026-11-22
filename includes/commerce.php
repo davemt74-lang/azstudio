@@ -565,7 +565,7 @@ function az_commerce_state(array $user): array
     return ['role'=>$admin?'admin':'model','products'=>$list,'interests'=>$interests,'promotions'=>$promotions,'orders'=>$orders,
         'videos'=>$videos,'liveFeature'=>$admin?az_commerce_live_feature():null,
         'paymentBasis'=>'Manual orders are administrator-attested; only Stripe events with valid provider signatures confirm Stripe payments. Creator payouts are not automated.',
-        'stripe'=>az_stripe_public_status(),'analytics'=>az_commerce_analytics($user)];
+        'stripe'=>az_stripe_public_status(),'carrierCheckout'=>az_customer_ship_public_status(),'analytics'=>az_commerce_analytics($user)];
 }
 function az_commerce_briefing(array $user): array
 {

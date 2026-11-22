@@ -1,0 +1,15 @@
+AZHottie Studio v1.35.0 — Smart Checkout & Customer-Selected Carrier Shipping
+
+- Each product may offer Flat Rate, Free Shipping, or Live Carrier Rate at checkout, alongside existing optional local cash pickup/delivery. US carrier mode requires corresponding private Stripe and EasyPost test/live accounts and the product's shipping measurements.
+- Public Shop, approved creator Watch videos and Live Shopping show a responsive customer address and live rate choice UI. The address is sent only to EasyPost for quoting and protected with AES-256-GCM in the database. It is never put in Agent Chat, Brain, notifications, or Stripe metadata.
+- Real EasyPost quote response IDs, USD rate amounts, carrier and service options are filtered server-side. Quotes last ten minutes, are bound to the browser session, selected product, quantity, immutable product/fulfillment revisions, and environment. CSRF, rate limiting and idempotent quote tokens restrict misuse. A stale quote, another browser's quote, or an arbitrary price cannot start a new Stripe session.
+- Stripe Checkout displays the selected carrier service and charges the rate snapshot, collecting the destination again and calculating tax if Stripe Tax is configured. Only a signed Stripe payment event records a sale. Merchandise subtotal alone determines creator commissions.
+- An edited shipping address at Stripe is handled as a PAID shipment exception; the payment and order remain recorded, but fulfillment is blocked until staff review and re-quote, avoiding a silent mismatch. The signed provider event cannot overwrite the approved amount.
+- Shipping staff see the customer's selected carrier/service/price without recipient PII and can prepare parcel/label purchasing only after confirmation. Real EasyPost label purchases remain individually staff-approved. Agent Brain/Chat sees non-PII counts for quote requests, carrier-paid orders and shipping exceptions; analytics separates collected shipping from purchased postage.
+- This release supports one product per Checkout session and US-only delivery. It does not automatically buy postage, create returns, issue refunds, make creator payouts, file taxes, or guarantee that an EasyPost rate is available when staff later purchase a label.
+- Database upgrade schema 40 to 41 adds encrypted customer quote and immutable checkout-selection records. Original Stripe flat/free shipping, per-product cash pickup/delivery, stock holds, approved affiliate attribution and manual tracking are preserved. Interrupted migration is replay safe.
+
+Acceptance:
+- Source 10/10 requires final-commit GitHub CI passing PHP integration, SQLite constraints, JavaScript regressions, Chrome desktop/mobile rate choice, and verified deployment ZIP.
+- Production requires backed-up hosted MySQL migration, real Stripe TEST payment with tax, EasyPost TEST carrier quotes/labels, signed webhook event, address mismatch test and staff handoff.
+- To deploy back up database, storage/config.php, uploads and media; upload application code, preserve private data; do not rerun install.php. Verify schema 41 and the private Stripe/EasyPost configuration first.

@@ -17,11 +17,18 @@ if(container){
       last=signature;title.textContent=item.title;desc.textContent=item.description;
       price.textContent=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(item.priceCents/100);
       checkout.hidden=!(item.checkoutMode==='external'&&Boolean(item.checkoutUrl));
-      form.hidden=!item.stripeReady||!item.fulfillment?.inStock;
+      const liveCarrier=item.fulfillment?.shippingRate==='carrier';
+      form.hidden=!item.stripeReady||!item.fulfillment?.inStock||(liveCarrier&&!item.fulfillment?.carrierCheckoutAvailable);
+      form.dataset.shippingMode=item.fulfillment?.shippingRate||'flat';
+      form.dataset.productTitle=item.title;form.dataset.priceCents=String(item.priceCents);
+      form.querySelector('button[type=submit]').textContent=liveCarrier?'Choose Shipping & Checkout':'Secure Stripe Checkout';
+      form.dataset.checkoutToken='';
       cashButton.dataset.localEnabled=item.localEnabled&&item.fulfillment?.inStock?'1':'0';
       cashButton.hidden=!(item.localEnabled&&item.fulfillment?.inStock);
       shipping.textContent=!item.fulfillment?.inStock?'Out of stock':item.fulfillment?.shippingEnabled
-        ?'US shipping available · '+(item.fulfillment.shippingRate==='free'?'Free':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(item.fulfillment.shippingFeeCents/100))
+        ?'US shipping available · '+(item.fulfillment.shippingRate==='carrier'?'Live carrier rates before checkout':
+          item.fulfillment.shippingRate==='free'?'Free':
+          new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(item.fulfillment.shippingFeeCents/100))
         :'Local pickup or seller fulfillment';
       if(item.localEnabled){
         cashButton.dataset.productId=item.id;cashButton.dataset.productTitle=item.title;
@@ -29,7 +36,7 @@ if(container){
         cashButton.dataset.roomId=item.roomId;cashButton.dataset.promotionId=item.promotionId||'';
       }
       document.dispatchEvent(new Event('azh:local-product-updated'));
-      if(item.stripeReady&&item.fulfillment?.inStock){
+      if(item.stripeReady&&item.fulfillment?.inStock&&(!liveCarrier||item.fulfillment?.carrierCheckoutAvailable)){
         form.dataset.productId=item.id;form.dataset.roomId=item.roomId;
         form.dataset.promotionId=item.promotionId||'';
       }else checkout.href=item.checkoutUrl;

@@ -216,6 +216,9 @@ function az_agent_workspace_brain(array $user): array
     $fulfillment=az_fulfillment_briefing($user);
     foreach($fulfillment['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,$fulfillment['counts']);
+    $customerShipping=az_customer_ship_briefing($user);
+    foreach($customerShipping['cards'] as $item)$cards[]=$item;
+    $summary=array_merge($summary,$customerShipping['counts']);
     $schedule=az_agent_schedule_briefing($user);
     foreach($schedule['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,['upcomingSchedule'=>$schedule['counts']['upcoming'],'scheduleConflicts'=>$schedule['counts']['conflicts']]);
