@@ -1,0 +1,34 @@
+
+.azh-smart-shipping-dialog{box-sizing:border-box;width:min(690px,calc(100vw - 28px));
+max-width:none;max-height:calc(100dvh - 30px);padding:clamp(16px,3vw,28px);
+border:1px solid #e7dfe4;border-radius:18px;overflow-y:auto;color:#322631;background:white;box-shadow:0 24px 70px #170e1840}
+.azh-smart-shipping-dialog::backdrop{background:#100b13b8}
+.azh-smart-shipping-dialog [hidden]{display:none!important}
+.azh-smart-shipping-head{display:flex;align-items:start;justify-content:space-between;gap:15px}
+.azh-smart-shipping-head small{letter-spacing:.13em;font-weight:800;color:#b55a76}
+.azh-smart-shipping-head h2{font-size:clamp(26px,4vw,42px);margin:6px 0 13px;letter-spacing:-.04em}
+.azh-smart-shipping-head h2 span{color:#b75072}
+.azh-smart-shipping-close{width:44px;height:44px;border:0;border-radius:10px;background:#f7eef3;font-size:24px;cursor:pointer}
+.azh-smart-shipping-notice{background:#fcf4f7;border-left:3px solid #c27a94;padding:12px 15px;color:#604d5d;line-height:1.5}
+.azh-smart-shipping-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.azh-smart-shipping-fields label{display:grid;gap:6px;min-width:0;font-size:13px;font-weight:650}
+.azh-smart-shipping-fields input{box-sizing:border-box;width:100%;min-width:0;padding:11px;
+border:1px solid #d3c5cf;border-radius:10px;background:#fff;color:#302631;font:inherit}
+.azh-smart-shipping-columns{grid-column:1/-1;display:grid;grid-template-columns:1fr 2fr;gap:12px}
+.azh-smart-shipping-primary{grid-column:1/-1;border:0;border-radius:10px;background:#332735;color:white;padding:13px;font-weight:750;cursor:pointer}
+.azh-smart-shipping-rate{display:flex;align-items:center;justify-content:space-between;gap:13px;
+padding:12px;border:1px solid #e6dde3;border-radius:12px;margin:9px 0}
+.azh-smart-shipping-rate p{font-size:13px;color:#635563;margin:5px 0}
+.azh-smart-shipping-rate button{padding:10px 14px;white-space:nowrap;border-radius:9px;
+background:#fff6fa;border:1px solid #ad6281;color:#623548;font-weight:750;cursor:pointer}
+.azh-smart-shipping-rate button:disabled,.azh-smart-shipping-primary:disabled{opacity:.55}
+#azh-smart-shipping-status{min-height:1.3em;color:#705265;line-height:1.4}
+#azh-smart-shipping-status[data-error=true]{color:#a63450}
+#azh-smart-shipping-total{font-weight:800}
+.azh-smart-shipping-open{overflow:hidden}
+@media(max-width:600px){
+.azh-smart-shipping-dialog{inset:0;margin:0;width:100vw;height:100dvh;max-height:100dvh;
+padding:16px;border:0;border-radius:0;overflow-y:auto}
+.azh-smart-shipping-fields{grid-template-columns:minmax(0,1fr)}
+.azh-smart-shipping-rate{display:grid}.azh-smart-shipping-rate button{width:100%}
+}
