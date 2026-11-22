@@ -99,6 +99,7 @@ function az_local_create_order(array $body): array
             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'pending','due',?,?)")
           ->execute([$id,$key,$cart,hash('sha256',$receipt),$method,$channel,$sourceRef,
             $method==='delivery'?$contact['zip']:null,az_local_encrypt($contact),$pickupSnapshot,$fee,$subtotal,$now,$now]);
+        az_inventory_reserve($db,$product['id'],$qty,hash('sha256','cash|'.$id),'cash',$id,null);
         az_commerce_queue_admins('cash-request:'.$id,$actor,'cash_order_request',
             'Cash order request needs review',
             $product['title'].' · '.($method==='pickup'?'Local pickup':'Local delivery').
@@ -129,6 +130,7 @@ function az_local_customer_cancel(string $receiptToken): array
           ->execute([$now,$now,$r['order_id']]);
         $db->prepare("UPDATE commerce_orders SET state='cancelled',updated_at=? WHERE id=? AND state='recorded'")
           ->execute([$now,$r['order_id']]);
+        az_inventory_resolve($db,hash('sha256','cash|'.$r['order_id']),'released');
         az_commerce_queue_admins('cash-customer-cancel:'.$r['order_id'],(int)$r['recorded_by'],'cash_cancelled',
             'Cash order cancelled by customer',$r['title'].' · An unaccepted unpaid order request was withdrawn.',true);
         return ['cancelled'=>true,'reference'=>'AZ-'.strtoupper(substr($r['order_id'],0,10))];
@@ -263,6 +265,8 @@ function az_local_admin_action(array $user,array $body): array
                   ->execute([$actor,$now,$id]);
             }
         }
+        if($action==='collect')az_inventory_resolve($db,hash('sha256','cash|'.$id),'consumed');
+        elseif($action==='cancel')az_inventory_resolve($db,hash('sha256','cash|'.$id),'released');
         if(in_array($action,['accept','ready','out_for_delivery','collect','complete','cancel','refund'],true)){
             az_commerce_queue_admins('cash-action:'.$id.':'.$action.':'.$revision,$actor,'cash_'.$action,
                 'Cash order '.str_replace('_',' ',$action),
