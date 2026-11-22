@@ -1,0 +1,70 @@
+AZHOTTIE STUDIO v1.23.0 — MODEL & ADMIN AGENT WORKSPACE
+Date: 21 November 2026
+
+What changed
+------------
+- Bell with unread count in the common header for signed-in model/admin accounts,
+  including signed-in visits to public pages.
+- One slide-out, single-scroll agent activity drawer: Notifications, History, Brain.
+- History of real independent video events (draft, edit, submit, withdraw,
+  delete, published/rejected/changes requested) and real production work events.
+- Existing assignment/production notifications feed the same drawer, with
+  recipient-scoped read/unread controls.
+- A model sees their own upcoming and overdue assignments, revision requests,
+  submitted work and eligible open shots, with explicit Accept/Decline/Claim actions.
+- An admin sees submitted model videos, submitted takes, unanswered assignments,
+  overdue production work and eligible model/shot assignment choices. Assigning
+  requires confirmation and goes through the original secured Work API.
+- New AI Agent chat replies can incorporate a bounded, read-only authenticated
+  Brain snapshot; this does not give the chat permission to mutate assignments.
+- Own activity is recorded as already-read History, not badge-spamming alerts.
+- Header was compacted to prevent overflow at 320px with the added bell.
+
+Security & source of truth
+--------------------------
+- Scoped by authenticated recipient_id; history and unread acknowledgement queries
+  cannot mutate another account's events.
+- Per-action CSRF and the canonical work-api.php checks remain authoritative.
+- Rendered titles and notes are text, not untrusted HTML; drawer destinations must
+  match known same-site destinations.
+- Private source footage is not scanned or automatically published. Admin review
+  still requires explicit consent and the existing publication workflow.
+- Brain suggestions are computed from current authorized database records on load
+  and refresh; no background AI worker, auto-approval, auto-publishing or
+  unsolicited assignment changes are claimed.
+- The bell refreshes while a session is visible (typically every 60 seconds).
+
+Deployment
+----------
+1. Back up all website files, the database and the entire protected storage/ tree.
+2. Finish active uploads, recordings and broadcasts before deploying.
+3. Extract the FULL_DEPLOY.zip application files over the existing installation.
+   Preserve storage/config.php, private media, uploaded files, databases and keys.
+4. Never rerun install.php for this upgrade.
+5. Initial database access migrates schema version 28 to version 29, adding
+   agent_workspace_events and recipient index. The DB user needs CREATE TABLE,
+   CREATE INDEX and UPDATE privileges.
+6. Hard-refresh dashboard.php, admin-studio.php, my-videos.php, my-work.php,
+   agent-chat.php and public pages when signed in.
+
+Verified in isolated local build
+--------------------------------
+- 361/361 JavaScript regression tests; 115 PHP syntax checks.
+- Eight Chromium role/viewport scenarios at 1440,768,390,320px, with confirmed
+  Notifications, History, Brain, models accepting work, admins assigning models,
+  acknowledgement, Escape closing, white readable cards and no horizontal overflow.
+- SQLite fixture checks of actor attribution, account separation, self-history
+  read state and unread-badge semantics.
+- Production files are byte-identical inside FULL_DEPLOY and SOURCE_TESTS ZIPs.
+
+Still requiring actual azhottie.com acceptance
+-----------------------------------------------
+- Automatic MySQL schema migration with real signed-in model/admin accounts.
+- Real upload -> model submission -> admin decision -> model alert/history chain.
+- Real model acceptance and admin assignment with production roster permissions.
+- Cross-browser/device badge refresh, CSRF/session expiry and PHP concurrency.
+- Prior Live Director camera-to-fan streaming acceptance remains open separately.
+
+No independent worker process is installed. This release adds the agent UI,
+verified event history and deterministic suggestions, not a continuously
+running autonomous assistant.

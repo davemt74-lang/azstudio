@@ -1,0 +1,244 @@
+AZHOTTIE STUDIO 1.7.0 — RELEASE REVIEW
+19 November 2026, America/Phoenix
+
+VERIFIED SCORE: 9 / 10
+TARGET: 10 / 10 AFTER INSTALLED-BROWSER/HOST/DEVICE ACCEPTANCE
+
+This project acceptance score gives one point to each area below. Nine areas
+passed local automated verification. The remaining installed-host, browser,
+provider and device checks have not been verified. A prior local-browser
+preview was rejected by automatic URL security review, including a prohibition
+on alternate browser workarounds. This release respected that rejection; no
+new live-browser visual pass is claimed.
+
+ACCEPTANCE AREAS (ONE POINT EACH)
+
+1. Install, upgrade and retained data — PASS
+   Fresh isolated installations and repeatable migration through schema 16.
+   Schema 15 adds saved production plans, original scene/shot links, mutation
+   receipts and AI proposals. Schema 16 adds assignment messages and read
+   cursors. Existing accounts, roster memberships, assignments, uploads, reviews,
+   edits and AI settings are retained. Source storage stays uninstalled and
+   untouched. Live MySQL execution remains in area 10.
+
+2. Roles, ownership and private script context — PASS
+   The current production owner administrator controls the full plan and
+   casting. Other administrators, fans and unassigned members cannot access
+   private plans or assignment threads. An authorized contributor receives the
+   original scene/shot context relevant to their work, without the full plan,
+   roster identities or other private assignments. Current account, role,
+   password and production permissions are rechecked on sensitive requests.
+
+3. Saved direction, scenes and linked work — PASS
+   Manual planning works without an AI key. Plans keep independent revisions
+   and ordered scene/shot IDs. Validation covers text lengths, orientation,
+   deadlines, takes, capacity and the 20-scene/60-shot/12-shot-per-scene limits.
+   Applying a scene preserves its original script and created-shot link. The
+   planner makes applied scenes read-only; current shot instructions can be
+   changed through the existing workspace without replacing assignments or
+   footage. Linked progress comes from actual work state.
+
+4. Casting and atomic assignment creation — PASS
+   Leave unassigned, open to included models, and direct casting use existing
+   eligibility, roster, capacity and project rules. Plan and roster revisions
+   must match at application. Failed or stale batches leave no partial shots,
+   assignments, notifications, scene links or successful receipts. A deliberate
+   mid-transaction database fault and simultaneous apply requests are covered.
+   The producer retains the existing studio self-contribution exception.
+
+5. AI proposals and reviewed adoption — PASS WITH PROVIDER FIXTURES
+   Production plans reuse the Admin Shot-list assistant provider/model. Plan,
+   quick-shot and edit proposals share the request allowance and pending limit.
+   Capacity is checked before reserving quota or calling a provider. Structured
+   output, response size, scene/shot budgets, timeout, current authorization and
+   stale project/plan/actual-shot sources are validated. Outbound drafts contain
+   approved creative text and titles; identities, private profiles, messages,
+   media and reference-file bytes stay local. Adopting a reviewed proposal
+   appends draft scenes; creating assignments remains a separate action.
+   No actual external OpenAI or Claude request was made.
+
+6. Private questions, retries and unread state — PASS
+   Each assignment has a producer/assignee-only, append-only text conversation.
+   Exact resend receipts prevent duplicate messages and in-app notifications.
+   An altered payload cannot reuse a successful request ID. Reads acknowledge
+   an existing sequence monotonically and exclude the reader's own messages.
+   Messages and read cursors do not change work/project revisions. Closed
+   assignments/projects keep authorized history while disabling new posts.
+   Roster removal preserves an existing explicit assignment and its thread.
+
+7. Controller integration and recovery — PASS WITH TEST DOM/MEDIA
+   Initial loading, failed-load recovery, reviewed application, draft recovery,
+   casting changes, read-only receipt recovery, CSRF renewal and parent busy
+   guards are covered. In-place shot refresh preserves other mounted drafts.
+   Interrupted message sends retain the original request and text separately
+   from new typing. Read acknowledgements use the highest rendered sequence;
+   a late read response cannot overwrite newer unread state. A refresh that
+   completes in a hidden tab does not acknowledge unseen replies. Responsive
+   CSS is implemented; visual appearance remains part of area 10.
+
+8. Connected production workflow — PASS WITH SYNTHETIC MEDIA
+   A full HTTP scenario saves a two-scene plan, creates direct/open work,
+   verifies private script access, exchanges questions and replies, activates
+   the production, claims/accepts work, uploads/submits a take, requests and
+   approves a replacement, removes a roster member without losing work, then
+   verifies accepted sources in the editor and exact finished-video provenance.
+   Synthetic media fixtures do not establish real browser export/codec quality.
+
+9. Existing studio behavior — PASS WITH TEST FIXTURES
+   Interview recording state, phone approval/upload, account roles, scheduling,
+   events/classes/appointments, capacity/attendance, roster controls, media
+   access, Director coverage, usable ranges, named cuts, editing proposals,
+   covers, finished-video metadata and explicit publication regressions pass.
+   Central AI encryption, migration and routing tests remain green. Source
+   files remained unchanged during the final automated runs.
+
+10. Installed host, browser, providers and physical devices — UNVERIFIED
+    Actual HostGator/other host, live MySQL, browser appearance, USB/HDMI/phone
+    cameras, external audio, Safari/iOS, real codecs, phone-network WebRTC and
+    configured-provider requests remain installation checks. No credentials,
+    host access or physical-device access were assumed. This area earns no
+    verified point until the installed acceptance checks succeed.
+
+FINAL VERIFICATION
+
+187 server integration tests passed across 19 isolated suites:
+  backend                   12 passed
+  production                10 passed
+  accounts                   8 passed
+  scheduling                 8 passed
+  publication               10 passed
+  phone                      8 passed
+  phone_edge                 2 passed
+  work                      17 passed
+  work_roster               14 passed
+  production_plan           16 passed
+  work_threads              14 passed
+  production_plan_flow       1 passed
+  work_media                 7 passed
+  work_planner               9 passed
+  director                  12 passed
+  edit_versions              9 passed
+  edit_composer             10 passed
+  ai_settings               11 passed
+  ai_routing                 9 passed
+
+The server matrix completed in 38.001 seconds with at most three suite
+processes concurrently. Contention suites used four PHP workers. All PHP source
+hashes stayed unchanged throughout the run. Real source storage remained
+unchanged and uninstalled.
+
+182 JavaScript tests passed: 0 failed, 0 skipped, 0 cancelled.
+The final run completed in 1.244 seconds. This includes 16 new production-plan
+and 13 new assignment-thread controller tests. All JavaScript source hashes
+stayed unchanged during the run. Tests use actual controllers with DOM/media
+fixtures; they are not live-browser or physical-device tests.
+
+Syntax checks passed for 66 production PHP files and 26 production JS files.
+Across the application, QA adapters and fixtures, 93 PHP and 32 JS files parse.
+Development runtimes: PHP 8.4.27 and Node v24.22.3.
+Deployment remains PHP 8.1+ without a Node, Composer or background-worker
+requirement. The production plan adds no new API-key configuration surface.
+
+V1.7 REVIEW CORRECTIONS
+
+- Moving a planned shot from direct casting to open/unassigned clears old
+  selected account IDs. The scene editor enforces the 12-shot-per-scene limit.
+- Initial plan-load errors display a recoverable error and Reload control.
+  Read-only bootstrap can initialize inside the parent production-save guard.
+- CSRF renewal fetches a fresh token without replacing the user's draft,
+  proposal review, or interrupted request identity, then retries once.
+- Delayed read acknowledgements cannot overwrite later unread counts. Reply
+  refreshes completing while the tab is hidden leave unseen messages unread.
+- Previously sent message/generation receipts remain recoverable after a
+  production closes; new writes/generation stay disabled.
+- AI generation preflight accounts for remaining plan capacity and the actual
+  production shot ceiling, including uncreated shots already in the plan.
+- The member script panel is labeled Original plan script and indicates when
+  the created shot has changed. Current shot directions remain authoritative.
+- Plan and quick-assistant application refresh the existing workspace in place
+  so other drafts, mounted conversations and capture guards are preserved.
+
+SHORT INSTALLED ACCEPTANCE SEQUENCE
+
+1. Back up the existing application and complete storage/database. Merge this
+   release into the same directory without reinstalling or deleting storage.
+   Sign in and hard-refresh. Confirm the automatic upgrade reaches schema 16.
+2. Open Productions, create/open a draft production and include two approved
+   models; leave a third eligible account outside the roster. Open Production
+   plan, save direction, add two scenes and save the plan. Reload and confirm
+   the saved script and casting are retained.
+3. Make one shot open to included models and one direct to a single model.
+   Review shots and assignments, then create the batch. Repeat/reload the
+   result and confirm no duplicate work. Activate the production. Included
+   members should discover eligible open work; only the assignee should see
+   the private direct shot. The outside account should see neither.
+4. As the assignee, open the original scene script, send a question, refresh
+   replies and acknowledge the conversation. As producer, answer it and check
+   unread indicators. Confirm another model cannot read this conversation.
+5. Claim/accept work, record/upload, submit, request a retake and approve the
+   replacement. Remove a roster member and confirm existing work, script,
+   footage and questions remain authorized while new open work disappears.
+6. Open approved footage in the editor, save a named cut, export and Save
+   finished video. Add a cover and inspect exact source/revision provenance.
+   Check phone uploads, optional phone live switching, local external inputs
+   and the selected microphone on the intended browsers/devices/network.
+7. If using AI, confirm the saved Admin provider/model and run one bounded
+   real draft with each configured provider. Review/adopt it, cast locally,
+   then separately review/create the assignments. Check actual response,
+   timeout and provider billing behavior in that installed environment.
+8. If public release is intended, explicitly publish a finished cut to Watch
+   and inspect it as a fan/signed-out visitor. Original footage and private
+   production scripts/questions remain subject to studio permissions.
+
+PACKAGING
+
+Deployment excludes tests, QA fixtures, package.json, development helpers and
+installed data. Source includes application code, tests, synthetic fixtures and
+the final verification logs/hashes. Both archives are byte-checked against the
+verified source before saving. Historical release reviews are retained,
+including RELEASE_REVIEW_1_6.txt.
+
+
+v1.10.0 FOLLOW-UP — HEADER + PERSONAL MEDIA EDITOR
+-------------------------------------------------
+Implemented: One logged-in sidebar toggle left of logo on desktop/mobile; all signed-in header navigation removed; sign-out moved into sidebar; public pages use same sidebar when viewed while signed in.
+Model/professional My media & editor (personal owner-private gallery, resumable chunked uploads with retry/discard, non-destructive trims, cover image capture/upload, browser-composited edited copies). Existing admin interview editing preserved; no model access to admin project media.
+
+Verification: 201/201 Node tests passed; 78 production PHP files passed syntax checks; production JavaScript syntax passed. Signed-in header was rendered by PHP CLI for admin/model/public views and checked for missing duplicate nav. All media routes guard account roles, file read is scoped to owner, and POST mutations require CSRF.
+Not verified: Local PHP CLI has no PDO drivers, so database-backed upload/permission tests cannot run in this environment; actual HostGator/MySQL/SQLite, iOS camera, and browser video export remain unverified. Local Chromium preview was explicitly blocked by the browser's security policy; no workaround attempted.
+Release score: 9/10 for available static/logic checks; not 10/10 host-certified.
+
+v1.11.0 — CONTINUATION / RECOVERY REVIEW — 2026-11-19
+SCOPED WORK: multi-clip private model timeline, signed-in device camera, optional
+owner-approved phone camera/recording/upload, mobile-only hamburger, light forms.
+
+VERIFIED LOCAL:
+* 215/215 Node JavaScript tests passed; new timeline tests exercise separate
+  source import, reorder, independent trim/title/volume, render card sequencing,
+  ownership-bound media routes, and fade calculations.
+* 84/84 production PHP files pass php -l syntax checks.
+* Local PHP HTTP smoke returned 200 for install.php and shared style.css,
+  form-light.css, universal-header.css, personal-timeline.js, personal-camera.js,
+  personal-phone-host.js, qr.js and favicon.svg.
+* Fixed signed-in camera upload retry: its status route differs from the
+  temporary phone route; now the same resumable chunk helper handles both.
+* Fixed stopped/disconnected live phone preview accidentally resetting a
+  pending gallery upload's recovery token and original file.
+* Fixed invited phone mode when a different signed-in account scans the QR;
+  no direct role access is granted and owner approval still applies.
+* Prior console/header test failed because it expected form styles in the
+  header stylesheet; the corrected test checks mobile navigation and the
+  shared form-light stylesheet independently.
+* Deployment archive built with explicit 0644 files / 0755 folders, and no
+  generated database, installed config, real media, account tokens or secrets.
+
+NOT VERIFIED IN THIS ENVIRONMENT:
+* PDO database integration/migration: local PHP has PDO but no SQLite/MySQL PDO
+  drivers; local endpoint tests cannot prove the HostGator DB upgrade.
+* Real device camera/microphone capture, full canvas+MediaRecorder export, iOS
+  Safari, live WebRTC connection across networks, and HostGator deployment.
+* Live WebRTC may need separately provisioned TURN; private phone upload does
+  not rely on live preview connectivity.
+
+GATE SCORE: 9/10 VERIFIED — complete local regression/syntax/static HTTP checks;
+requires hosted DB/device end-to-end acceptance to claim 10/10.

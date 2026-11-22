@@ -1,0 +1,63 @@
+AZHOTTIE V1.5 OPTIONAL EDIT COMPOSER
+
+Authentication: active project-owning administrator. POST requires the existing
+session CSRF token. API response: {ok:true,data:...} or structured error.
+
+GET edit-composer-api.php?action=settings
+  Task-specific editing provider/model settings plus usage.daily/usage.pending.
+  No secret is returned. Configure through ai-settings-api.php (Admin).
+
+GET action=latest&projectId=ID
+GET action=proposal&id=ID
+GET action=request&projectId=ID&requestToken=TOKEN
+  Saved proposal or null for an empty latest result. Request lookup returns
+  request_not_received 404 if no receipt exists; retain the token for safe retry.
+
+POST action=generate
+  {projectId,requestToken,targetDurationSeconds:0(full)|1..3600,direction}
+  Token 16..160 letters/digits/underscore/hyphen; direction up to 2000 chars.
+  Repeating the same token/project/target/direction returns its saved receipt.
+  Changing that intent with the same token fails request_conflict.
+
+Proposal data:
+  id/proposalId,projectId,state(pending|ready|failed|applied),provider,model,fingerprint,
+  summary,edit,items,warnings,durationMs,targetDurationMs,coverage,stale,
+  appliedTimelineId,appliedTimelineRevision,error,errorCode,createdAt.
+
+The edit shape matches DIRECTOR_API.txt and EDIT_API.txt. Send proposalId and
+directorFingerprint when saving through timeline.create. That transaction
+validates current evidence/ranges and records the applied timeline receipt.
+It creates a new named cut; existing edits are never overwritten implicitly.
+
+Implementation boundaries:
+  - schema 12, edit_ai_proposals; upgrade runs after editable-cut schema 11.
+  - central per-admin settings with separate shot/editor provider choices.
+  - schema 13 central provider settings; each proposal snapshot freezes its
+    provider/model/workspace identity, with legacy proposals defaulting OpenAI.
+  - shared daily request count and one pending assistant request per owner.
+  - 180-second interrupted-request expiry; failures still count as attempts.
+  - community lock reserves intent/quota; provider latency releases that lock.
+  - fresh role/password checks after the response before saving the result.
+  - fixed HTTPS OpenAI Responses or Claude Messages endpoint, verified TLS, no redirects,
+    45-second transport timeout, 1MiB response cap, 6000 output-token limit.
+  - at most 120 candidate ranges, 40 output clips, one occurrence per source.
+  - metadata-only payload whitelist: project brief, requirements, candidate
+    labels/ranges/preference, notes, and in-range review-note excerpts.
+  - up to 40 review notes per candidate, 1500 Unicode chars per note, with
+    truncated/notesOmitted metadata; input JSON limited to 128KiB.
+  - no uploaded media, account records, reference files or private profiles.
+  - complete/non-refusal/error-free structured response required, then business
+    validation of IDs, minimum100ms ranges, unique sources and target runtime.
+  - actual proposed clips determine runtime and missing-coverage warnings;
+    provider suggestions are explicitly labeled as suggestions.
+  - pending request parameters survive browser remount/unknown network results;
+    late responses from destroyed views do not mutate newer local recovery.
+
+Official API contract checked during this build:
+https://developers.openai.com/api/docs/guides/structured-outputs
+https://platform.claude.com/docs/en/build-with-claude/structured-outputs
+https://platform.claude.com/docs/en/api/messages/create
+
+All provider integration tests use fixtures; no real provider usage was invoked.
+Automatic transcript/frame understanding and server-side video rendering are
+outside this release. The browser editor performs the actual video render.

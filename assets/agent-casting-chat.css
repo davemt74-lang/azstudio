@@ -1,0 +1,22 @@
+/* Existing Agent Chat: read-only verified casting briefing + explicitly confirmed controls. */
+.azh-casting-chat-panel{background:#fff;border:1px solid #eadce5;border-radius:16px;padding:18px;margin:18px 0;color:#332734;min-width:0}
+.azh-casting-chat-panel.is-focused{border-color:#be4d83;box-shadow:0 0 0 2px #f8e3ee}
+.azh-casting-chat-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.azh-casting-chat-head h2{font-size:19px;margin:0;color:#2d2330}.azh-casting-chat-head p{font-size:12px;color:#846578;margin:5px 0}
+.azh-casting-chat-panel [data-casting-status]{font-size:12px;color:#826b7a;margin:8px 0}
+.azh-casting-chat-counts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,125px),1fr));gap:9px;margin:12px 0}
+.azh-casting-chat-stat{background:#fdf8fb;border:1px solid #f1e5eb;border-radius:12px;padding:10px}
+.azh-casting-chat-stat strong{display:block;font-size:21px;color:#b32965;line-height:1.4}
+.azh-casting-chat-stat span{display:block;font-size:11px;color:#6e5869}
+.azh-casting-chat-card{border-top:1px solid #f1e8ed;padding:12px 0;overflow-wrap:anywhere}
+.azh-casting-chat-card>strong{font-size:14px;display:block}.azh-casting-chat-card p{font-size:13px;color:#685264;margin:5px 0 10px;line-height:1.55}
+.azh-casting-chat-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.azh-casting-chat-link{display:inline-flex;color:#aa2860;font-size:13px;font-weight:750;margin:6px 13px 6px 0}
+.azh-casting-chat-link:focus-visible,.azh-casting-chat-button:focus-visible{outline:2px solid #b32965;outline-offset:3px}
+.azh-casting-chat-button{display:inline-flex;padding:9px 12px;border-radius:9px;border:1px solid #be4680;background:#fff;color:#9e2357;font-size:13px;font-weight:750;cursor:pointer}
+.azh-casting-chat-button:hover{background:#fdf0f6}
+@media(max-width:480px){.azh-casting-chat-panel{padding:12px}.azh-casting-chat-head h2{font-size:17px}}
+
+.azh-casting-chat-report{border:1px solid #f0e4eb;background:#fdfafd;border-radius:12px;padding:10px 13px;margin:15px 0}
+.azh-casting-chat-report>div{padding:9px 0;border-bottom:1px solid #f1e5ec}.azh-casting-chat-report>div:last-child{border:0}
+.azh-casting-chat-report strong{font-size:13px;color:#8f285d}.azh-casting-chat-report p{font-size:12px;line-height:1.55;margin:5px 0;color:#574759}

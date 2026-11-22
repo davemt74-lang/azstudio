@@ -1,0 +1,71 @@
+AZHOTTIE STUDIO 1.6.0
+18 November 2026, America/Phoenix
+
+PRODUCTION MODELS AND SHARED ASSIGNMENTS
+
+Each saved production now has an Add models to this production section.
+Search approved model/professional accounts, select multiple people, and save
+one roster. Included members can find an active production before an individual
+assignment exists. The roster allows up to 200 accounts and shows current
+assignment counts, account availability, and removal controls.
+
+HOW TO USE IT
+
+1. Create or open a production and save its brief.
+2. Under Add models to this production, select the intended approved accounts
+   and choose Add selected models. Use Accounts to approve missing roles.
+3. Create shots manually, from a reviewed AI proposal, or through Director.
+4. Set a shot to Open to let eligible included members claim a place. Set it
+   to Assigned and select a roster member for a direct invitation. Direct
+   invitations can be prepared while the production is Draft.
+5. Set the production to In progress. Included members see it in My work >
+   My productions; eligible open shots appear in Open shots. Direct invitations
+   appear in Assigned to me. Claims and uploads require In progress.
+6. Review uploaded footage and build finished videos using the existing tools.
+
+ROSTER AND ASSIGNMENT BEHAVIOR
+
+Adding a person does not assign every shot or reserve contributor places.
+Each shot still enforces eligible roles and its contributor limit. Studio/phone
+capture retains the producer contribution exception. Models see their own
+assignments and eligible open shots; other private direct work remains hidden.
+
+Removing a member stops new open work, claims, and new assignments. Existing
+explicit assignments, submissions, and review history remain available under
+current role/account/project permissions. Cancel assignments separately if work
+should stop. Completed/archived rosters are read-only until reopened.
+
+Membership and newly opened eligible shots produce in-app updates. This release
+does not send automatic email/SMS. Open-work notifications are hidden if the
+underlying shot is later made private, ineligible, closed, or inaccessible.
+
+UPGRADE WITHOUT REINSTALLING
+
+Merge this release into the existing application and preserve storage/config.php,
+the database, media and uploads. Do not rerun install.php. Schema 14 adds the
+roster tables and shot-bound notifications automatically. Existing contributors
+with noncancelled/nondeclined work are included automatically. Older oversized
+rosters retain their contributors; new additions enforce the 200-account cap.
+Explicitly removed membership is not restored by migration replay.
+
+For previously unclaimed open work, select the intended members after updating.
+No mass enrollment of other accounts takes place. Existing AI settings and
+credentials, schedules, appointments, interviews, assignments, footage, saved
+cuts, and finished videos are retained.
+
+RELIABILITY AND REVIEW
+
+Roster mutations share the production transaction lock. A roster revision
+prevents stale edits and a saved request receipt makes retries idempotent.
+Removal racing a claim either blocks the new claim or preserves the assignment
+that already succeeded. Roster changes do not advance the project revision or
+invalidate otherwise current AI proposals/edit fingerprints. The UI preserves
+other form drafts and the mounted AI planner during membership changes.
+
+The deployment still requires PHP 8.1+ and no Node, Composer, FFmpeg or worker.
+No installation/license/security key is needed. Provider keys remain optional
+and are entered through Admin > AI settings, as added in 1.5.0.
+
+See RELEASE_REVIEW.txt for final verification totals, remaining installed-browser
+and host/device checks, and the acceptance sequence. ROSTER_API.txt documents
+new endpoints and data contracts.

@@ -1,0 +1,91 @@
+AZHOTTIE STUDIO v1.19.1 — EDITOR / LIVE DIRECTOR MAINTENANCE
+================================================================
+
+SCOPE
+-----
+- Private timeline editor: my-editor.php + assets/personal-timeline*.js,
+  assets/personal-audio-envelope.js, assets/personal-timeline.css,
+  assets/media-engine.js and includes/personal-edits.php.
+- Live phone-camera path: live-director.php, my-camera.php,
+  personal-phone-api.php, includes/personal-phone.php, assets/live-director.js,
+  assets/personal-camera.js, assets/phone-live.js.
+- No new SQL migration; existing access controls and private video publication
+  approvals remain in place.
+
+VIDEO TIMELINE — WHAT CHANGED
+-----------------------------
+1. V1 clips have dedicated trim-start and trim-end handles; drag handles to
+   non-destructively change the edit. The existing Clip inspector retains
+   numeric in/out points and Mark In/Mark Out controls. Snap applies to trim.
+2. Right-click any V1 clip for clip actions such as trim here, split at
+   timeline position, duplicate, mute/unmute source sound, detach sound to A2,
+   or open the inspector. The context menu appears near the pointer.
+3. Right-click a volume line in A1 source-audio or A2 detached-audio track to
+   add a volume keyframe. Drag each point vertically to change volume;
+   adjacent points are linearly interpolated. A context menu offers remove
+   keyframe and segment-level actions. Saving retains keyframes (up to 32
+   per audio segment) and applies them in browser preview/export.
+4. Detach moves the source sound into an independent A2 audio clip; the V1
+   original's sound is muted to avoid doubling the mix. A2 has independent
+   timeline start/trim/volume, can be dragged along the timeline and opens
+   its own inspector. Removing a detached clip does not change the original.
+5. Both Clip and A2 audio inspectors are floating and draggable over the
+   monitor/timeline; the edit layout no longer confines them to one column.
+6. Edits are source-ID based and owner scoped; raw private media URLs never
+   become persisted project references. Original footage stays intact.
+
+LIVE DIRECTOR — PHONE FEED STATUS / CONNECTIVITY
+------------------------------------------------
+1. Director now receives whether an approved phone has an active, fresh live
+   offer and whether the host answered it. An inactive card explains the
+   required next action: share video on the phone, check connection, or
+   configure TURN where needed. Local phone recording alone is not a feed.
+2. Phone and host peers use the same configured iceServers from the server
+   rather than different hardcoded ICE settings. This does not provision TURN:
+   operators must supply working relay credentials when networking requires it.
+3. On WebRTC interruption, temporary disconnects get a short grace period;
+   failed/expired sessions are identified and bounded retries can re-offer.
+   Local phone recording is unaffected by network reconnection attempts.
+4. Live Director QR invited phones go through approved paired sharing even
+   if the person scanning the QR is signed into the same site on the phone.
+5. Audio sent from a phone remains separately opt-in and subject to Director
+   mixer controls. Camera preview remains private until Director takes it.
+
+VERIFICATION / ACCEPTANCE
+-------------------------
+- 319/319 JavaScript automated tests passing (zero skipped or failed).
+- PHP server edit validation: 10 dedicated assertions passing.
+- Modified PHP files passed syntax checking.
+- Chromium editor smoke exercised video selection, context menu, trimming,
+  volume keyframe creation, A2 detachment and save/reopen using a local video
+  fixture and simulated owner-authorized endpoints. No browser errors.
+- Real device, cellular/NAT, TURN, fan playback, and program-recording checks
+  were NOT available within the development environment and still require
+  installed-site acceptance on https://azhottie.com.
+
+INSTALLED-SITE SMOKE SEQUENCE
+-----------------------------
+1. Take a complete backup. Stop and end existing live broadcast/recording.
+2. Deploy the FULL_DEPLOY archive into the existing application directory
+   without replacing existing storage data or running install.php.
+3. Hard refresh /my-editor.php and /live-director.php; confirm new controls.
+4. Open a private saved timeline, test trim, separate A2, automate volume and
+   reopen project; export and listen for the expected gain changes.
+5. In /live-director.php, invite + approve a phone; on the phone open the
+   scanned /my-camera.php URL under HTTPS. Start camera then Share live OR
+   check Live preview on Record and start a recording.
+6. Wait for 'Live camera connected to Director' on the phone and moving
+   video in the Director's LEFT-side phone tile. Check that selecting it with
+   'Broadcast now' puts the intended source in Program without exposing
+   private unselected thumbnails to viewers.
+7. Confirm with a second browser/fan account and listen for audio; record a
+   short show and confirm replay publication works as intended.
+8. On a remote/cellular network, use configured STUN/TURN. Device approval
+   by itself is not proof the camera stream was negotiated/decoded.
+
+SECURITY / HOSTING
+------------------
+- Owner-scoped private media references and project access remain enforced.
+- A phone invitation grants temporary approved-camera access, not admin rights.
+- Existing P2P viewer cap remains six; no CDN/SFU or TURN service included.
+- Preserve `storage/.htaccess`, uploads, recordings, database and config.php.

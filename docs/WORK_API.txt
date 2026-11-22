@@ -1,0 +1,251 @@
+AZHottie Studio v1.7 — Production Work API
+=========================================
+
+Schema 8 (after 7): az_upgrade_work_schema(PDO). Schema 9 adds the optional AI shot planner separately. interviews.project_id CHAR32 nullable,
+production_projects, production_shots, shot_assignments, shot_submissions,
+work_uploads, work_references, work_events, work_notifications, work_requests, work_source_takes.
+Schema 14 adds production_rosters, production_members and work_notifications.shot_id.
+See ROSTER_API.txt for membership, migration, revisions and receipt details.
+Project creation creates backing admin-owned interview and sets interviews.project_id.
+All mutations work-api acquire community.lock, refresh actor, then transaction.
+Media APIs acquire same community.lock BEFORE owner uploads/admin-ID.lock.
+
+GET work-api.php?action=bootstrap => {user,csrf,timezone:'America/Phoenix',canManage,
+ users:[{id,name,roles}] admin-only, links:{events:[{id,title,startLocal}],appointments:[{id,title,startLocal}]},
+ limits,unreadCount}. Staff choices include active model/professional accounts and the current project administrator;
+ no emails. links appointments only admin's own customer/professional bookings.
+GET projects => Project[] (admin owned; member own assignment or active included production)
+GET project&id => Project + {shots:Shot[],references:Reference[],activity:WorkEvent[] admin only,roster:Roster admin only}
+GET shot&id => Shot + {project:Project,assignments:Assignment[],references:Reference[],roster:Roster admin only}
+GET myWork => {projects:Project[],assigned:Assignment[],open:Shot[],submitted:Assignment[],completed:Assignment[]}
+GET roster&projectId => Roster (owner administrator only)
+GET assignment&id => Assignment + {shot:Shot,project:Project,submissions:Submission[],references:Reference[]}
+GET notifications => {notifications:Notification[],unreadCount}
+GET users => [{id,name,roles}] admin only
+GET scheduleLinks => {events,appointments} admin only
+
+POST saveProject {id?,revision?requiredUpdate,title,brief,productLine:'',kind:'production'|'interview'|'mixed',status:'draft'|'active'|'completed'|'archived',eventId:null|id,appointmentId:null|id} => full Project
+POST saveShot {id?,revision?requiredUpdate,projectId,title,brief,mode:'assigned'|'open',maxContributors:1..50,eligibleRoles:['model'|'professional'],orientation:'portrait'|'landscape'|'square'|'any',targetDurationSeconds:0..3600,takesRequested:1..20,dueLocal:null|'YYYY-MM-DDTHH:mm',sortOrder:0..10000,status:'active'|'closed'|'archived'} => full Shot
+POST assign {shotId,userId} => Assignment (new/reassigned work requires eligible roster member; producer exempt; existing current assignment idempotent; reassign declined/cancelled resets assigned)
+POST claim {shotId} => Assignment (active roster member and eligible role required; accepted immediately; max contributors counts nondeclined/noncancelled member assignments; producer self-contribution is separate; atomic)
+POST respond {assignmentId,revision,decision:'accept'|'decline',note:''} => Assignment
+POST cancelAssignment {assignmentId,revision,note:''} => Assignment admin only
+POST submitAssignment {assignmentId,revision,note:''} => Assignment; at least one new draft take required; all draft takes become submitted, no prior take overwritten
+POST reviewSubmission {submissionId,revision,decision:'accepted'|'retake',note:''} => Submission; reload assignment detail for aggregate state. A current-round retake always sets changes_requested, even with accepted takes. Pending takes keep submitted. A reviewed replacement round with accepted takes and no pending/current-round retakes completes approved.
+POST favoriteSubmission {submissionId,favorite:boolean} => Submission admin only, uses takes.is_favorite
+POST addSubmissionNote {submissionId,atMs,text} => Submission admin only, uses take_notes
+POST deleteSubmissionNote {submissionId,noteId} => Submission admin only
+POST markNotificationsRead {ids:[id,...]} OR {all:true} => {unreadCount}
+
+Project fields: id,title,brief,productLine,kind,status,revision,eventId,appointmentId,
+ schedule:{type,id,title,startLocal,endLocal,location}|null (only if viewer authorized),
+ createdAt,updatedAt,shotCount,assignmentCount,submittedCount,acceptedCount,approvedAssignmentCount,canManage,isMember,memberCount (admin only),
+ editorUrl,interviewId (admin only),recordingUrl (admin only),videos:[public video allowlist] for member, admin finished rows optional.
+Shot fields: id,projectId,projectTitle,title,brief,mode,maxContributors,eligibleRoles,
+ orientation,targetDurationSeconds,takesRequested,dueAt,dueLocal,sortOrder,status,revision,
+ slotsRemaining,contributorCount,assignmentCount,acceptedCount,approvedAssignmentCount,myAssignment:Assignment|null,canClaim,canManage.
+Assignment fields: id,shotId,projectId,userId,userName,shotTitle,projectTitle,status,revision,round,
+ note,createdAt,updatedAt,submittedAt,reviewedAt,dueAt,dueLocal,orientation,targetDurationSeconds,
+ takesRequested,submissionCount,acceptedCount,canRespond,canUpload,canSubmit,canManage,
+ latestReviewNote,watchVideos:[public video allowlist].
+Submission fields: id,assignmentId,takeId,contributorId,contributorName,uploadedBy,source,sourceLabel,label,round,reviewRound,status,
+ note,reviewNote,reviewedAt,revision,createdAt,mediaUrl:'work-media.php?type=submission&id=...',
+ durationMs,mimeType,fileName,sizeBytes,isFavorite,reviewNotes:[{id,atMs,text,createdAt}],canReview.
+Reference fields: id,projectId,shotId,title,mimeType,sizeBytes,mediaUrl:'work-media.php?type=reference&id=...'
+Notification fields: id,kind,title,message,projectId,assignmentId,readAt,createdAt,url.
+
+MEDIA hooks (all raw rows server-only; no direct exposure):
+az_work_project_row(string id,array user,bool adminOnly=false): project row, owner_id/interview_id checked.
+az_work_shot_row(string id,array user,bool adminOnly=false): shot row, project permission checked.
+az_work_assignment_access(string id,array user,bool forUpload=false): JOINed row with assignment fields
+ id,shot_id,user_id,status,revision plus project_id,owner_id,interview_id,project_status,
+ shot_status,shot_revision,shot_title,project_title,eligible_roles_json. A member must be
+ active, current eligible model/professional and exact assignee. Owner admin may upload on
+ behalf of an active assignee; uploads accept accepted/changes_requested (assigned only owner).
+az_work_register_take(array assignment,array take,array user,string clientToken): returns Submission.
+ Requeries real take, enforces backing interview and question_id==shot_id, creates draft submission.
+ Idempotent by take_id and (assignment_id,client_token). contributor_id = assignment.user_id,
+ uploaded_by = actor.id. Call after finalize under shared lock, no outer PDO transaction.
+az_work_submission_row(string id,array user,bool adminOnly=false): raw submission + take fields,
+ project owner, active assignee scope; admin owner can access all.
+az_work_reference_row(string id,array user): raw reference checked through project/shot visibility.
+az_work_event(projectId, actorId, kind, message, assignmentId=null) audit helper.
+az_work_notify(recipientId,kind,title,message,projectId,assignmentId=null,shotId=null) in-app helper.
+Open-shot notices bind shotId and recheck current visibility before delivery.
+
+work_uploads columns: upload_id CHAR32 PK FK uploads ONDELETECASCADE,
+ assignment_id CHAR32 FK, contributor_id userFK, uploaded_by userFK,
+ assignment_revision INT, shot_revision INT, client_token VARCHAR160,
+ submission_id CHAR32 NULL, created_at VARCHAR32; UNIQUE(uploaded_by,client_token).
+work_references: id,project_id,shot_id nullable,title VARCHAR200,storage_name VARCHAR80 UNIQUE,
+ mime_type VARCHAR80,file_name VARCHAR250,size_bytes BIGINT,created_by userFK,created_at VARCHAR32.
+shot_submissions: id,assignment_id,contributor_id,uploaded_by,take_id UNIQUE,client_token,
+ status draft/submitted/accepted/retake,note,review_note,reviewed_by nullable,
+ revision default1,submitted_round default0,review_round default0,created_at,updated_at,submitted_at nullable,reviewed_at nullable,
+ UNIQUE(assignment_id,client_token). Both takes and assignment FKs cascade.
+
+Production edit contract: backing interview state.edit settings includes mode=production/interview/mixed.
+Project kind visible on project data. Editor media agent owns prepareEditor integration and accepted-only eligibility.
+Root filters legacy interview lists with interviews.project_id IS NULL. Backing interviews remain admin owned;
+models get no api.php access. Do not trust any client-provided owner/interview/contributor/media destination.
+
+
+FINAL WORKFLOW AND IMPLEMENTATION NOTES
+---------------------------------------
+Project states: draft, active, completed, archived.
+Shot states: active, closed, archived; distribution mode assigned or open.
+Assignment states: assigned, accepted, submitted, changes_requested, approved,
+ declined, cancelled. Submission states: draft, submitted, accepted, retake.
+
+Contributor slots:
+- Active member assignments count towards maxContributors (1..50), including
+  submitted/approved work. Declined/cancelled assignments release their slot.
+- The owning administrator may create a producer self-assignment. This does not
+  consume a model/professional contributor slot. Uploaded footage retains the
+  administrator as contributor and uploadedBy, including approved phone capture.
+- assignmentCount includes producer work; contributorCount and slotsRemaining
+  count only member slots. approvedAssignmentCount counts approved assignments;
+  acceptedCount counts accepted submissions, not assignments.
+- A project may have up to 200 shots. Role changes must not strand administrator
+  close/archive controls; ineligible assignees cannot upload new footage.
+
+Retake rounds:
+- shot_assignments.current_round begins at zero. Draft uploads do not increment
+  assignment revision or round, allowing multiple pending recordings to finish.
+- submitAssignment tags all new drafts with submitted_round=current_round+1 and
+  advances the assignment round. Older submissions and feedback are retained.
+- reviewSubmission stores review_round=current assignment round. Any unresolved
+  retake in that round makes changes_requested, including when a different take
+  has already been accepted. The contributor can upload a replacement.
+- A replacement submission advances the round. Old retakes stay in the history
+  and do not block completion of the new round. Any still-unreviewed submission
+  keeps submitted; when review is complete with accepted takes, state is approved.
+- Reviewing other pending footage cannot erase a current-round retake. Reversing
+  a retake to acceptance also works without deleting previous rounds.
+- Reopen completed/closed work before requesting additional takes. Deadlines are
+  advisory Phoenix times; lateness alone does not destroy or reject an upload.
+
+Idempotency:
+- Work mutation bodies may include requestId (8..160 letters/digits/_ . : -).
+  Retries with the identical body and requestId return the current resource.
+  Reusing the requestId for a different action or payload returns 409.
+- work_requests stores actor, action, request hash and returned resource identity.
+  Replayed responses are still checked against the caller's current permission.
+- Assignment uniqueness is (shot_id,user_id). Open-shot claims are serialized
+  under community.lock and the PDO transaction, including capacity checks.
+- Scoped media clientToken is separate (16..160 letters/digits/_ . : -), with a
+  unique (uploaded_by,client_token) upload receipt and assignment/token submission.
+- Upload authorization binds assignment revision and shot revision. A changed
+  brief, cancelled assignment, lost role, suspension or closed work rejects an
+  unfinished upload. Completed acknowledgement retries do not duplicate footage.
+
+Canonical pages and links:
+  productions.php?projectId=PROJECT_ID
+  productions.php?shotId=SHOT_ID
+  productions.php?assignmentId=ASSIGNMENT_ID
+  my-work.php?projectId=PROJECT_ID
+  my-work.php?shotId=SHOT_ID
+  my-work.php?assignmentId=ASSIGNMENT_ID
+  editor.php?id=ADMIN_BACKING_INTERVIEW_ID
+  interview.php?id=ADMIN_BACKING_INTERVIEW_ID
+Only the administrator receives backing interview identifiers/editor URLs.
+Member pages receive only their own assignments/media and eligible open briefs.
+Other contributors' assignment identities, private takes and reviews are omitted.
+Fan/customer-only accounts do not have access to the work API.
+
+Media API (owned by includes/work-media.php):
+ GET work-upload-api.php?action=upload&uploadId=...&assignmentId=...
+ GET work-upload-api.php?action=sourceInterviews&projectId=...
+ POST beginUpload, uploadChunk, finishUpload, abandonUpload
+ POST prepareEditor {projectId}
+ POST uploadReference multipart {projectId,shotId?,title?,file}
+ POST importSource {projectId,takeId}
+Private media routes are work-media.php?type=submission&id=... and
+ work-media.php?type=reference&id=..., with current permission checks and ranges.
+Reference uploads accept JPG/PNG/WebP/PDF up to 20 MB; project/shot access is checked.
+source distinguishes member, producer and approved_phone; sourceLabel is safe UI
+text, and label retains the stored take label. Phone access never grants project
+administrator rights or member-account access.
+
+Additional server hook:
+ az_work_host_assignment(interviewId,questionId,user) returns the owner producer
+ assignment for a real shot in that backing interview. No fictional model account
+ or client-supplied destination/contributor identity is created or trusted.
+
+Mixed source provenance:
+ work_source_takes(take_id PK FK takes CASCADE,
+ source_take_id nullable FK takes SET NULL, source_interview_id, project_id,
+ created_by, created_at). Only shortlisted, nonprivate source interviews owned by
+ the same administrator may be imported into a mixed project. Copies retain their
+ source identity; a deleted source preserves the original source_interview_id.
+
+Publication and source withdrawal:
+- Production editor/export accepts reviewed, accepted, nonprivate, shortlisted
+  submissions and eligible imported sources. Drafts and retakes stay out.
+- Accepted-to-retake changes and cancellation of an assignment containing accepted
+  footage unpublish that project's finished videos conservatively. Historical files
+  and review records are retained.
+- Archiving a project archives its backing interview, unpublishes its finished
+  videos, disables the phone room, revokes connections and removes invites/signals.
+- Archiving/deleting/withdrawing an ordinary imported source also unpublishes its
+  destination projects. A finished video cannot be republished when its saved
+  selectedTakeIds are no longer eligible. Restore never republishes automatically.
+- Legacy API cannot delete/archive a project backing interview or delete production
+  submissions. Editor state autosave still works with an unchanged modelId=null.
+
+Transaction and schema integration:
+- work-api.php POST: CSRF -> release session lock -> community.lock -> reload actor
+  and password version -> PDO transaction -> mutate -> commit -> unlock.
+- Media handlers: community.lock before uploads/admin-OWNER_ID.lock. Storage
+  finalization and submission registration share/reuse a transaction as applicable.
+- az_work_save_project and az_work_save_shot are transaction-neutral; the optional
+  planner applies a reviewed proposal atomically under its own transaction.
+- Schema 8 includes idempotent column checks for internal round counters. Schema 9
+  handles optional AI configuration/proposals. Existing version 1.2 data is retained.
+
+Verification:
+ python3 tests/work_integration.py --php /path/to/php
+Tests use a disposable installation and four PHP workers. They cover ownership,
+roles/suspension, CSRF, stale revisions, concurrent capacity, scoped media/retries,
+retake rounds, private notes/media, schedule linking, migration replay, publication
+withdrawal, phone archive revocation and legacy editor/source lifecycle regression.
+No test fixtures or account credentials are installed into the delivered storage.
+
+
+V1.6 ROSTER ACCESS NOTES
+-----------------------
+- Roster membership grants discovery of active productions and eligible open
+  shots. It does not assign shots, consume contributor slots, reveal another
+  member's private direct shots/submissions, or grant administrator APIs.
+- New direct assignments require membership, with the producer exception.
+  Draft and active projects allow direct assignment; only active allows claim.
+- My work.projects includes active included productions. My work.open requires
+  current active membership. Existing assigned/history work is retained after
+  removal, including uploads when the assignment, role and project permit them.
+- Nonmanager shotCount includes only authorized shots. slotsRemaining and
+  contributorCount are null for private direct shots and removed-member history;
+  active open shots retain the capacity information needed to decide to claim.
+- POST addMembers and removeMember use roster revision and optional requestId;
+  see ROSTER_API.txt. Project revision and planner/editor fingerprints are not
+  advanced by a membership-only change.
+
+
+V1.7 PRODUCTION PLANS AND QUESTIONS
+----------------------------------
+See PRODUCTION_PLAN_API.txt for schema15 and production-plan-api.php routes.
+See WORK_THREADS_API.txt for schema16 and work-thread-api.php routes.
+
+Shot and assignment details add planScene:null|{sceneId,sceneTitle,action,
+ dialogue,props,performerRole,shotTitle,framing,instructions,planRevision,
+ shotRevision,createdAt,isCurrent}. This authorized per-shot original snapshot
+ excludes the full plan, other shot IDs, casting IDs and other assignments.
+Current shot directions remain authoritative after an explicit shot edit.
+
+Every authorized Assignment DTO adds questionUnreadCount for its viewer.
+The count excludes that reader's own messages. Private owner/assignee access is
+rechecked, including on count retrieval. Question activity and read cursors do
+not advance assignment, shot or production revisions.
+
+Production-plan saves use independent revisions and their own receipts. Applying
+creates pending shots and casting through these existing work functions in one
+transaction. Existing direct/open membership/capacity rules remain in effect.

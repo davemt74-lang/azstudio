@@ -1,0 +1,25 @@
+AZHOTTIE STUDIO v1.14.0 — COMBINED MEMBER WORKSPACE UPDATE
+
+1. Removed redundant Video editor and Phone camera shortcuts below the My
+   media hero. Sidebar links remain.
+2. Added Agent chat member canvas (agent-chat.php), private conversations,
+   sticky composer for signed-in workspace pages, and Admin AI settings.
+   Chat provider selection can be OpenAI or Anthropic. Chat is disabled by
+   default and requires explicit admin enablement. Chat has NO tools and does
+   not read private footage, bookings or other member data.
+3. my-camera.php: guest phones still join with no AZHottie login after owner
+   approval. Logo links back to AZHottie, main controls remain bottom-aligned,
+   redundant footer copy removed, Share live / Stop sharing is one toggle in
+   the same row, and a local nondestructive Edit/trim workflow lets users
+   preview, trim and render a separate video before private upload.
+4. my-editor.php: the page fills the viewport and only editor panes scroll;
+   scrollbar thumb colors follow the AZHottie pink/raspberry theme.
+5. Private calendar, classes and appointment pages now use high-contrast white
+   and soft-gray surfaces rather than hard-coded black gradients, including
+   month grid, out-of-month days, event buttons and booking slots.
+6. Preserves social profiles, public casting, model assignments, original media,
+   editing versions, prior AI configuration and private appointments.
+
+TESTS: see source archive for baseline JavaScript suite and v1.14 focused checks.
+HOSTING: PHP scripts require PDO SQLite or MySQL; real database and device tests
+were not available in this local runtime. No claim of production 10/10.

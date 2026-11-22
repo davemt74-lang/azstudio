@@ -1,0 +1,624 @@
+AZHOTTIE STUDIO v1.26.0 — CASTING & ONBOARDING AGENT
+
+Back up all website files, database, protected storage/ and private configuration
+before updating the existing installation. Finish live recording or uploads.
+Merge the FULL_DEPLOY application files, preserving storage/config.php, model
+media, uploaded files, and the existing database. DO NOT rerun install.php.
+The existing schema upgrades from version 31 to version 32, adding two casting
+follow-through tables and one model onboarding checkpoint table. The MySQL
+account needs CREATE TABLE/UPDATE privileges and the site's existing engine.
+
+Hard-refresh Casting CRM, Model Account Settings, the Admin Agent Brain, and
+Agent Chat. Admins can review questionnaire completeness and follow-up rules
+in Casting CRM, confirm early-stage transitions with current revisions, and
+mark or reopen orientation and production readiness for active models.
+Models see only their own onboarding checklist and existing assignments.
+The Agent Chat companion and AI provider context contain verified aggregate
+casting workflow summaries only; neither the AI nor cron can approve or
+reject applicants, issue invitations, assign models, or send external messages.
+Actual AI replies require the existing administrator-selected provider to be
+configured and available. No private applicant answers are sent to the provider.
+
+The existing private hourly cron at includes/agent-followthrough-cron.php
+now also scans casting records, creates deduplicated in-app notifications for
+stalled casting workflows and incomplete onboarding, and records scan receipts.
+A fresh install alone does NOT install or enable cron. The Admin Brain will
+report that no scheduled scan has been observed until cron runs on the host.
+
+Verify real MySQL schema migration, two separate model/admin accounts, casting
+stage confirmation and stale-revision rejection, onboarding/assignment gating,
+and notification/Chat privacy on azhottie.com. Use the full acceptance matrix
+in docs/RELEASE_1_26_0.txt. Previous phone-to-fan streaming acceptance remains open.
+
+========================================================================
+
+AZHOTTIE STUDIO v1.25.0 — LIVE DIRECTOR SPECIALIST
+
+Stop the broadcast/recording and back up all website files, private config,
+complete storage/ and database before extracting FULL_DEPLOY.zip into the
+existing installation. Preserve all private media and storage/config.php;
+DO NOT rerun install.php. The database upgrades from schema 30 to 31 and adds
+two narrow diagnostic tables. MySQL needs CREATE TABLE/INDEX privileges.
+
+Hard-refresh live-director.php, live.php and the Admin Agent Brain on every
+active device. Confirm the fan viewer reports actual decoded video frames and
+that Program sent FPS advances, not just the incoming phone FPS.
+
+The specialist does NOT automatically switch cameras, take any program live,
+end a show or change publication. Operator recovery requires confirmation.
+Multi-camera canvas compositions may still stall if Director is backgrounded.
+The hourly private cron from v1.24.0 also prunes old diagnostic samples; it
+must be configured and tested by the host operator.
+
+See docs/RELEASE_1_25_0.txt for security details, live production tests and
+all production-verification limitations.
+
+========================================================================
+
+AZHOTTIE STUDIO v1.24.0 — AGENT FOLLOW-THROUGH
+
+Back up all website files, database and protected storage/ before merging
+FULL_DEPLOY.zip. Keep uploaded footage, private config and storage intact.
+Do not rerun install.php. Database auto-upgrades from schema 29 to 30 with
+new follow-through delivery/scan tables. Hard-refresh model and admin pages.
+The admin Brain can run an owner-scoped "Check assignments now" immediately.
+Actual hourly proactive reminders require a cPanel cron entry running the
+private CLI script: includes/agent-followthrough-cron.php. The UI indicates
+"scheduled scans have not run yet" until a real cron check completes.
+
+Manual reminders need an explicit admin confirmation and are rate-limited.
+Assignments still change only via the existing secure Work API; automatic
+reminders are in-app only, never email/SMS or automatic approvals.
+See docs/RELEASE_1_24_0.txt for full host setup, tests and remaining checks.
+
+========================================================================
+
+AZHOTTIE STUDIO v1.23.0 — MODEL & ADMIN AGENT WORKSPACE
+
+Back up site, database and protected storage/; finish active recordings.
+Merge application files from FULL_DEPLOY.zip into the existing installation.
+Preserve storage/config.php and all private media; DO NOT rerun install.php.
+First database access upgrades schema 28 to 29 (new agent_workspace_events table);
+MySQL account needs CREATE TABLE/INDEX and UPDATE privileges. Hard-refresh pages.
+New header bell + Notifications / History / Brain views are for admin/model roles.
+Real backend role/CSRF/revision protections remain authoritative. Work mutations
+require explicit confirmation; Brain suggestions do not automatically take action.
+See docs/RELEASE_1_23_0.txt for tests and hosted acceptance checklist.
+
+========================================================================
+
+AZHOTTIE STUDIO v1.22.2 — LIVE DIRECTOR FROZEN FAN VIDEO REPAIR
+
+1. Back up azhottie.com, the database, and the entire private storage directory.
+2. Merge the Full Deployment ZIP into the existing application directory.
+3. Preserve storage, server configuration, and installed database; do not rerun install.php.
+4. Hard refresh live-director.php, live.php, and the phone camera page.
+5. Keep the Director visible for normal compositing and recording. Background
+   single-camera relay is a viewer continuity fallback; overlays may disappear
+   from the relayed feed until Director returns to foreground.
+6. Check the 'Program sent N fps' indicator with an actual signed-in fan viewer,
+   then confirm moving video and that Unmute enables sound only on request.
+7. Confirm camera switching, multi-camera compositions, and a saved recording.
+
+No database migration, no new permissions, and no server configuration change.
+
+AZHOTTIE STUDIO v1.22.1 — ADMIN HEADER AND LIVE TITLE POSITION
+Release: 2026-11-21
+
+WHAT CHANGED
+- Removed duplicate AZHOTTIE / CONTROL ROOM breadcrumb in Admin Studio.
+- Live Director: removed camera search field and filter logic; moved editable
+  live show / saved recording title into its former left-hand position.
+- All approved and pending phone cameras remain visible in the source column.
+- No database changes; schema remains version 28.
+
+INSTALL / UPGRADE
+1. Stop active shows/uploads and back up the site, database, storage/ and files.
+2. Merge application files from FULL_DEPLOY.zip; preserve private storage/.
+3. Do not rerun install.php; hard-refresh Admin Studio and Live Director.
+4. Check phone previews, program switching, Go live, saved recording title
+   and responsive header on real browsers before production certification.
+
+--- PRIOR RELEASE HISTORY ---
+
+AZHOTTIE STUDIO v1.22.0 — VIEWER ENGAGEMENT, DEADLINES, ACTION REQUIRED
+Release: 2026-11-21
+
+WHAT CHANGED
+- 14-day engagement chart: measured profile visits and Watch playback starts.
+  30-day video play starts, browser completions and estimated watched minutes.
+- New watch-engagement.php endpoint; publication + consent gates, CSRF,
+  per-session deduplication and self/admin/bot exclusion. Daily aggregates only.
+- Assignment deadlines: overdue and seven-day counts, direct assignment links;
+  submitted/awaiting-review work is excluded from overdue.
+- Action-required feed: feedback, unaccepted assignments, urgent deadlines,
+  admin review and model-video change requests. Specific item links included.
+- Accessible light dashboard cards and responsive phone layouts.
+
+INSTALL / UPGRADE
+1. Stop broadcasts/uploads. Back up the website, database, storage/, media,
+   uploads and config before replacing application files.
+2. Extract FULL_DEPLOY.zip and merge the azhottie-studio/ application contents
+   into your current site root. Keep ALL existing private storage untouched;
+   only storage/.htaccess is present in the ZIP.
+3. Do not rerun install.php. Version 27 upgrades automatically to schema 28,
+   creating published_video_engagement_daily. Ensure database DDL permission.
+4. Hard-refresh dashboard.php, my-videos.php, and watch.php on phones/desktops.
+5. Verify Watch playback events, member scope, admin-only moderation, overdue
+   deadlines, submitted exclusions, responsive chart, and source privacy on
+   real hosting with PHP/MySQL.
+6. Verify Live Director phone camera, fan playback and recording independently;
+   the prior production gate still applies.
+
+AUTOMATED CHECKS
+- 341/341 JavaScript tests, 113 PHP syntax checks, PHP action/event logic,
+  Python SQLite engagement queries, and 15 synthetic Chromium layouts passed.
+- PHP PDO hosted MySQL runtime was NOT available for a real database test.
+- No real azhottie.com user activity or live production was exercised.
+
+SEE docs/RELEASE_1_22_0.txt for scope, metrics and limitations.
+
+--- PRIOR RELEASE HISTORY ---
+
+AZHOTTIE STUDIO v1.21.0 — MODEL DASHBOARD + COMPACT LIVE DIRECTOR HEADER
+Release: 2026-11-21
+
+WHAT CHANGED
+- dashboard.php: replaced the photograph-based welcome hero and generic tile list
+  with an owner-scoped stats overview and model production workspace.
+- Statistics: profile page views (total/last 30 days), count of distinct published
+  interviews, published independent videos, and truthful live-appearance status.
+  Live participant appearances are intentionally shown as "not yet tracked"
+  until a verified participation-credit link exists; no number is inferred.
+- Profile views: aggregate daily page views counted from v1.21.0 onward. A
+  browser session counts at most once per profile per 30 minutes. Owners,
+  admins, bot UAs and invisible/private profiles are excluded. IP addresses,
+  user agents and per-visitor IDs are NOT stored in the analytics table.
+- Activity: active video productions, assignments with status and due date,
+  available open shots, independent My Videos draft/review counts, and upcoming
+  confirmed appointments, event registrations and taught classes.
+- Live Director header: removed redundant screen branding and links to Member
+  Live and Saved Shows; removed visible Program title label while retaining the
+  editable title field for broadcast and recording metadata. Compact phone-camera
+  Search is placed at the left and filters cards without disconnecting feeds,
+  clearing the program, or removing active WebRTC streams.
+- Responsive behavior: light statistics cards; clear white activity panels;
+  single document scroll on the dashboard and compact Director toolbar.
+
+INSTALL / UPGRADE
+1. Stop any active broadcasts or uploads, and back up the full website,
+   database and complete protected storage/ tree before the update.
+2. Extract the FULL_DEPLOY.zip archive. Merge the files inside the included
+   azhottie-studio/ directory into your existing site root. Preserve ALL
+   existing storage/, storage/config.php, recordings, uploads and credentials.
+   The only storage asset in the package is storage/.htaccess.
+3. Do not rerun install.php. The existing schema migrates automatically from
+   version 26 to 27, adding member_profile_views_daily. PHP's database user
+   needs permission to create the new table and update studio_schema.
+4. Hard-refresh dashboard.php, user.php, and live-director.php on mobile and
+   desktop (including on connected phones where relevant).
+5. Verify as a model: own profile views/productions/assignments/registrations
+   are visible, no other model's private data is present, and no invented live
+   appearance tally is shown. A first-time model may have zero historical views.
+6. Verify in Director: Search filters tiles by phone name, does not stop live
+   streams or change Program, and Go live / End use the entered show title.
+   Saved live shows are still reachable from the Admin Studio navigation.
+7. Conduct hosted browser, PHP/MySQL, model-permission, live-phone, live fan
+   playback and recorded-show tests before awarding production certification.
+
+AUTOMATED CHECKS PERFORMED
+- 335/335 Node tests passed (including v1.21 dashboard and Director header).
+- 117 PHP files passed php -l syntax checks.
+- Python SQLite fixture checked distinct interviews, per-user aggregate views,
+  member-scoped projects & assignments, bookings, and registered events.
+- Chromium layout tests checked the Director header at 1440, 1024, 720, 390
+  and 320 pixels and dashboard views at 1440, 1024, 390 and 320 pixels.
+  No horizontal overflow; statistic reading cards retained white backgrounds.
+- These tests use local fixtures and do NOT establish live azhottie.com camera,
+  database or viewer performance. Real-production acceptance remains outstanding.
+
+DEPLOYMENT SECURITY
+No private user data, videos, credentials, tests, local screenshots or databases
+are included in FULL_DEPLOY.zip. Originals remain in protected storage.
+
+--- PRIOR RELEASE HISTORY ---
+
+AZHOTTIE STUDIO v1.20.1 — SHARED SIDEBAR CLEANUP
+
+EXISTING INSTALLATION:
+1. Back up the existing installation, database and protected storage/ contents.
+2. Merge AZHottie_Studio_v1.20.1_FULL_DEPLOY.zip application files into
+   the current AZHottie installation; preserve all user recordings, secrets,
+   storage/config.php and the database. Do NOT rerun install.php.
+3. This update changes no database tables and requires no schema migration.
+4. Hard-refresh desktop and mobile browsers. Verify the repeated sidebar
+   "YOUR AZHOTTIE / My space. / Private member area" block is gone from
+   member navigation, and the counterpart Admin Studio intro is also gone.
+   Test the signed-in public-page sidebar menu too. Existing nav links and
+   the primary site header must still work normally.
+
+SEE docs/RELEASE_1_20_1.txt for implementation details and checks.
+
+--- PRIOR RELEASE HISTORY ---
+
+AZHOTTIE STUDIO v1.20.0 — MODEL VIDEO SUBMISSIONS + LIGHT DASHBOARDS
+
+EXISTING INSTALLATION:
+1. Stop live broadcasts and active uploads. Back up the ENTIRE site, the
+   database, and all storage/ contents before updating.
+2. Extract AZHottie_Studio_v1.20.0_FULL_DEPLOY.zip, then merge the files in
+   azhottie-studio/ into your existing site application directory.
+   Preserve storage/config.php, media, uploaded recordings and database data.
+   The ZIP includes storage/.htaccess for server-side privacy protection.
+3. Do NOT rerun install.php. Schema version 25 -> 26 runs automatically when
+   the site next opens the database. Allow the normal PHP process database DDL
+   permissions (CREATE TABLE/INDEX and UPDATE studio_schema).
+4. Hard refresh dashboard.php, admin-studio.php, my-videos.php, my-media.php,
+   user-submissions.php and watch.php after deploying.
+5. Sign in as a model: upload/export a video into My Media, add it to My Videos,
+   edit the title/description, then check the consent box and submit for review.
+   Ensure neither a draft nor a pending video appears publicly.
+6. Sign in as an admin: inspect the video in User Submissions, request changes
+   with reviewer notes, then approve only after verifying content and rights.
+   Ensure approved posts appear on Watch and a revoked post disappears.
+7. Verify model cannot see another model's private source, visitors cannot
+   access unapproved model-video-file.php, and only admin can moderate.
+8. Check dashboard card readability on desktop and phone. Reading containers
+   must be white/light with dark text; video players may remain black.
+9. Complete an actual hosted PHP/MySQL (or SQLite), browser and media playback
+   acceptance test before calling this a production-verified 10/10 release.
+
+AUTOMATED CHECKS: Node UI/source tests, PHP lint, portable SQLite DDL/public
+projection checks and Chromium UI workflow smoke tests run against local source.
+The Chromium test uses mocked APIs, not the installed PHP database or actual
+user recordings; see docs/RELEASE_1_20_0.txt for exact verification evidence.
+
+--- PRIOR RELEASE HISTORY ---
+
+AZHOTTIE STUDIO v1.19.1 — TIMELINE AUDIO + LIVE PHONE FIXES
+
+EXISTING INSTALLATION (important):
+1. Stop the Live Director broadcast, phone recordings, and incomplete uploads.
+2. Back up the website files, database, and ENTIRE storage/ directory.
+3. Extract AZHottie_Studio_v1.19.1_FULL_DEPLOY.zip, then merge the contents of
+   azhottie-studio/ into the existing website's application directory.
+   Overwrite application PHP/JS/CSS/docs only; retain your whole storage/ tree,
+   including config.php, database, credentials, user uploads and recordings.
+   The package supplies only storage/.htaccess for access protection.
+4. Do NOT run install.php again. No database schema changes are required.
+5. Hard refresh my-editor.php, live-director.php and my-camera.php on every
+   connected device (on mobile, close/reopen the page if still cached).
+6. Check private editor save/reopen/export: trim edges, right-click clip menu,
+   Detach audio to A2, right-click an audio volume line for keyframes, drag
+   each keyframe vertically, and drag either floating inspector over the timeline.
+7. Live phone test: in live-director.php invite + approve phone, scan its QR in
+   my-camera.php (HTTPS), tap Share live or enable Live preview on Record and
+   start recording, verify phone says 'Live camera connected' AND its tile shows
+   moving video. Select Broadcast now to take that specific phone to Program.
+8. Test fan viewing, independent audio, program recording and saved replay.
+   Live cross-network connectivity may need your configured TURN relay;
+   approved/connected phone identity is not proof of a working WebRTC video path.
+
+AUTOMATED VERIFICATION: 319/319 Node tests passed; PHP validation 10 assertions;
+changed PHP passed syntax checks; Chromium smoke tested the edit controls with
+local fixture video and mocked endpoints. Real azhottie.com phones, TURN paths,
+viewer audio and saved live-show playback remain for on-site testing. The live
+viewer count is still capped by existing peer-to-peer limits (6 viewers).
+
+SEE docs/RELEASE_1_19_1.txt for details and checklist.
+
+--- PRIOR RELEASE HISTORY ---
+
+AZHOTTIE STUDIO v1.19.0 — LIVE SHOW PRODUCTION
+
+Before updating: end any active live show and pending uploads. Back up your
+full website, database and storage/ directory. Merge the FULL_DEPLOY ZIP's
+azhottie-studio/ contents into the existing website document root. Overwrite
+application files only; DO NOT delete or replace existing storage/config.php,
+database, recordings or uploads. DO NOT run install.php on an existing site.
+No database schema update is needed; scene and rundown state use private,
+owner-scoped files under the existing protected storage/ directory.
+
+The full-screen Director now includes Composition, Show Rundown, Media Playback
+and Audience tabs in addition to existing controls. Scenes preview privately
+until Take. The signed-in fan Live page adds opt-in show chat and reactions.
+Hard refresh browser assets after copying files. Verify 644 files and 755
+folders on HostGator. Review docs/RELEASE_1_19.txt and
+ docs/RELEASE_REVIEW_1_19.txt for the full test checklist.
+
+The last verification point requires working connected phones, separate fan
+browser, audio and a real saved Program recording. Shared-host WebRTC is still
+limited to six browser viewers and may require a TURN service for some NATs.
+
+--- PRIOR RELEASE HISTORY ---
+
+AZHOTTIE STUDIO v1.18.1 — LIVE DIRECTOR WORKSPACE & PHONE PREVIEW FIX
+
+Existing installation: back up the entire site, database and storage/.
+Stop any broadcasts, uploads or recordings before replacing the application files.
+Extract azhottie-studio/ files into your existing document root containing index.php,
+overwriting application code and assets but PRESERVING your entire existing storage/
+(including config.php, all media, and database). Do NOT run install.php again.
+No database schema migration is required. Hard refresh the browser after updating.
+
+Live Director (live-director.php):
+- One full-viewport toolbar; no global header, admin sidebar, or bottom help strip.
+- No exterior margins or padding; Program monitor fills right upper area.
+- Switching, Audio, Overlays, Scenes, Recording are tabs below Program.
+- Only approved/pending PHONE cameras appear in left panel; USB/local camera
+  tools are deferred to a later release.
+- Each phone has a persistent video tile. An inactive tile displays until the
+  phone transmits a healthy, decoded live video stream. Tap Broadcast now to
+  send that phone to Program. Video stays private until Director takes it.
+- A QR-invited Director phone can enable Live preview on Record in the phone
+  camera, so recording also shares a private preview. Phone audio still requires
+  a separate opt-in and Director mixer enable.
+- Shared masthead has been widened and aligned to the member sidebar.
+
+On azhottie.com: invite a phone and approve it, start recording with the
+Live preview on Record checkbox enabled or use Share live, confirm its tile
+changes from inactive to moving video, press Broadcast now, verify Program
+and a separate fan viewer. Verify mobile layout and Record Program.
+
+The browser-based PHP/SQLite/MySQL, physical cameras and WebRTC on hosting
+remain to be verified. HostGator file modes: 644 files / 755 directories.
+
+--- PRIOR RELEASE HISTORY ---
+
+AZHOTTIE STUDIO v1.18.0 — LIVE CAMERA RELIABILITY + PROGRAM AUDIO + SCENES
+
+EXISTING INSTALL (HostGator / PHP shared hosting):
+1. Stop any live stream or camera recording before replacing application files.
+2. Back up the complete installation, database, and entire storage/ folder.
+3. Extract the FULL_DEPLOY ZIP and merge azhottie-studio/ files into your
+   existing site document root (containing index.php). Overwrite application
+   PHP, CSS, JS and docs. PRESERVE all existing storage/ contents, including
+   storage/config.php, databases, videos, and uploaded media.
+4. Do not rerun install.php. The database schema remains at version 25; new
+   saved scenes and image overlays use private owner-scoped storage files.
+5. Hard refresh live-director.php. In File Manager verify 644 file and 755
+   directory permissions. CSS/JS under assets/ should return HTTP 200.
+6. On HTTPS, choose Find cameras and allow browser camera permission. Open
+   each required USB/webcam device or use + QR connect for a guest phone.
+7. Verify EVERY source displays moving LIVE VIDEO frames. A connected phone
+   without a live stream will still be listed as approved, not a live tile.
+   Use Preview then Take to Program. Confirm switching while recording.
+8. Program audio: select and set a host microphone, adjust levels, and
+   optionally enable camera audio. Guest phone audio is OFF by default; the
+   phone must opt in before sharing and the Director enables the camera channel.
+9. Test private scene presets, an uploaded transparent PNG overlay, and the
+   complete Record -> Verify -> Saved Live Productions -> Publish workflow.
+
+IMPORTANT HOST ACCEPTANCE LIMITS:
+- HostGator database access, actual USB/phone frames, WebRTC NAT traversal,
+  viewer playback, audio mixing, and real recorded output must be tested on
+  the installed HTTPS website with permitted cameras and microphones.
+- An approved phone may require TURN relay configuration depending on network.
+- A PHP shared host is NOT a mass-audience streaming server; existing limit
+  remains six simultaneous peer-to-peer viewers per broadcast.
+- Scenes recall their saved camera in PRIVATE PREVIEW. Take is always required
+  before an unshared camera goes to Program. Public live video never includes
+  private thumbnails or other original media automatically.
+- Image overlays are stored under protected storage/live-director/<owner>/.
+  Do not disable storage/.htaccess or expose the folder publicly.
+
+FRESH INSTALL: upload full ZIP and run install.php once. No license key.
+
+--- PRIOR UPGRADE HISTORY ---
+
+AZHOTTIE STUDIO v1.14.0 — AGENT CHAT + CAMERA EDIT + LIGHT CALENDAR
+
+UPGRADE (existing website):
+1. Stop ongoing camera recordings, video exports and file uploads.
+2. Back up the full application and database. Preserve the entire storage/
+   directory, including storage/config.php, all recordings, and uploads.
+3. Upload the v1.14.0 FULL_DEPLOY ZIP and merge its azhottie-studio/
+   contents into the existing web root. Overwrite application code and assets.
+   NEVER overwrite existing storage contents.
+4. Do not rerun install.php. Sign in; first database use upgrades schema 21
+   to 22 (member agent chat). Hard refresh to load new CSS/JS.
+5. Check Agent chat and Admin -> AI settings; member chat is OFF by default.
+   Admin must save an OpenAI or Claude API key/model and explicitly enable it.
+6. Check Calendar (light background), My media gallery, the full-screen
+   Video editor, and My Camera with an actual device. Imported/recorded footage
+   remains private until a separate explicit production/publication action.
+7. The camera's Edit / trim control renders a NEW private clip in the browser;
+   select its start/end points and keep the tab visible during export.
+
+FRESH INSTALL: upload full ZIP and open install.php. No license key needed.
+APACHE/SHARED HOSTING: files should be 644, directories 755. Ensure assets/
+stylesheets return HTTP 200; preserve the included .htaccess to protect storage.
+
+KNOWN ACCEPTANCE LIMITS: Database integration on actual HostGator/MySQL,
+actual phones, WebRTC live sharing, real browser export, and live provider
+requests require testing on the deployed website. The available static and
+JavaScript tests cannot certify those paths.
+
+AZHOTTIE STUDIO v1.13.1 — SOCIAL PROFILE LAYOUT HOTFIX
+- Social profiles render full-width without the member sidebar or the
+  AZHOTTIE / USER + MEMBER AREA row. The cover starts under the shared header.
+- The profile header has the brand and account dropdown without a dead
+  hamburger on mobile. Other logged-in pages keep their normal sidebar.
+- No schema changes. Back up the site and database, replace application files,
+  KEEP all existing storage/ contents, and hard-refresh. Do not reinstall.
+- See docs/RELEASE_1_13_1_PROFILE_LAYOUT.txt for verification details.
+
+AZHOTTIE STUDIO v1.12.0 — FULL INSTALL / SAFE UPGRADE
+
+AZHOTTIE STUDIO v1.11.0 — FULL INSTALL OR SAFE UPGRADE
+
+FRESH INSTALL
+1. Upload and extract the FULL_DEPLOY ZIP into your domain's document root.
+2. Confirm index.php, install.php and assets/ are directly in that root.
+3. On HTTPS, open install.php and create your first administrator/database.
+4. Sign in and open dashboard.php. Public applications are at apply.php;
+   casting administration is at casting.php.
+5. No installation key or license key is necessary.
+
+UPGRADE FROM v1.8 OR EARLIER
+1. Finish recordings and uploads. Back up both the site and its SQL database.
+2. Preserve the entire existing storage folder, including storage/config.php,
+   media, uploads and your SQLite database or MySQL credentials.
+3. Extract and merge the NEW application files into the same site directory.
+   Overwrite PHP/CSS/JS/assets only, never existing storage data.
+4. DO NOT rerun install.php. Log in normally. First database access applies
+   idempotent schema migrations up to version 17.
+5. Hard refresh the site (Ctrl+Shift+R); clear your CDN cache if applicable.
+6. Confirm styles/scripts load and carry normal 200 responses.
+
+HOSTGATOR FILE PERMISSIONS
+  755 for directories; 644 for PHP, CSS, JS, images and other files.
+  Existing storage should be protected by its .htaccess. Never expose
+  storage/config.php, a SQLite file, uploads or raw interview footage.
+  Confirm your domain's document root is the folder containing index.php.
+
+CASTING WORKFLOW
+  Public applicant: apply.php -> submits adult introductory application.
+  Admin: casting.php -> reviews lead / edits private notes / approves.
+  Admin: Generate invitation -> copies unique 7-day URL -> privately sends it.
+  Applicant: model-invite.php?token=... -> creates password or signs into the
+  account matching their application email -> model role/profile activated.
+  Admin questionnaire editor: casting.php?tab=questions; use Add/Remove for
+  questions and answer choices, reorder questions, and Save application questions.
+
+NOT IMPLEMENTED
+  Paid recurring subscription billing; email delivery of invitation links;
+  AI chatbar in the member canvas. These are future product areas, not toggles.
+
+RELEASE 1.11.0 — PRIVATE MULTI-CLIP VIDEO EDITOR + PHONE CAMERAS
+- Existing My media gallery continues to offer one-clip trimming and private uploads.
+- New my-editor.php is a real, non-destructive timeline editor: choose multiple
+  source videos, reorder, trim each clip, overlay text, add optional black title
+  cards, set per-clip audio volume, preview the sequence and export a private movie.
+- Projects are saved under the signed-in creator's account and reopen with their
+  clip order, trims and export settings. Original videos are not overwritten.
+- Saved finished movies upload back to the same private media gallery; the model
+  can replay or download them from My media gallery. No automatic publication.
+- Logged-in models can film or upload directly from my-camera.php on their own
+  phone without QR pairing, including browser-local recording backups.
+- Optional Connect another phone in my-editor.php generates a five-minute QR.
+  The phone requests access; the editor owner approves it. The approved phone
+  can upload privately and optionally offer an in-editor live camera preview.
+  Temporary phone tokens do NOT grant sign-in, other-user media access,
+  production assignment access or publishing. Revoke from the editor any time.
+- All normal form controls have white backgrounds, dark text, light date/time
+  widgets, and visible focus outlines (shared assets/form-light.css).
+- The sidebar hamburger is visible only on phone/tablet widths <= 850px.
+  Desktop shows the sidebar directly; public navigation stays unchanged.
+- Upgrade is automatic from schema 18 to 20 (personal edit projects and
+  temporary phone invitations/devices/signaling tables). No reinstall needed.
+- Requires HTTPS for remote phone pairing and camera/microphone use.
+- Live phone preview requires working WebRTC connectivity; some networks require
+  TURN beyond the included STUN configuration. A separate TURN service is not
+  provisioned and direct phone uploads work without live preview.
+- Browser export uses MediaRecorder and canvas in real time. Keep the browser
+  tab visible and test the actual browser/device before production work.
+- If an upload is interrupted, preserve the video; use the saved upload state
+  and reselect or retry the same file. If a rendered copy cannot be uploaded,
+  use its temporary Download rendered video link before leaving the page.
+
+RELEASE 1.10.0 — SIDEBAR HEADER + PRIVATE MODEL MEDIA
+- Signed-in pages use one sidebar instead of duplicated header navigation.
+- Private account-scoped uploads and covers were introduced in v1.10.
+
+VERIFICATION LIMITS
+- JavaScript behavior tests and PHP syntax/static HTTP checks can run locally.
+- This environment has no pdo_sqlite/pdo_mysql driver: PHP database integration
+  and actual server upgrade must be verified on your installed hosting account.
+- Physical phone/USB camera, live WebRTC, iOS Safari and real video export
+  require hardware/browser acceptance. Do not treat those as certified here.
+
+
+AZHottie Studio v1.12.0 — Lucky-style Personal Video Studio
+Date: 2026-11-19
+
+USER GOAL
+Replace the simple personal multi-clip form with a real dark editing workspace similar to Lucky Game Hub's Video Studio. Retain model-owned footage and the existing secure phone camera connection.
+
+IMPLEMENTED
+- Dark full-window editing UI with Back to My Media, private-project selector, save, Inspector toggle, tool browser, large preview monitor and timeline transport.
+- Lucky-style independent T1 timed text, V1 video segments, A1 source audio representation and B1 background soundtrack lane.
+- Media bin scoped to the signed-in model's personal video library; +Add, search, refresh, resumable upload, signed-in camera link, QR-paired second phone with approval and live preview.
+- Drag/reorder video segments, source playback, mark In/Out, split clip, clip inspector, per-clip sound level, video filters (Original / Vivid / Warm / Mono / Cinematic / Vintage), hard-cut/fade transition, per-clip overlays and black title cards.
+- Timed text overlays render at their specified timeline offsets. Soundtrack may use AUDIO FROM a private video source (B1); independent MP3/WAV-only uploads are NOT added in this release.
+- Local edit assistant offers duration-based highlights and explicitly does not claim to analyze content or call a model. Administrator AI settings are not exposed to models.
+- Undo/Redo in browser and keyboard; reversible, original file never modified.
+- Real-time browser movie preview, browser MediaRecorder export, save rendered video into the user's private gallery; source project saved via personal_edit_projects.
+- PHP server validation of all new fields, filters, T1 title IDs, B1 media ownership. Existing project JSON remains backwards compatible. No database migration is needed; schema stays v20.
+
+PERMISSIONS
+- Model/professional/admin only; personal media and project API always filter by authenticated owner.
+- No public Watch publishing, no production submission or cross-user access from personal editor.
+- Second phone token is temporary and only uploads under its approved owner.
+
+NOT BUILT IN v1.12.0
+- Native photo clips; standalone MP3/WAV personal media; separate voice-over recording; per-track mixing automation; hosted FFmpeg worker; actual LLM-based scene analysis.
+- Actual phone live-preview handshake and physical camera/browser export are not validated in this environment.
+
+UPGRADE
+- Back up site and complete storage directory. Replace application files, KEEP storage/config.php, existing database, recordings and uploads. No installer rerun.
+- Files in release ZIP are 644, directories 755 (review and reset on hosting).
+- Visit my-editor.php under a model account. Open Media bin and connect or upload as needed. Verify phone, audio and export on installed site.
+
+TESTS
+- JavaScript suite includes existing editor/media/security regressions plus dedicated Lucky-style workspace, split, filters, T1/B1 and proposal tests.
+- PHP syntax check all production PHP files; static asset HTTP 200; archive permissions and code content verified.
+
+AZHottie Studio 1.13.0 — Profiles / camera hotfix
+------------------------------------------------
+This is a full replacement release, not an incremental patch. Back up your
+application and its database before uploading. Replace application files,
+but preserve the ENTIRE existing storage/ folder and its config.php, database,
+recordings, media files, and uploads. Do not rerun install.php on an existing
+installation. The app creates user_social_profiles and advances schema 20 to
+21 on first access; previous data and roles are unchanged.
+
+New pages:
+  /user.php                — logged-in owner's social profile
+  /user/<handle>           — sharable profile URL, available after handle setup
+  /account-settings.php    — account, role and social-profile settings
+  /my-camera.php           — full-screen camera (QR guest need not sign in)
+Old /account.php redirects to /user.php for compatibility.
+
+Profiles are PRIVATE by default. The member must explicitly choose member-only
+or public visibility under Account Settings. Only previously published Watch
+videos connected to a linked model profile can appear publicly.
+
+After upgrading, hard refresh the browser and verify CSS/JS assets return HTTP
+200 (HostGator static assets need 644 file / 755 folder permissions). Test the
+camera with a freshly generated QR code and check camera error details if an
+upload still fails. The file-transfer environment cannot certify a live
+HostGator/phone end-to-end upload.
+
+AZHOTTIE STUDIO 1.15.0 — ADMIN LIVE STUDIO
+=======================================
+After backing up and retaining the entire storage directory, merge this full
+replacement package into your installation. Do not rerun the installer. The
+schema advances from version 22 to 23 on the next authenticated visit.
+
+Admin Studio: admin-studio.php. Live Director: live-director.php.
+Signed-in fan/customer Live page: live.php. See docs/RELEASE_1_15.txt.
+Connected phones still require approval by the Director's own account. Do not
+share private model streams automatically. Real camera/network acceptance is
+required before relying on this for a public or paid member event.
+
+AZHOTTIE STUDIO 1.16.0 — SAVED LIVE PRODUCTIONS
+- Stop and save current broadcasts before replacing files.
+- Back up site, DB and entire storage directory. Replace app files, preserve
+  all existing storage/config/database/media; do not rerun installer.
+- Automatic DB migration to schema version 24. Existing recordings become
+  private saved productions; admin must publish explicitly for fan replays.
+- New routes: live-productions.php and live-recording-media.php.
+- Check CSS/JS 200 on HostGator, then follow docs/RELEASE_1_16.txt.
+
+AZHOTTIE STUDIO 1.17.0 — FULL SCREEN DIRECTOR + PUBLIC LIVE SHOWS
+- Back up the complete application, database, and storage directory.
+- Stop live broadcasting/recordings before copying the 1.17.0 application files.
+- Replace application files; preserve storage/config.php, the database,
+  recordings and media. DO NOT rerun install.php for an existing installation.
+- Automatic schema migration from 24 to 25 adds a publication audience field.
+  Every existing show stays members-only, including previously published shows.
+- Open live-director.php for the new Preview/Take switching controls and overlays.
+- Use live-productions.php to manage recordings and covers. Publish to members,
+  then explicitly Make public if the entire show should appear on live-shows.php.
+- Check docs/RELEASE_1_17.txt for privacy and acceptance checklist.

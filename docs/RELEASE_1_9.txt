@@ -1,0 +1,72 @@
+AZHOTTIE STUDIO v1.9.0 — MODEL-LED MEMBERSHIP & CASTING CRM
+
+WHAT'S NEW
+
+1. Public landing page redesigned as a bright, model-led AZHottie membership
+   experience. Includes original light/angelic photoshoot hero, featured pathways
+   to Watch, member events, private spa appointments, class registration,
+   member signup, and a public model casting application. No paid subscription
+   checkout has been added; do not represent memberships as paid entitlements.
+2. Signed-in pages use a universal shared header, left sidebar and right-hand
+   content canvas. The existing content, tools, recording controls and forms stay
+   in the canvas. No nonfunctional AI chat bar has been inserted.
+3. Public apply.php accepts private introductory applications from adults 18+.
+   It does NOT create model accounts or grant model access. The casting team
+   must explicitly approve applicants. Applications are rate-limited, require
+   CSRF and contact opt-in, and reject invalid answers.
+4. Private casting.php CRM shows leads, their original questionnaire answers,
+   private reviewer notes, and stages: New, Contacted, Screening, Interview,
+   Approved, Declined, Converted.
+5. The same CRM has an editable public-questionnaire builder. Admins can add,
+   delete, reorder and edit questions; add, delete and edit multiple-choice
+   answers; change between single-choice, multi-choice, short text and long
+   text; and choose required fields. A revision check prevents stale saves.
+   Each application stores a complete snapshot of the questionnaire it saw.
+6. Admin approval -> one-time invitation link -> invited account completes its
+   model registration. Invitation tokens are 256-bit, stored only as hashes,
+   expire in 7 days and become unusable after redemption. Existing member
+   accounts must log in with the matching email; there is no password reset or
+   automatic role elevation from a public application. Activated accounts receive
+   model, fan and customer roles; a model profile is created or reused.
+7. Six prebuilt editable private interview questionnaires remain included from
+   the previous release, unaffected by public casting edits.
+
+ROUTES
+  index.php                  Public membership landing
+  apply.php                  Public model application
+  casting.php                Admin-only lead CRM and question editor
+  casting.php?tab=questions  Admin-only editable public application
+  model-invite.php?token=..  One-time approved invitation acceptance
+  dashboard.php              Signed-in member workspace
+
+NEW DATABASE SCHEMA VERSION: 17 (automatic, idempotent migration)
+
+BACKWARD COMPATIBILITY
+- No changes to existing interviews, production/shot ownership, publication
+  permissions, member scheduling, recorded footage or private questionnaires.
+- Existing storage/config.php, databases, media, uploads and all installed
+  records MUST be preserved when updating.
+- The clean ZIP includes install.php for first-time setup and does not contain
+  real accounts, credentials, saved recordings or databases.
+
+LIVE ACCEPTANCE CHECKLIST
+  [ ] Confirm homepage hero, mobile menu and asset response status are 200
+  [ ] Admin: Casting CRM shows sample application as private, not public
+  [ ] Add a new question with two answers, delete one and add another, save
+  [ ] Submit a test application; change the form; confirm old answers persist
+  [ ] Approve an application and generate a private one-time invitation
+  [ ] Accept invitation with new account; confirm model role/profile and one-use
+  [ ] Accept invitation for an existing member signed into matching email
+  [ ] Check permissions, SSL, HostGator PHP PDO/MySQL and backup/restore
+
+AUTOMATED CHECKS AVAILABLE LOCALLY
+- PHP syntax, node UI/logic tests, PHP validation of casting questionnaire and
+  answer choices, generated ZIP permission verification and HTTP for public
+  landing/assets without installed data.
+- Full SQLite/MySQL integration checks are blocked in this model's PHP runtime
+  because it has no PDO database drivers. The supplied source tests cover the
+  complete HTTP workflow and must run in an environment with pdo_sqlite or
+  pdo_mysql before marking host-specific testing complete.
+- Browser screenshot checks against localhost were blocked by the environment
+  browser security policy (ERR_BLOCKED_BY_ADMINISTRATOR); real responsive and
+  physical-device acceptance is still required.

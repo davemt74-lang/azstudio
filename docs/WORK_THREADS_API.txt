@@ -1,0 +1,170 @@
+AZHOTTIE STUDIO 1.7 — ASSIGNMENT QUESTIONS AND REPLIES API
+Schema 16; extends WORK_API.txt
+
+PURPOSE AND PRIVACY
+
+Each explicit assignment has a private, append-only conversation between its
+production owner and assigned contributor. This is not a production-wide chat.
+An included roster member cannot read another model's messages. Being another
+administrator does not grant access to a production owned by somebody else.
+
+All reads, unread counts, sends and read acknowledgements reuse current assignment
+authorization. The viewer must be an active account with an appropriate current
+production role; an assignee must still qualify for the shot. The production
+owner must still be an active administrator. Owner history access remains even
+when the assignee is unavailable, but new sends are disabled in that case.
+
+Removing a contributor from the roster preserves the conversation for their
+existing explicit assignment under those permissions. It does not allow access
+to other assignments or restore open-shot claiming. No account emails, casting
+notes or other conversations are included in a thread response.
+
+Endpoint: work-thread-api.php
+Responses use Cache-Control: no-store and the normal envelope:
+  success: {ok:true,data:...}
+  error:   {ok:false,error:{code,message}}
+POST requires X-CSRF-Token. Current csrf is included in successful responses.
+Authentication is rechecked after obtaining community.lock, including password
+version/status changes while waiting. Unsupported methods return 405.
+
+READ AND PAGINATE
+
+GET ?action=thread&assignmentId=ASSIGNMENT_ID[&beforeSequence=INTEGER]
+  => Thread
+
+Thread = {
+  assignmentId,
+  messages:[{
+    id,sequence,authorId,authorName,text,createdAt,isOwn
+  }],
+  hasMore,oldestSequence,latestSequence,unreadCount,
+  canPost,readOnlyReason,csrf
+}
+
+The default page is the latest 30 messages, ordered by increasing sequence for
+display. beforeSequence is an exclusive positive integer boundary: pass the
+previous page's oldestSequence to load the preceding 30 messages. hasMore means
+there are earlier messages beyond that returned page. Empty pages report
+oldestSequence 0. latestSequence is the current end of the whole conversation,
+even when the response contains an earlier page; it is not a read acknowledgement.
+
+Messages use per-assignment sequence numbers allocated under the mutation lock.
+authorName reflects the account's current display name. isOwn compares authorId
+to the viewer. Message text is returned literally; render it as escaped text,
+never executable HTML. There are no attachments, message edits or message deletes
+in this release. GET does not mark anything read.
+
+SEND
+
+POST ?action=send
+  {assignmentId,text,requestId}
+  => Thread for the latest page, plus sentMessageId
+
+text must contain 1..4000 Unicode characters after trimming and removal of null
+bytes; invalid UTF-8, empty input and text over 16000 UTF-8 bytes are rejected.
+Line breaks and literal HTML-like text are preserved as text. requestId is
+required: 8..160 ASCII letters, digits, underscore, period, colon or hyphen.
+
+A new send is allowed when the production is draft/active, the assignment is
+neither declined nor cancelled, and the other contributor account remains active
+and eligible. Accepted, submitted, changes-requested and approved assignments
+can still have questions while their production permits them. The shot's capture
+availability is separate from discussion permission.
+
+Read-only conditions are returned as canPost:false with readOnlyReason:
+  - Completed or archived production.
+  - Declined or cancelled assignment.
+  - Missing, inactive or role-ineligible assigned contributor.
+  - Owner's producer/studio self-assignment, which has no second participant.
+
+Posting in a read-only conversation fails thread_read_only. Existing messages
+remain readable when the viewer still has assignment access. Account suspension,
+role loss, owner invalidation and unrelated accounts remain ordinary access
+denials rather than readable empty threads.
+
+SEND RECEIPTS AND NOTIFICATIONS
+
+Preserve requestId and the exact intended message while a send response is
+uncertain. The stored receipt is scoped to the author and binds the assignment
+and normalized text. Matching retries return the current authorized latest-page
+Thread and the same sentMessageId. They do not append a message or notify again.
+Changing the assignment or message under the same token fails request_conflict.
+
+Receipt recovery is allowed after the conversation becomes read-only, because
+the send already succeeded. Current read access is still required; a receipt
+cannot bypass suspension, role loss or ownership changes. A new send requires
+the current posting conditions.
+
+Message insertion and one work_notifications entry commit atomically under
+community.lock and a database transaction. The notification kind is
+assignment_message. It goes to the other party and links to the assignment,
+with a generic message containing the shot title rather than the question body.
+Notification reads retain the existing current-assignment access checks.
+There is no email, SMS, external messaging or browser push delivery here.
+
+MARK READ
+
+POST ?action=markRead
+  {assignmentId,throughSequence:INTEGER}
+  => {assignmentId,throughSequence,unreadCount,csrf}
+
+This is a per-reader high-water cursor. Acknowledge the highest message sequence
+actually rendered in the conversation. Do not copy latestSequence from an older
+pagination response, because newer messages may not have been rendered.
+Acknowledging sequence N treats other-party messages through N as read; own
+messages never contribute to unreadCount.
+
+throughSequence accepts 0 through the server's current end. A value beyond that
+end fails read_sequence_ahead. An older/equal acknowledgement is a harmless no-op
+and returns the existing higher cursor. The cursor never moves backward. Marking
+an older displayed page after a newer message arrives leaves that new message
+unread, regardless of mutation order. No requestId is needed for this monotonic
+operation. No message content is deleted by marking read.
+
+The conversation read cursor and the global Updates notification read state are
+separate. Reading an update does not silently acknowledge the full conversation;
+marking a conversation read does not rewrite the global notification history.
+
+EXISTING WORK INTEGRATION
+
+Assignment DTOs add questionUnreadCount for the current authorized viewer.
+The helper az_work_thread_unread(assignmentId,user) repeats authorization before
+counting so assignment IDs cannot be used to query another person's activity.
+Unread counts are the number of other-party messages beyond that reader's saved
+cursor. Different assignments and users have independent cursors.
+
+Messages and read acknowledgements do not increment assignment, shot, project,
+plan or roster revisions. They do not interrupt an otherwise current recording,
+upload, review or editorial fingerprint. Existing assignment notes and footage
+review comments remain their own fields and are not copied into this thread.
+
+MIGRATION
+
+az_upgrade_work_threads_schema(PDO) follows production-plan schema15 and adds:
+
+  work_assignment_messages(
+    id PK, assignment_id FK, sequence_no, author_id FK, body,
+    client_token, request_hash, created_at,
+    UNIQUE(assignment_id,sequence_no), UNIQUE(author_id,client_token)
+  )
+
+  work_assignment_reads(
+    assignment_id FK, reader_id FK, through_sequence, updated_at,
+    PRIMARY KEY(assignment_id,reader_id)
+  )
+
+The assignment foreign keys cascade when their parent assignment is deleted.
+DDL is repeatable for SQLite/MySQL under schema-migration.lock; schema version
+advances only after both tables exist. Migration replay preserves all messages,
+read cursors and send receipts. Existing assignments begin with an empty thread
+and zero unread messages; no historical notes are invented as conversations.
+
+VERIFICATION SCOPE
+
+The focused suite uses a disposable SQLite installation and four PHP workers.
+It covers access/CSRF, owner and role changes, retained membership-removal access,
+read-only states, Unicode/plain text, receipt recovery, notification deduplication,
+ordered pagination, concurrent sends, duplicate-send races, read/new-message
+races and migration replay. Controller tests use test DOM objects. These do not
+claim hosted MySQL, live-browser appearance or physical-device verification.
+See RELEASE_REVIEW.txt for the complete release matrix and installed checks.

@@ -1,0 +1,48 @@
+AZHOTTIE 1.15.0 RELEASE VERIFICATION
+================================
+Scope: Separate Admin Studio navigation, role-scoped Live Director, P2P
+single-program fan viewer, selected-camera recording to private media.
+
+AUTOMATED CHECKS IN THIS ENVIRONMENT
+- JavaScript regression: 257 passed, 0 failed/skipped (npm test).
+- PHP syntax: 98 PHP files passed (php -l).
+- Focused live PHP contract checks: 7 passed; these do not run a DB.
+- Local static CSS, JavaScript and QR assets: HTTP 200 (localhost PHP server).
+- Full installation and source archive manifest/mode audit: see release packaging.
+
+NOT VERIFIED; DO NOT CLAIM 10/10 CERTIFICATION
+- This PHP runtime has no PDO SQLite/MySQL driver, so live DB migration and
+  actual multi-user integration were NOT tested here.
+- End-to-end live phone -> director -> customer WebRTC not device verified.
+- Browser visual screenshot check was blocked by ERR_BLOCKED_BY_ADMINISTRATOR;
+  no workaround attempted.
+- Actual camera-audio mixing, browser MediaRecorder output and HostGator
+  large-file uploads have not been verified on real devices.
+
+LIMITATIONS
+- Pilot P2P fan-out: 6 concurrent viewers maximum; host browser must remain
+  open and online. Internet bandwidth grows with each viewer.
+- WebRTC signaling uses PHP and ICE/STUN; TURN relay is not provisioned.
+  Additional TURN settings may be needed for strict NAT/firewall combinations.
+- The program is transmitted only to logged-in members by live.php; it is not
+  automatically published to public Watch.
+- Live Director lists its own approved QR phone connections, not unapproved
+  private cameras from other models' accounts.
+- Director records Program canvas plus selected host microphone; individual
+  camera tracks/audio are not archived as separate cameras by this feature.
+- A recording is saved into the Director's private gallery and linked to the
+  ended/live program. Save/backup behavior should be checked on the host.
+
+HOSTED ACCEPTANCE CHECKLIST
+[ ] Admin Studio has separate navigation from member sidebar.
+[ ] Editor role can direct but cannot administer members/accounts.
+[ ] Start a Live program; fan sees a joinable live room when logged in.
+[ ] Camera from local/USB hardware can be taken to Program.
+[ ] QR phone pairs to Director, admin approves, phone shares video.
+[ ] Director selects phone and local webcams manually and on timers.
+[ ] Fan sees Program only, with no direct access to private camera sources.
+[ ] Host microphone audio can be heard by fan when enabled.
+[ ] Record Program and camera switches, stop, upload, play private copy.
+[ ] Fan disconnects when Director ends broadcast.
+[ ] Verify uploads/reconnect on phone, and STUN/TURN as needed.
+[ ] Confirm CSS JS assets return 200, no 403 on HostGator.

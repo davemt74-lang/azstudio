@@ -1,0 +1,52 @@
+AZHottie Studio 1.13.0 — Social profiles, Account Settings, guest camera hotfix
+================================================================================
+
+WHAT CHANGED
+- Real social-style member profiles at user.php and friendly /user/<handle> routes.
+- Profiles show cover image, avatar, AZHottie roles, display/stage name,
+  optional headline, bio and specialties, and previously published Watch videos.
+  No private gallery clips, interview footage, casting notes, email addresses,
+  appointment details or other private account data appear on profiles.
+- Upload JPG/PNG/WebP profile and cover photos from the profile itself.
+  Images live in private storage and are served only if the profile is viewable.
+- Account form moved to account-settings.php, including password, role requests,
+  model-production details, and social visibility/text/handle settings.
+  Legacy account.php now redirects signed-in members to user.php.
+- Header includes avatar/name dropdown at far right: My profile, Account
+  settings, My media gallery (where eligible), Sign out. The left sidebar
+  contains links to My profile and Account settings. Desktop sidebar remains
+  visible and hamburger remains mobile-only.
+- Social profiles start PRIVATE. Owners can choose PRIVATE (owner + admins),
+  MEMBERS (logged-in AZHottie accounts), or PUBLIC (including signed-out users).
+  Friendly URLs require a unique handle (editable in Account Settings).
+- Public profile videos are only those already published through Watch and
+  associated with the member's linked model-production profile.
+- Existing Lucky-inspired camera fixes from the interrupted v1.13 work:
+  full-screen standalone camera page, guest QR approval without login,
+  smaller resumable upload chunks, bounded retry/server-checkpoint recovery,
+  correct upload-status action routing, clearer HTTP error messaging, and
+  fresh QR invitations replacing stale device pairing.
+
+INSTALLATION
+- Backup the application and database, and keep the entire existing storage/
+  folder. Merge application files from the full deployment ZIP.
+- Do NOT run install.php for an existing installation; schema version 21 is
+  added on the first authenticated request. It creates only a new social-profile
+  table; existing model profiles, media, users and private records stay intact.
+- File permissions are 644, directory permissions are 755 in the ZIP.
+- After upload, hard-refresh browser CSS and JavaScript.
+- Open user.php, account-settings.php, and my-camera.php to test.
+
+TESTING / LIMITATIONS
+- Automated Node test suite (including social-profile and camera tests) passes.
+- All PHP files pass CLI syntax validation. Focused PHP privacy checks pass.
+- A live database acceptance test is not available in this runtime because
+  neither SQLite nor MySQL PDO drivers are installed. HostGator database,
+  mobile Safari, real camera devices, live WebRTC, and an actual upload remain
+  unverified until tested on the installed site.
+- The earlier 'upload interrupted' error was not reproduced on the user's
+  HostGator environment. Retrying and detailed errors improve diagnosis; if
+  it persists, note the exact HTTP status/action from the camera screen and
+  check HostGator's PHP errors/ModSecurity logs.
+- Follower counts, paid subscriptions, direct messaging, and social photo
+  posting are NOT part of this release.

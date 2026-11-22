@@ -1,0 +1,156 @@
+AZHOTTIE STUDIO 1.4.0 — RELEASE REVIEW
+18 November 2026, America/Phoenix
+
+VERIFIED SCORE: 9 / 10
+TARGET: 10 / 10 AFTER INSTALLED-BROWSER/HOST/DEVICE ACCEPTANCE
+
+The implemented release passed the nine locally verifiable acceptance areas
+below. The tenth remains unverified. A prior local-browser preview was rejected
+by automatic URL security review, including a prohibition on alternate browser
+workarounds. This build respected that rejection and did not substitute another
+browser surface. No new visual browser pass is claimed.
+
+ACCEPTANCE AREAS (ONE POINT EACH)
+
+1. Install, upgrade and retained data — PASS
+   Fresh isolated installation, repeatable schema upgrades through12, preserved
+   accounts/interviews/media and project history, source storage untouched.
+   Actual hosted MySQL remains part of gate10.
+
+2. Roles, ownership and existing workflows — PASS
+   Administrator-owned productions/edits; model and other-admin access denied;
+   CSRF/current-role/password checks. Existing accounts, scheduling, capacity,
+   attendance, appointments, interviews, media, phones and publication regress.
+
+3. Director coverage and missing-shot actions — PASS
+   Linked requirements, distinct eligible usable takes, overlap-aware duration,
+   missing/review/retake/ready transitions, unknown-duration exclusion and
+   concurrent/retried missing-shot creation. Calendar references remain intact.
+
+4. Usable sections and curated boundaries — PASS
+   Exact source/range binding, preferred sections, revisions, receipt recovery,
+   cross-project rejection and current eligibility. Initial Director/AI cuts
+   cannot widen a section or bridge a gap between two curated ranges.
+
+5. Manual first-cut preparation — PASS
+   Preferred/favorite ranking, no duplicated sources, 30/60/full/custom targets,
+   card-aware runtime, proportional trims within source ranges and visible
+   missing-material warnings. Prepared proposals do not overwrite saved cuts.
+
+6. Named editable cuts and history — PASS
+   Independent trims/settings, optimistic concurrent saves, immutable snapshots,
+   view/copy/restore/archive/delete lifecycle and exact retry receipts, including
+   receipt recovery after archival. Cut-name drafts survive version changes.
+
+7. Export provenance, covers and publication — PASS
+   Render/upload/publication source metadata matches its exact saved revision.
+   Finished-video return links point to that revision. Selected-source withdrawal
+   is acknowledged and revalidated; withdrawing unused bin footage preserves
+   valid render eligibility. Existing covers and explicit Watch publication pass.
+
+8. Optional AI proposals — PASS WITH PROVIDER FIXTURES
+   Text-only evidence whitelist, timestamp notes, exact candidate/range/runtime
+   validation, shared quota, pending expiry, unchanged retry identity, malformed/
+   incomplete/refused/error handling, stale application rollback and independent
+   review. No real paid provider request was made.
+
+9. Controller integration and recovery — PASS WITH TEST DOM/MEDIA OBJECTS
+   Actual Director/composer/editor controllers tested for disabled-form value
+   loss, late responses, unsaved fields, duplicate writes, source changes,
+   navigation, rename persistence and request recovery. Responsive CSS and page
+   connections are implemented; visual acceptance remains gate10.
+
+10. Installed browser, hosting and physical devices — UNVERIFIED (0 POINTS)
+    Actual HostGator/other host, live MySQL, browser appearance, USB/HDMI/phone
+    cameras, external audio, Safari/iOS, actual codecs, phone-network WebRTC,
+    and one configured-provider request if AI is enabled remain user-installation
+    checks. No credentials or host/device access were assumed.
+
+FINAL VERIFICATION
+
+122 server integration tests passed across 13 isolated suites:
+  backend                  12 passed
+  production               10 passed
+  accounts                  8 passed
+  scheduling                8 passed
+  publication              10 passed
+  phone                     8 passed
+  phone_edge                2 passed
+  work                     17 passed
+  work_media                7 passed
+  work_planner              9 passed
+  director                 12 passed
+  edit_versions             9 passed
+  edit_composer            10 passed
+
+The HTTP matrix completed in 40.182 seconds, with at most three
+suite processes concurrently. Contention suites used four PHP server workers.
+All PHP source hashes remained unchanged throughout the final matrix. Real
+application storage remained unchanged and uninstalled.
+
+130 JavaScript tests passed, 0 failed, 0 skipped, 0 cancelled.
+JavaScript source hashes remained unchanged during the final run. Fixtures test
+controller/media behavior without asserting a live-browser or hardware result.
+
+Syntax checks passed for 58 production PHP files and 23 production JS files.
+Including QA adapters, 84 PHP and 29 JS files parse. Development runtimes:
+PHP8.4.27 and Node24.22.3. Deployment remains PHP8.1+ with no Node dependency.
+
+REVIEW DEFECTS FIXED BEFORE PACKAGING
+
+  - Native FormData excluded disabled controls during Save draft; values are
+    now captured before controls are disabled.
+  - A matching fingerprint did not enforce curated candidate ranges at initial
+    timeline creation; ranges are rechecked against current allowed candidates.
+  - AI input omitted timestamped review notes; bounded in-range excerpts now
+    accompany candidate labels and section notes.
+  - AI runtime warnings described a different manual proposal; they now use the
+    actual AI-selected clips, runtime and requirement deficits.
+  - Malformed provider response shapes could emit PHP warnings; they now fail
+    explicitly before iteration.
+  - A late rejected AI request could overwrite newer local recovery; destroyed
+    views no longer persist or alter its state.
+  - A definitive invalid request left its input fields locked; editable fields
+    now unlock while uncertain network receipts retain exact safe retry intent.
+  - Canceling a proposal handoff falsely announced success; canceled handoffs
+    leave status unchanged.
+  - Unknown/too-short source duration could make coverage appear ready or block
+    an unrelated valid named-cut save; usable counts and excluded bin handling
+    now reflect actual editor eligibility.
+  - Pending cut names could disappear during switching; naming drafts now save
+    before navigation and participate in unsaved-change checks.
+  - Source withdrawal between timeline and footage reads silently removed clips;
+    the refreshed state now requires acknowledgment before rendering.
+  - Successful lost write receipts could not recover after archival; recovery
+    confirms existing success without performing a new closed-project write.
+  - Withdrawing an unused bin source invalidated a valid rendered revision;
+    export eligibility now checks the selected sources while retaining the exact
+    immutable source-edit comparison.
+
+SHORT INSTALLED ACCEPTANCE SEQUENCE
+
+1. Back up the current installation and merge the deployment ZIP while retaining
+   all storage/configuration/database/media. Sign in and hard-refresh.
+2. Open Productions, add a small project and two coverage requirements. Assign
+   one shot to a model and open one to eligible contributors.
+3. On a real phone, accept/claim the work, record/upload, submit, and complete a
+   requested retake. Verify only accepted footage counts in Director.
+4. Mark usable sections, prepare a short first cut and save it as a named draft.
+5. Adjust a trim/name, save another revision, view the old revision and restore
+   or copy it. Confirm a second named cut retains independent edits.
+6. Export, explicitly Save finished video, upload/capture a cover and use its
+   editor return link. Confirm the exact saved revision opens.
+7. Publish that finished version to Watch and inspect as a fan/signed-out visitor.
+   Original takes, review notes and member appointments must remain private.
+8. Test QR phone upload separately from optional live phone switching. Check
+   USB/HDMI sources and the chosen microphone during manual/fixed/random changes.
+9. If enabling AI, configure your provider and run one bounded real request;
+   inspect/review the saved proposal before creating a new cut.
+
+PACKAGING
+
+Deployment excludes tests/QA/package.json/development files and installed data.
+Source includes complete code, tests, synthetic fixtures and verification logs.
+Both archives are checked against the verified source before saving. Archive
+hashes and exclusions are recorded in the build manifest. The v1.3 release
+review is retained separately as historical evidence.

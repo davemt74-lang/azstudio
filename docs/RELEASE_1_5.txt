@@ -1,0 +1,66 @@
+AZHOTTIE STUDIO 1.5.0
+18 November 2026, America/Phoenix
+
+ADMIN AI SETTINGS AND TWO PROVIDERS
+
+This release adds Admin → AI settings for OpenAI and Claude (Anthropic).
+Each administrator can save separate encrypted keys, load models using the
+saved credentials, and select a provider for shot planning and for editing.
+An optional Claude workspace ID supports keys without a workspace scope.
+The shared daily generation allowance remains in force across both providers.
+
+HOW ASSIGNMENTS WORK
+
+1. Create a production brief.
+2. Write shots manually, review an AI-generated shot list, or create a shot
+   from missing Director coverage.
+3. Edit the instructions and add reviewed shots to the production.
+4. Assign a model/professional, or open a shot for eligible members to claim.
+5. The contributor accepts/claims, records/uploads and submits footage.
+6. Review the footage, request retakes or accept it, then build an edit.
+
+The AI writes structured shot instructions, including framing, an action or
+spoken beat, completion cue, orientation, duration and requested take count.
+This release has no dedicated full-screenplay generator or automated casting.
+A script can be included in the brief/instructions. AI proposals create
+unassigned shots only after review; assigning people remains a separate step.
+
+CONFIGURE AFTER INSTALLATION
+
+Open admin.php beneath the installation URL, or choose Admin from the studio.
+Save one or both API keys while new assistance is disabled. Select Check key &
+load models, choose a model, select providers for the two assistants, then
+enable and save. Refresh an already-open production's assistant using Check
+saved proposal. A model-list check does not generate content or prove billing
+readiness. API usage belongs to the configured provider account.
+
+Empty key fields keep saved credentials. Removing a selected key requires
+disabling assistance or choosing another configured provider in the same save.
+Settings are personal to the administrator and are unavailable to model,
+professional, fan and customer accounts without the administrator role.
+
+UPGRADE
+
+Merge this package into the existing application and preserve all storage,
+configuration, database and media. Do not rerun the installer. Schema 13 upgrades
+automatically and preserves saved OpenAI settings. The old encrypted credential
+copy is cleared after the move. Existing productions, assignments, proposals,
+edits, recordings, finished videos, accounts and schedules are retained.
+
+No installer/license/security key is required. Provider API keys are optional
+and enable only the AI features. PHP 8.1+ remains the deployment requirement;
+no Node, Composer, FFmpeg or background-worker service is added.
+
+RELIABILITY
+
+New proposals retain their original provider/model identity when settings change.
+Existing OpenAI proposal receipts remain recoverable. No automatic provider
+fallback is added. Review and stale-source validation remain in place.
+Connection checks revalidate roles and settings after the network response.
+Secret values are encrypted and never returned in browser responses.
+Save failures preserve form edits; revision conflicts require explicit reload.
+Reload also refreshes a stale form token. Failed assistant-settings loads keep
+generation disabled until recovery succeeds.
+
+See RELEASE_REVIEW.txt for verification totals and remaining host/device/live
+provider checks. AI_SETTINGS_API.txt documents routing and API contracts.

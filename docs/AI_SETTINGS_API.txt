@@ -1,0 +1,114 @@
+AZHOTTIE V1.7 ADMIN AI SETTINGS
+
+Page: admin.php. API: ai-settings-api.php.
+Active administrator authentication is required. Every POST requires the
+existing session CSRF token. All responses use Cache-Control: no-store.
+Settings belong to the signed-in administrator, not all site members.
+
+GET ?action=settings
+  {ok:true,data:{revision,enabled,dailyLimit,shotProvider,editProvider,
+    providers:{openai:{hasKey,model,workspaceId,connection},
+               anthropic:{hasKey,model,workspaceId,connection}},
+    usage:{daily,pending},csrf}}
+  connection = {status:'unknown'|'success'|'failed',message,checkedAt}
+  Canonical providers: openai, anthropic. OpenAI workspaceId is always empty.
+  No API key or ciphertext is returned. csrf supports stale-page recovery.
+
+POST ?action=save (saveSettings is an alias)
+  {revision,enabled,dailyLimit:1..100,shotProvider,editProvider,
+    providers:{openai:{model,apiKey,removeKey},
+               anthropic:{model,apiKey,removeKey,workspaceId}}}
+  Returns the same redacted settings DTO plus csrf.
+  Empty apiKey preserves the saved key. removeKey explicitly clears it.
+  Enabled assistance requires a key and model for each selected provider.
+  To remove a selected key, disable assistance or route its task to another
+  configured provider in the same atomic save. A stale revision returns 409.
+  Provider IDs are allowlisted, model IDs bounded, and credentials reject
+  whitespace/control/header injection. Workspace IDs begin with wrkspc_.
+
+POST ?action=models or ?action=test
+  {provider,revision?}
+  Uses the saved credential only. It does not accept an unsaved API key.
+  GETs the provider's model list; makes no generation request.
+  Returns {provider,ok:true,models:[{id,name,compatibility}],message,settings}.
+  Nested settings include csrf. A connection error has the usual structured
+  error response; its sanitized status is retained for a subsequent GET.
+  Settings are rechecked after the network operation. A stale check cannot
+  overwrite current connection status. Current role/password version is also
+  rechecked before storing results or returning model access information.
+
+Model discovery
+  OpenAI lists text-model candidates, omitting known audio/image/realtime/
+  search/embedding/moderation/code-specialist families and expired shutdowns.
+  The Models API does not expose structured-output capability; compatibility
+  remains unverified until an actual generation request succeeds.
+  Claude uses capabilities.structured_outputs.supported when provided, excludes
+  explicit unsupported/retired models, and otherwise labels compatibility
+  unverified. Display names and IDs come from the provider, not a fixed menu.
+  Claude pagination is bounded to five pages, 1000 models per request.
+  Access success is not a generation or billing-readiness guarantee.
+
+Generation routing
+  az_ai_task_settings(owner,'shotPlanner'|'editComposer') is INTERNAL and
+  includes ciphertext; never serialize it directly to an API response.
+  Shot-list/editor settings APIs return redacted task-specific provider/model.
+  Production plans reuse shotPlanner; no additional provider setting is added.
+  New jobs freeze provider, model and optional workspaceId. Snapshot ai metadata
+  contains those identifiers but no credential. Keys exist only in the private
+  provider table and the bounded server-side outbound job.
+  Existing model_id columns and request-token receipts remain compatible.
+  Legacy proposals without provider metadata are identified as OpenAI.
+  No automatic retry through the other provider is performed.
+
+  OpenAI: POST https://api.openai.com/v1/responses
+    Authorization: Bearer <server-held key>
+    model,instructions,input,store:false,max_output_tokens:6000 (9000 for production plans),
+    text.format:{type:'json_schema',name,strict:true,schema}
+
+  Claude: POST https://api.anthropic.com/v1/messages
+    Authorization: Bearer <server-held key>
+    anthropic-version: 2026-10-21
+    anthropic-workspace-id when configured
+    model,max_tokens:6000 (9000 for production plans),system,messages:[{role:'user',content}],
+    output_config.format:{type:'json_schema',schema}
+
+  Both use fixed HTTPS hosts, verified TLS, no redirects, a 45-second generation
+  timeout, a 15-second per-page model-list timeout and a 1MiB response cap.
+  Complete responses are normalized and then pass the existing assistant's
+  business validation. Refusals, incomplete output, malformed JSON, invalid
+  ranges and invented source identifiers do not create production work.
+  Community locks are released during provider latency. Saved proposals still
+  require explicit review/application and current project/source fingerprints.
+
+Shared allowance and identity
+  Production-plan, quick-shot and editing requests across both providers share
+  one daily generation-attempt allowance per
+  administrator and permit one active pending generation. Daily reset: 00:00 UTC.
+  Interrupted jobs expire after 180 seconds. Failed attempts count; access checks
+  do not. This application allowance is not a provider spending budget.
+  No prompt automatically dispatches model assignments or publishes footage.
+
+Migration 13
+  ai_settings holds routing, enablement, daily allowance and revision.
+  ai_provider_settings holds per-provider model, encrypted key, workspace and
+  access-check metadata, keyed by owner_id/provider.
+  Migration moves existing work_ai_settings values into central tables, then
+  clears the old credential copy in the same data transaction. Existing central
+  rows win on replay, so a removed key cannot reappear from a legacy row.
+  work-planner-api.php saveSettings remains a compatibility wrapper that updates
+  OpenAI credentials without resetting selected Claude routing.
+  Preserve storage/config.php and its app_secret when upgrading or restoring.
+
+Official API references checked for this implementation
+  https://developers.openai.com/api/docs/guides/structured-outputs
+  https://developers.openai.com/api/reference/resources/models/methods/list
+  https://platform.claude.com/docs/en/build-with-claude/structured-outputs
+  https://platform.claude.com/docs/en/manage-claude/authentication
+  https://platform.claude.com/docs/en/api/models/list
+  https://platform.claude.com/docs/en/api/messages/create
+
+Provider tests use fixtures; no real API keys or paid generation were used.
+
+Schema 15 production_plan_ai_proposals participates in shared daily/pending
+usage alongside work_ai_proposals and edit_ai_proposals. Assignment question
+messages are never included in production-plan AI context.

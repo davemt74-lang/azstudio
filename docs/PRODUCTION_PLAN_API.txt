@@ -1,0 +1,272 @@
+AZHOTTIE STUDIO 1.7 — PRODUCTION PLAN API
+Schema 15; extends WORK_API.txt, ROSTER_API.txt and AI_SETTINGS_API.txt
+
+PURPOSE AND ACCESS
+
+One saved plan per production connects creative direction, ordered script scenes,
+linked shots, and reviewed casting. The production owner must have a current
+active administrator account. Other administrators and contributors cannot read
+the complete plan or its AI proposals. Members receive only the authorized shot's
+frozen scene instructions through planScene in the existing work API.
+
+Endpoint: production-plan-api.php
+Every response uses Cache-Control: no-store and the normal JSON envelope:
+  success: {ok:true,data:...}
+  error:   {ok:false,error:{code,message}}
+POST requires the session's X-CSRF-Token. GET bootstrap returns the current token.
+The endpoint rechecks account status, administrator role and password version
+after acquiring community.lock. Unsupported methods return 405.
+
+READ ROUTES
+
+GET ?action=bootstrap&projectId=PROJECT_ID
+  => {project:Project,plan:Plan,roster:Roster,aiSettings:Settings,
+      latestProposal:Proposal|null,csrf}
+
+GET ?action=plan&projectId=PROJECT_ID => Plan
+GET ?action=latest&projectId=PROJECT_ID => Proposal|null
+GET ?action=proposal&id=PROPOSAL_ID => Proposal
+
+Project and Roster follow the existing production/roster contracts. aiSettings
+uses the administrator's existing shotPlanner route and contains enabled,
+configured, hasKey, provider, model, dailyLimit, revision and maxShots. It exposes
+no credential. It is not a separate provider configuration or allowance.
+
+PLAN DTO
+
+Plan = {
+  id:projectId, projectId, revision,
+  objective, productFocus, format, targetDurationSeconds,
+  creativeDirection, deliverables,
+  scenes:[Scene], canEdit, createdAt, updatedAt
+}
+
+Scene = {
+  id, title, action, dialogue, props, performerRole,
+  shots:[PlannedShot], locked
+}
+
+PlannedShot = {
+  id, title, framing, instructions, orientation, targetDurationSeconds,
+  takesRequested, distribution:'unassigned'|'open'|'assigned',
+  userIds:[integer], eligibleRoles:['model'|'professional'],
+  maxContributors, dueLocal:null|'YYYY-MM-DDTHH:mm',
+  shotId:null|CREATED_SHOT_ID,
+  assignments:[{id,userId,userName,status}], progress
+}
+
+Before the first save, revision is 0 and timestamps are null. Defaults use the
+production's product line, portrait format, 60 seconds, empty direction/scenes.
+Scene and planned-shot IDs are stable 32-character lowercase hexadecimal keys;
+scene keys must be unique, and planned-shot keys must be unique across the plan.
+Created production shot IDs are separate server-generated identities.
+
+canEdit is true only for draft/active productions. locked, shotId, assignments,
+progress and other display/link fields are server-derived, stripped on save,
+and never trusted as evidence that work was created. Linked shot progress follows
+current assignments: unassigned, open, assigned, accepted, submitted,
+changes_requested, approved, or closed. Assignment rows retain their own states.
+
+SAVE AND RESUME
+
+POST ?action=save
+  {projectId,revision,plan:{creative fields,scenes:[...]},requestId?}
+  => Plan
+
+The payload contains the complete current plan, not a partial field patch. Empty
+draft scenes/directions are allowed within the validation limits so planning can
+be resumed. The current plan revision is required; stale saves return
+revision_conflict. A first save uses revision 0. An unchanged normalized payload
+does not advance the plan revision.
+
+Applied scenes are locked in their existing positions and content, including
+their planned shot definitions. A save cannot remove them, move them, alter their
+script/casting, or reuse their shot keys elsewhere. That fails plan_scene_locked.
+Append new scenes or use the normal created-shot workspace for later changes to
+existing work. Header direction and unapplied scenes remain editable. Existing
+recordings, assignments and review history are never rewritten by a plan save.
+
+Plan revisions are independent of production and roster revisions. A save or
+application updates the production's updated_at but not production.revision.
+Membership changes do not alter plan revision. All meaningful saves record a
+production activity event.
+
+CREATE SHOTS AND ASSIGNMENTS
+
+POST ?action=apply
+  {projectId,revision,rosterRevision,requestId?}
+  => Plan with created shot links, current assignments and progress
+
+The plan must already be saved. The server finds every planned shot that has not
+been linked yet. All scenes need at least one shot; each pending scene/shot needs
+a title and usable action, dialogue, framing or filming instructions.
+
+Before creating work, the server checks the exact plan revision, current roster
+revision, production state, overall 200-shot limit, selected accounts' current
+status/roles/membership, and contributor capacity. A direct shot must select at
+least one eligible account. The production owner retains the producer/studio
+exception and does not consume a model contributor place.
+
+Distribution behavior:
+  unassigned -> assigned-mode shot with no invitation yet
+  open       -> open shot available to eligible included members
+  assigned   -> assigned-mode shot plus one invitation per selected account
+
+Only direct shots may have userIds. Unassigned/open shots do not secretly reserve
+places or assign the full roster. A draft production can prepare invitations;
+the existing active-project requirement still controls claims and uploads.
+
+All pending shots, compiled briefs, frozen scene links, direct assignments,
+notifications, events, the plan revision and the optional request receipt commit
+in one transaction under community.lock. Any failure rolls back the entire batch.
+Already-linked shots are preserved. Applying a current plan with no pending work
+returns it without duplicating shots or assignments.
+
+MANUAL MUTATION RECEIPTS
+
+save, apply and useProposal accept requestId: 8..160 ASCII letters, digits,
+underscore, period, colon or hyphen. Preserve the same token and payload while
+recovering an interrupted response. A receipt is scoped to the acting owner and
+binds action, project and payload hash. A matching retry returns the current
+authorized plan without repeating the mutation; a changed action/payload fails
+request_conflict. Current owner access is checked before receipt recovery, even
+for a production that is now completed/archived. A new mutation still requires
+draft/active state. The UI uses receipts; the API allows omission for clients
+that accept optimistic-revision recovery instead.
+
+MEMBER SCRIPT SNAPSHOT
+
+The existing work-api.php shot and assignment detail responses add:
+  planScene: null | {
+    sceneId,sceneTitle,action,dialogue,props,performerRole,
+    shotTitle,framing,instructions,planRevision,shotRevision,createdAt,isCurrent
+  }
+
+az_production_plan_shot_context(shotId,user) reuses current shot authorization.
+Only the linked scene-level script and this shot's directions are returned.
+Other scenes, other shots' private directions, planned casting, roster records,
+private account details and AI input snapshots are not included.
+
+The original scene context is immutable history. isCurrent compares the created
+shot's saved snapshot revision with its current shot revision. Any later normal
+shot edit makes isCurrent false; the current shot brief is then authoritative.
+Do not present the historical scene as the current filming instruction. Removing
+roster membership preserves an existing explicit assignment and its authorized
+snapshot under ordinary account/role/project permissions.
+
+OPTIONAL AI SCRIPT PROPOSALS
+
+POST ?action=generate
+  {projectId,revision,sceneCount:1..8,direction:'',requestToken}
+  => Proposal
+
+requestToken is required: 16..160 ASCII letters, digits, underscore or hyphen.
+Save direction first. A project brief, objective or creative direction is needed.
+The configured administrator shotPlanner provider/model supplies the request;
+both OpenAI and Claude use the existing central settings and shared transport.
+
+Proposal = {
+  id,projectId,state:'pending'|'ready'|'failed'|'applied',provider,model,
+  summary,scenes:[{title,action,dialogue,props,performerRole,shots:[{
+    title,framing,instructions,orientation,targetDurationSeconds,takesRequested
+  }]}],error,errorCode,usedPlanRevision:null|integer,createdAt,updatedAt
+}
+
+The creative request payload contains only production title/brief/product line/
+kind, the saved
+creative direction fields, existing scene and planned-shot titles, actual
+existing production shot titles, requested scene count, maximum new shot count,
+and the additional direction. It contains no uploaded media or references,
+account/roster IDs or records, assignments, private profiles, conversation messages,
+review footage, credentials, database IDs or internal revision metadata. Provider
+credentials are used by the existing server transport for authentication, not
+included in the model's creative context. Any names
+or personal details deliberately typed into the supplied creative text remain
+part of that text. performerRole is a generic creative placeholder; actual roster
+selection happens locally after review.
+
+The saved internal snapshot fixes provider/model/workspace identity and contains
+the project revision/state, plan revision/direction, existing scene titles, and
+actual production shot IDs/titles/revisions/status. Those internal values support
+staleness checks; outbound context includes only the explicitly listed text.
+Membership-only changes do not stale a proposal. Saved-plan, production brief/
+state, or actual shot changes do.
+
+Capacity is calculated before credentials are decrypted or quota reserved:
+  remainingSceneSlots = 20 - current saved scene count
+  maximumNewShots = max(0, min(12, 60 - current planned shot count,
+                        200 - actual production shots - uncreated planned shots))
+Each requested scene needs at least one shot, so a request exceeding either
+available amount fails plan_limit without starting a provider request. The prompt
+receives maximumNewShots, and response parsing/finish validation enforce that
+original budget as well as the exact requested scene count.
+
+The input text is capped at 131072 bytes; the generation budget is 9000 output
+tokens. Unexpected/missing schema fields, wrong scene count, empty scene/shot
+direction, excessive shot count, invalid numbers/formats, malformed JSON,
+incomplete responses, refusals and provider errors cannot create plan scenes or
+assignments. Response text is capped at 262144 bytes before decoding.
+
+POST ?action=useProposal
+  {projectId,proposalId,revision,requestId?}
+  => Plan
+
+Only a ready proposal matching the current saved-plan/project/shot fingerprint
+can be adopted. Its reviewed scenes append to the saved plan with new stable
+scene/shot keys. All proposed shots begin unassigned, without recipients or
+deadlines. This action does not create production shots or notify models. Review
+and edit script/casting, save, then call apply. An already-applied proposal is
+recoverable without appending another copy. Stale adoption fails proposal_stale.
+
+RELIABILITY AND QUOTA
+
+Generation reserves its pending row under community.lock. External provider
+latency runs outside that lock, so ordinary uploads/claims/reviews/scheduling
+can proceed. After the response, current account status, role, password version
+and production ownership are checked again before saving the proposal.
+
+The quota counts work_ai_proposals, edit_ai_proposals and
+production_plan_ai_proposals together for the current administrator and UTC day.
+Failed and completed reserved requests still count; rejected preflight inputs do
+not create a reservation. At most one recent pending assistant request is allowed
+across these tasks/providers. Pending rows older than 180 seconds expire to failed.
+
+A matching requestToken returns its original saved request/proposal identity;
+it does not make another paid call or adopt changed provider settings. A changed
+request under the same token fails request_conflict. Check latest/proposal after
+an interrupted response. An expired or failed request requires an explicit new
+token for a new attempt. There is no automatic provider fallback or publication.
+
+LIMITS
+
+Manual plan: up to 20 scenes, 12 shots per scene, 60 planned shots total; up to
+50 selected accounts per direct shot and 1..50 contributor places. Production
+limit remains 200 actual shots. Requested takes: 1..20. Shot length: 0..3600
+seconds; target finished length: 1..3600 seconds. Deadlines use America/Phoenix.
+
+Text limits use the existing az_text UTF-8 byte limits: objective 4000,
+productFocus 400, creativeDirection 6000, deliverables 4000, scene/shot title 200,
+scene action 4000, dialogue 4000, props 2000, performerRole 160, framing 2000,
+shot instructions 4000, additional AI direction 2000, proposal summary 3000.
+Normalized plan JSON is limited to 524288 bytes. Props/references are textual
+notes; reference uploads continue through the existing work media API.
+
+MIGRATION AND VERIFICATION SCOPE
+
+az_upgrade_production_plan_schema(PDO) follows roster schema14 and creates:
+  production_plans(project_id PK/FK, revision, payload_json, timestamps)
+  production_plan_shots(project_id,scene_key,shot_key,shot_id UNIQUE,
+                        plan_revision,snapshot_json,created_at)
+  production_plan_requests(owner_id,client_token,action,request_hash,
+                           project_id,created_at)
+  production_plan_ai_proposals(request identity,state,provider snapshot,
+                               response,used plan revision,errors,timestamps)
+
+DDL/index creation is repeatable for SQLite/MySQL under schema-migration.lock;
+schema version advances only after creation completes. Existing projects,
+assignments and footage are not backfilled into invented scripts. Plans appear
+as unsaved defaults until the producer saves one. Schema16 then adds threads.
+
+Tests use disposable SQLite HTTP installations and provider-response fixtures.
+No live provider request, hosted MySQL execution or browser/device acceptance is
+implied by those tests. See RELEASE_REVIEW.txt for final release totals and gates.

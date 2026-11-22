@@ -1,0 +1,93 @@
+AZHOTTIE V1.4 EDITABLE CUTS API
+
+Schema 11 adds production_edits, immutable production_edit_history snapshots,
+and production_edit_requests durable mutation receipts. Existing interview
+edits and finished-video versions are retained. No server render worker is
+required; the existing browser renderer produces the actual movie.
+
+Only the active administrator owning a project can read or mutate its cuts.
+POST requires the current X-CSRF-Token and runs under community.lock with a
+database transaction and refreshed authentication. Archived projects are read
+only. Completed projects can still finish editorial work.
+
+GET edit-api.php?action=list&projectId=ID
+  {timelines:[timeline]}; excludes deleted drafts, includes archived cuts.
+
+GET edit-api.php?action=timeline&id=ID&revision=OPTIONAL_POSITIVE_INTEGER
+  Reads current or exact historical snapshot. The response includes:
+  id,projectId,interviewId,title,targetDurationSeconds,status,revision,
+  latestRevision,historical,edit,selectedTakeIds,unavailableSelectedIds,
+  history,renders,lastRender,createdAt,updatedAt,editorUrl.
+  history contains the latest 100 revisions; any older revision can still be
+  read by its exact number. Returned historical title/edit are immutable.
+  Unavailable selected footage remains identified without exposing media URLs
+  through the timeline API. The existing editor media API enforces eligibility.
+
+Every POST requires a fresh requestToken (16..160 letters/digits/._:-).
+Keep the exact body/token after a lost response. A repeated request returns its
+original receipt; using that token for another body fails request_conflict.
+
+POST timeline.create
+  {projectId,title,targetDurationSeconds:0..3600,requestToken,edit,
+   directorFingerprint?,proposalId?}
+  Always creates a new independent named cut. Zero target means full selection.
+  Does not overwrite another cut or the backing interview's working edit.
+  directorFingerprint checks current project/coverage/footage state; each
+  included range must fit entirely within one currently allowed candidate.
+  Disjoint curated sections cannot be bridged. proposalId attaches an owned
+  ready AI proposal in the same transaction; attachment failure rolls back.
+  Returns timeline. Navigate its editorUrl to open it.
+
+POST timeline.save
+  {id,revision,requestToken,edit?,title?,targetDurationSeconds?,status?}
+  revision is the current optimistic concurrency guard.
+  status is active|archived. A changed snapshot creates revision+1 and preserves
+  every prior snapshot. Identical content keeps the existing revision.
+  Archived cuts must be restored before changing edit/name. Status-only
+  archival is allowed when sources have become unavailable.
+  Ordinary explicit timeline edits may change ranges within approved source
+  bounds; this is distinct from accepting a Director proposal's curated bounds.
+
+POST timeline.restore
+  {id,revision,restoreRevision,requestToken}
+  Copies the chosen immutable snapshot into a new current revision. Rechecks
+  current source eligibility and bounds; withdrawn sources prevent restoration.
+
+POST timeline.delete
+  {id,revision,requestToken}
+  Deletes a draft from normal lists while retaining a recovery receipt.
+  Cuts referenced by saved finished videos cannot be deleted; archive them to
+  retain the exact source timeline. Original recordings are never deleted.
+
+EDIT FORMAT
+  {order:[takeId],segments:{takeId:{included:boolean,title:string,
+   trimStart:seconds,trimEnd:seconds,showCard:boolean}},settings:{
+   cardMode:all|none|perClip,cardDuration:0.5..15,fadeDuration:0..3,
+   aspect:16:9|9:16|1:1,resolution:720|1080,fit:contain|cover,
+   brand:string,modelName:string}}
+  Up to 500 distinct ordered sources. One appearance per source. Each range
+  must fit within its known source duration and contain at least 100ms.
+  Duration is uploaded metadata; validation is not an independent media probe.
+  All IDs must be currently eligible approved project footage. Unknown keys
+  are removed by normalization, preventing harmless key order from breaking
+  exact export revision matching. Trim precision is milliseconds.
+
+EDITOR AND EXPORT PROVENANCE
+  editor.php?id=INTERVIEW&timelineId=ID&timelineRevision=N
+  Opens that exact editable revision. Historical and archived versions can be
+  inspected and copied; they cannot autosave or render over the latest cut.
+  New accepted takes enter a named cut excluded by default.
+  Autosaves use the timeline API, leaving legacy interview edit state intact.
+  A lost save receipt is retried before later changes; revision conflicts keep
+  the local edit available for retry or saving as a new cut.
+
+  Finished sourceEdit contains timelineId,timelineRevision,edit,selectedTakeIds
+  alongside existing interview metadata. Upload start/chunks/finalize and
+  publication validate that the normalized edit and selected source order match
+  the immutable saved revision. Current source eligibility is rechecked.
+  Subsequent changes to a timeline do not rewrite an already rendered movie's
+  provenance. Finished-video editorUrl returns to its exact saved revision.
+
+Source-level integration checks: tests/edit_versions_integration.py.
+Controller/recovery checks: tests/edit-versions.test.mjs. These are HTTP and
+JavaScript fixture checks, not physical-device or visual browser acceptance.

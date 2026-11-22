@@ -1,0 +1,60 @@
+AZHOTTIE STUDIO 1.16.0 — LIVE DIRECTOR LAYOUT AND SAVED BROADCASTS
+
+WHAT CHANGED
+1. live-director.php now opens a dedicated, fixed-height control room with no admin
+   workspace sidebar or breadcrumb. Camera previews, QR invitation and approved
+   phone connections are in the left scrollable column; the enlarged live Program,
+   source switches, microphone, recording and status are in the right column.
+   Only the columns scroll; the page itself does not scroll. Mobile stacks the
+   Program above the sources, each independently scrollable.
+2. live.php displays the live video player immediately, without the old Watch
+   Live heading or member breadcrumb. Beneath the player, signed-in members
+   see a list of published recorded live productions with cover images.
+   Selecting a card plays its saved broadcast in an embedded replay viewer.
+3. New live-productions.php in Admin Studio lists saved live Program recordings,
+   supports cover upload (PNG/JPG/WebP, max 5 MB), title, description, replay,
+   download, and explicit publish/unpublish. Only admins publish; live editors
+   can edit recordings they own. Director shows a link to this library.
+4. New live-recording-media.php streams recordings and covers after per-request
+   authentication and publication/ownership checks, including byte ranges for
+   video seek. Original files remain in owner-private media storage.
+5. Automatic schema migration 23 -> 24 backfills titles and leaves ALL existing
+   live recordings unpublished by default. Old recordings are preserved.
+
+PRIVACY / PRODUCTION RULES
+- New and existing saved live recordings are PRIVATE until an admin publishes.
+- The fan replay feed and media endpoint accept signed-in members only.
+- Fans never receive individual source cameras, private gallery URLs, or unpublished
+  broadcast media. An inactive owner's video is excluded from fan access.
+- Only the owner or admin can edit details/covers. Cover changes are revisioned;
+  stale forms return a conflict instead of clobbering a later edit.
+- For WebRTC live broadcasting, Director must remain open. Pilot maximum remains
+  six viewers, subject to network conditions and bandwidth. This is not an SFU/CDN.
+
+UPGRADE
+1. End live broadcasts and upload/recording operations before upgrading.
+2. Back up the site, existing database, and the entire storage directory.
+3. Extract and MERGE azhottie-studio files into the site's document root.
+4. PRESERVE existing storage/config.php, database, recordings and uploads.
+5. Do not rerun install.php for a configured site. On next request the database
+   upgrades automatically to schema version 24.
+6. Hard-refresh and verify admin-studio.php, live-director.php, live.php and
+   live-productions.php. New files have 0644 and folders 0755 modes in ZIP.
+
+REQUIRED HOSTED CHECKS
+[ ] Validate MySQL/SQLite schema migration preserves preexisting live recordings.
+[ ] Live Director has no outer document scroll; internal columns scroll correctly.
+[ ] Connect a local webcam and QR-approved phone; switch Program between them.
+[ ] Broadcast to signed-in fan on separate device and record the combined output.
+[ ] Save recording; verify it appears in Saved live productions as Private draft.
+[ ] Upload/change cover; edit title/description; confirm stale revision check.
+[ ] Fan cannot find or load the private recording by ID.
+[ ] Admin publishes; fan sees cover card below live player and can play/seek video.
+[ ] Admin unpublishes; fan media requests are denied.
+[ ] Check portrait phones, landscape desktop, audio track, storage and bandwidth.
+
+VERIFIED HERE
+266/266 JavaScript tests passed; 100/100 PHP files pass syntax checks;
+9 dedicated live PHP contract checks passed. Static package contents and modes
+verified. No live hosted database, device/WebRTC, export or visual-browser
+acceptance was possible in this environment (PDO driver and browser unavailable).

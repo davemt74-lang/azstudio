@@ -1,0 +1,90 @@
+/* AZHottie v1.9: one page scroll, one sidebar, normal page content in right canvas. */
+body:has(.azh-member-layout) {
+  --bg:#f6f3f4;--panel:#fff;--panel-2:#fcf8f9;--panel-3:#f5eaf0;
+  --border:#e8e0e4;--text:#29222b;--muted:#69636b;--subtle:#867b85;
+  --accent:#bf3b71;--accent-soft:rgba(191,59,113,.09);
+  --accent-border:rgba(191,59,113,.26);--danger:#b62955;--success:#327f5a;
+  --shadow:0 14px 42px #2819220e;
+  background:#f6f3f4;color:#29222b;
+}
+.azh-member-layout,.azh-member-layout *{box-sizing:border-box}
+.azh-member-layout{width:min(100%,1750px);margin:0 auto;display:grid;grid-template-columns:248px minmax(0,1fr);min-height:calc(100vh - 70px);align-items:start;gap:0}
+.azh-member-sidebar{align-self:stretch;background:#fff;border-right:1px solid #e8e0e4;min-height:calc(100vh - 70px)}
+.azh-side-navigation{position:sticky;top:0;display:flex;flex-direction:column;gap:10px;padding:25px 14px 34px;}
+.azh-side-label{font-size:10px;letter-spacing:.17em;color:#8f7984;font-weight:800;margin:0 0 8px}
+.azh-side-navigation nav{display:flex;flex-direction:column;gap:4px;min-width:0}
+.azh-side-label{margin:21px 13px 5px}
+.azh-side-navigation nav > .azh-side-label:first-child{margin-top:4px}
+.azh-side-link{display:flex;align-items:center;gap:13px;min-height:41px;padding:9px 13px;border-radius:10px;color:#594b57;font-size:13.5px;font-weight:620;text-decoration:none;line-height:1.3}
+.azh-side-link:hover{color:#a52860;background:#fcf1f5;text-decoration:none}
+.azh-side-link.is-active{color:#a32260;background:#fceaf2;font-weight:800}
+.azh-side-glyph{font-size:19px;line-height:1;color:#a76e8b;width:24px;text-align:center;font-weight:500;flex:none}
+.azh-side-link.is-active .azh-side-glyph{color:#b82f69}
+.azh-side-foot{font-size:10px;letter-spacing:.08em;color:#a39ba1;line-height:1.65;border-top:1px solid #f0e9ee;margin:27px 12px 0;padding-top:19px}
+.azh-side-mobile-toggle{display:none}
+.azh-member-canvas{min-width:0;width:100%;padding:25px clamp(18px,3.3vw,55px) 50px;background:#f8f6f7}
+.azh-canvas-topline{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px;font-weight:770;letter-spacing:.11em;color:#8b7684;text-transform:uppercase;min-height:34px;padding-bottom:17px;border-bottom:1px solid #e8dfe5}
+.azh-canvas-slash{color:#d79daf;padding:0 8px}.azh-canvas-member-pill{font-size:10px;color:#ae376d;letter-spacing:.11em;white-space:nowrap}
+.azh-member-canvas>.workspace{max-width:none!important;margin:0!important;padding:30px 0 46px!important;width:100%;min-width:0}
+.azh-member-canvas .page-heading{margin-bottom:27px}
+.azh-member-canvas .panel{box-shadow:0 8px 24px #27122206}
+.azh-member-canvas .studio-footer{margin:0}
+body:has(.azh-member-layout) .studio-footer{max-width:1750px;margin:0 auto;padding:20px 30px}
+.azh-member-layout :focus-visible{outline:3px solid #d95088;outline-offset:3px}
+/* Calendar, wide tables and media canvases may be larger than the column but must not create nested page scrolling. */
+.azh-member-canvas main,.azh-member-canvas section,.azh-member-canvas .workspace{min-width:0}
+@media(max-width:1050px){.azh-member-layout{grid-template-columns:220px minmax(0,1fr)}.azh-side-link{font-size:12.5px;padding:9px}.azh-member-canvas{padding:20px 22px 40px}}
+@media(max-width:850px){
+ .azh-member-layout{display:block;min-height:0}
+ .azh-member-sidebar{min-height:0;border-right:0;border-bottom:1px solid #e8e0e4}
+ .azh-side-mobile-toggle{display:flex;align-items:center;gap:11px;width:100%;background:#fff;border:0;color:#342631;padding:14px 18px;font-size:14px;font-weight:740;text-align:left}
+ .azh-side-chevron{margin-left:auto}
+ .azh-side-navigation{display:none;position:static;max-height:none;padding:0 12px 18px}
+ .azh-member-layout[data-side-open="true"] .azh-side-navigation{display:flex}
+ .azh-member-canvas{padding:18px 18px 35px}
+ .azh-member-canvas>.workspace{padding:24px 0 35px!important}
+ .azh-canvas-topline{font-size:10px}
+}
+@media(max-width:460px){.azh-member-canvas{padding:16px 14px 28px}.azh-canvas-member-pill{display:none}}
+@media(prefers-reduced-motion:reduce){.azh-side-link{transition:none}}
+
+/* v1.10: one header hamburger operates the sidebar on desktop and mobile. */
+.azh-side-signout { margin:14px 0 0; padding:12px 0 0; border-top:1px solid #f0e9ee; }
+.azh-side-signout .azh-side-link { border:0; background:transparent; width:100%; text-align:left; cursor:pointer; font:inherit; }
+.azh-side-signout .azh-side-link:hover { background:#fceaf2; }
+@media(min-width:851px) {
+ .azh-member-layout[data-side-open="false"] { grid-template-columns:minmax(0,1fr); }
+ .azh-member-layout[data-side-open="false"] .azh-member-sidebar { display:none; }
+}
+@media(max-width:850px) {
+ .azh-member-sidebar { display:none; }
+ .azh-member-layout[data-side-open="true"] .azh-member-sidebar { display:block; }
+ .azh-member-sidebar #azh-side-navigation { display:block; }
+ .azh-member-layout[data-side-open="true"] .azh-side-navigation { display:flex; }
+}
+
+/* v1.11: keep desktop navigation permanently visible; mobile toggle controls only small screens. */
+@media(min-width:851px){
+ .azh-member-layout,.azh-member-layout[data-side-open="false"]{grid-template-columns:248px minmax(0,1fr)}
+ .azh-member-layout .azh-member-sidebar,.azh-member-layout[data-side-open="false"] .azh-member-sidebar{display:block}
+}
+
+/* v1.20 light-content compatibility.
+   The original interview/segment rules hardcoded black fills while the signed-in
+   shell adopted dark ink; this made some content unreadable. Keep video monitors
+   dark, but force reading surfaces to match the light member dashboard. */
+body:has(.azh-member-layout) .azh-member-canvas .library-overview,
+body:has(.azh-member-layout) .azh-member-canvas .interview-card,
+body:has(.azh-member-layout) .azh-member-canvas .segment-card {
+ background:#fff!important;color:#2e2630!important;border-color:#e7dce2!important;
+}
+body:has(.azh-member-layout) .azh-member-canvas .interview-card:hover{border-color:#d4a3bc!important}
+body:has(.azh-member-layout) .azh-member-canvas .segment-card:not(.included){background:#fff9fc!important}
+body:has(.azh-member-layout) .azh-member-canvas .question-row{border-color:#e9dfe6!important}
+body:has(.azh-member-layout) .azh-member-canvas .question-row-text{color:#352b35!important}
+body:has(.azh-member-layout) .azh-member-canvas .segment-card .segment-actions .icon-button{
+ background:#fff!important;color:#6f4260!important;border-color:#e4d6de!important;
+}
+body:has(.azh-member-layout) .dialog{
+ background:#fff!important;color:#2e2630!important;border-color:#e7d7e0!important;color-scheme:light;
+}

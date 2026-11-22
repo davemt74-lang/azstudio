@@ -1,0 +1,25 @@
+AZHOTTIE STUDIO v1.20.1 — SHARED SIDEBAR INTRO REMOVAL
+
+CHANGES
+- Removed the top-of-sidebar introduction at a single shared rendering
+  point: includes/member-layout.php::az_render_member_nav_links.
+- This covers member pages, Admin Studio pages, and the floating sidebar
+  seen by a signed-in user on public/non-workspace pages.
+- Removed orphaned CSS styling and positioned the first nav section at the
+  top without a large blank gap.
+- Kept the global header brand, page title, navigation destinations,
+  role-based visibility and sign-out action unchanged.
+- No schema changes or installer changes.
+
+VERIFICATION
+- PHP syntax check for changed shared navigation and relevant PHP source.
+- PHP rendered-output checks for signed-in member, administrator and signed-in
+  public-page flyout paths.
+- Node regression tests for removed markup, nav presence and CSS selectors.
+- Complete Node suite and deployment package parity/integrity checks.
+
+DEPLOYMENT
+Back up the site and preserve protected storage and user media. Merge the
+application files in the full deployment ZIP into the existing site.
+Do not rerun install.php. Hard refresh on desktop/phone. This release is
+locally verified; the installed azhottie.com site requires a visual check.

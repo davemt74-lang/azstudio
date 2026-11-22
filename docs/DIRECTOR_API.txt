@@ -1,0 +1,109 @@
+AZHOTTIE V1.4 PRODUCTION DIRECTOR API
+
+All responses use {ok:true,data:...}; errors use {ok:false,error:{code,message}}.
+Only the active administrator owning the project can use these endpoints.
+POST uses the existing X-CSRF-Token, shared mutation lock and transaction.
+No installation key or extra account role is introduced.
+
+GET director-api.php?action=project&projectId=ID
+  {project,requirements,selections,eligibleTakes,candidates,coverage,fingerprint,
+   csrf,limits}
+  project: id,title,brief,productLine,kind,status,revision,interviewId,editorUrl,
+           productionUrl,shots (the existing administrator shot summaries)
+  requirements: [{id,projectId,title,purpose,minimumSelections,
+    targetDurationSeconds,required,sortOrder,revision,shotIds,coverage}]
+  purpose: opening|product_detail|demonstration|answer|reaction|b_roll|closing|other
+  selections: [{id,projectId,requirementId,takeId,label,notes,startMs,endMs,
+    preferred,revision,eligible,durationMs,createdAt,updatedAt}]
+  eligibleTakes: existing az_take_data fields (including mediaUrl, durationMs,
+    reviewNotes and isFavorite), plus sourceKind, submissionId, editorEligible.
+  candidates: [{requirementId,takeId,selectionId,title,label,notes,startMs,endMs,
+    preferred,isFavorite,showCard,sourceKind,durationSource:'uploaded_metadata'}]
+  A curated selection is an allowed candidate range. If that requirement/take
+  has any selections, no unrestricted full-take candidate is added. A linked
+  accepted take with known duration and no selection can use its full duration.
+  Unknown or shorter-than-100ms duration never contributes a usable take,
+  duration target or edit candidate, even for a requirement without a time target.
+
+  Per-requirement coverage: status ready|missing|awaiting_review|retake_needed,
+    acceptedCount,minimumSelections,durationMs,targetDurationMs,
+    awaitingReviewCount,retakeCount,missingCount,durationMissingMs,shotIds,actions.
+  actions: [{type:'create_shot'|'open_shot'|'review'|'retake',label,url?,shotId?,
+             assignmentId?}]. Every URL is an existing scoped production route.
+  Project coverage: status unplanned|ready|incomplete, requiredCount,readyCount,
+    missingCount,awaitingReviewCount,retakeCount,totalRequirements.
+  Coverage counts unique currently eligible accepted takes linked to the
+  requirement's shots or explicitly labeled usable sections. Multiple sections
+  of one take do not increase the take count. Overlapping sections count once
+  towards duration. This is a checklist of approved labeled footage, not visual
+  analysis or an independent probe of uploaded video duration/quality.
+
+POST actions, all with projectId:
+
+requirement.save
+  {id?,revision? (required for update),title,purpose,minimumSelections:1..20,
+   targetDurationSeconds:0..3600,required:boolean,sortOrder:0..10000,
+   shotIds:[IDs],requestId?}
+  Returns the refreshed overview. Max 100 requirements per project.
+
+requirement.delete
+  {id,revision,requestId?} -> refreshed overview. Deletes the requirement's
+  selections and links, preserving all shots, assignments and original footage.
+
+requirement.shot
+  {requirementId,revision,requestId?,mode?,eligibleRoles?,maxContributors?,
+   orientation?} -> {shot,created,overview}
+  Returns an existing active linked shot, or creates and links a shot through
+  the existing work service. Community locking and the project-scoped linkage
+  avoid duplicate missing-shot requests. An archived linked shot does not block
+  deliberately creating a replacement. Existing contributor assignment stays
+  in the current production workflow.
+
+selection.save
+  {id?,revision? (required for update),requirementId,takeId,label,notes,
+   startMs,endMs,preferred:boolean,requestId?} -> refreshed overview
+  Times are integer milliseconds, >=0, <= known source duration, at least 100ms.
+  Only currently eligible project footage is accepted. Max 500 selections.
+selection.delete {id,revision,requestId?} -> refreshed overview.
+
+For every mutation, requestId is an optional 8..160 character client receipt
+token. A matching retry returns current state without performing the action
+again; a different payload with that token fails request_conflict. Requirement
+and selection forms should retain their token until a confirmed response.
+Archived projects are read-only. Completed projects can mark usable sections
+and prepare edits; reopen them to change requirements or request new shots.
+
+cut.propose
+  {projectId,targetDurationSeconds:0(full)|1..3600,cardMode?:none|all|perClip,
+   cardDuration?:0.5..15,fadeDuration?:0..3,fingerprint?}
+  Returns {projectId,fingerprint,edit,items,warnings,durationMs,targetDurationMs,
+    coverage}. Does not save or overwrite any timeline and makes no AI request.
+  Items are source selections with reason, chosen range, and requirementId.
+  Picks preferred sections, favorite takes, then stable source identity order;
+  selects up to each requirement's minimum count without reusing a take.
+  Target time includes cards; fades occur within the answer duration. A shorter
+  target proportionally trims selected ranges, never extending a curated range.
+  A target too short for all cards plus 100ms per answer is rejected explicitly.
+  Missing coverage or a short draft is reported rather than filled with invented
+  or unapproved footage. One occurrence per take reflects the existing editor.
+
+  edit = {order:[takeId],segments:{takeId:{included:true,title,
+    trimStart:seconds,trimEnd:seconds,showCard:boolean}},settings:{cardMode,
+    cardDuration,fadeDuration,aspect:'16:9',resolution:720,fit:'contain',
+    brand:'AZHOTTIE',modelName:''}}
+  Save through edit-api.php?action=timeline.create using directorFingerprint
+  set to this proposal's fingerprint. The timeline API owns named draft versions.
+
+Internal functions for composer/editor integration:
+  az_upgrade_director_schema(PDO $db) -- schema 10.
+  az_director_snapshot(string $projectId,array $user): array
+  az_director_propose(array $body,array $user): array
+  az_director_get(string $action,array $query,array $user): array
+  az_director_post(string $action,array $body,array $user): array
+  Mutations are transaction-neutral; the API/controller owns its transaction.
+
+The snapshot fingerprint excludes CSRF, URLs, current editor state, interview
+revision and named timeline revisions. It includes project editorial context,
+requirements, selections, linked shot state, eligible source identity/duration,
+labels, favorites and review notes. It invalidates stale source-based proposals
+without becoming stale when a saved timeline is created from that proposal.

@@ -1,0 +1,48 @@
+AZHOTTIE STUDIO v1.18.1 — LIVE DIRECTOR PHONE-FIRST WORKSPACE
+
+USER-REQUESTED CHANGES
+- One edge-to-edge Live Director toolbar: global masthead, admin sidebar,
+  duplicate header, and persistent bottom instruction strip are absent.
+- No outer margins or padding; no page-level scroll. Camera list and selected
+  control tab scroll internally. The Program monitor remains visible above
+  Switching, Audio mixer, Overlays, Scenes, and Recording tabs.
+- Left column only shows invited phone cameras. Active phone feeds have
+  persistent moving preview <video> tiles with decoded-frame health checks
+  and a Broadcast now action. Approved idle phones show an inactive-camera
+  slate and a disabled Broadcast now button. No local/USB controls here.
+- New phone feeds never take themselves to Program. Only explicit Broadcast
+  now (or the operator's selected automatic switching mode) changes output.
+- QR-invited Director phones have a visible Live preview on Record option.
+  Recording stays possible without connecting WebRTC. Phone microphone
+  sharing requires its own consent and a separate Director mixer enable.
+- Shared masthead width expanded; desktop signed-in logo aligns to the
+  left member workspace sidebar inset, rather than using a narrower centered
+  container inconsistent with the page layout.
+- Relevant asset links include a version suffix to refresh cached CSS/JS.
+
+PRIVACY AND SOURCE BOUNDARIES
+- Fan playback and recording use ONLY the Program canvas stream.
+- Raw phone previews remain private to the Director and are not separately
+  accessible to fans. Approved phones have no account-management access.
+- No changes to account/data API or database schema.
+
+VERIFICATION
+- Full JavaScript suite and 8 focused Live Director/layout/privacy tests.
+- PHP syntax checks, asset HTTP checks, ZIP modes 644/755.
+- Known limitation: local browser preview blocked by the environment. Actual
+  phone/USB hardware, HostGator, WebRTC, fan playback and full-browser visual
+  testing have NOT been verified. Do not score these live acceptance gates 10.
+
+HOST ACCEPTANCE
+1. Update site using FULL_DEPLOY ZIP. Keep entire storage/ directory and do
+   not rerun the installer. Back up site and database first.
+2. Hard refresh the Live Director; confirm one full-screen toolbar and the
+   Program player at the top-right with five functional control tabs below.
+3. Connect an additional phone via QR; before sharing, verify the inactive
+   camera placeholder and disabled Broadcast now control.
+4. On phone, enable Live preview on Record and begin recording (or press Share
+   live). After moving frames arrive, the same tile should become live.
+5. Press Broadcast now. Watch the fan stream and check that overlays and the
+   recorded Program reflect the selected camera only.
+6. Check mobile viewport no page-level scrolling, internal source/tabs scroll,
+   and shared masthead logo alignment on normal member pages.

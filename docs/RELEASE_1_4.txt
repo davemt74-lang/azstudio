@@ -1,0 +1,95 @@
+AZHOTTIE STUDIO 1.4.0 — PRODUCTION DIRECTOR AND EDITABLE CUTS
+18 November 2026, America/Phoenix
+
+This release extends the existing brief-to-published-video workflow with
+coverage requirements, marked usable footage, reviewable first cuts and named
+editable revisions. The public landing page, interviews, member accounts,
+scheduling, cameras, phone uploads, covers and Watch feed remain connected.
+
+THE CONNECTED PATH
+
+1. Open a production and select Production Director.
+2. Define required opening/product/demo/answer/reaction/supporting/closing
+   coverage. Link existing shots or create a missing shot and assign it through
+   the existing production workflow.
+3. Models record/upload and submit through My work. Review accepts or requests
+   retakes. The Director reflects the current eligible accepted sources.
+4. Mark usable start/end ranges, add section notes and choose preferred takes.
+5. Prepare a manual 30-second, 60-second, full or custom cut. Optionally ask the
+   configured AI assistant for an editorial proposal based on saved metadata.
+6. Review the proposed order, ranges and question cards, then save a named cut.
+7. Open the existing editor, adjust and save independent timeline revisions,
+   preview/export, explicitly save a finished video, choose its cover and publish.
+8. From a finished video, return to the exact editable revision that produced it.
+
+COVERAGE AND SOURCES
+
+Coverage uses distinct usable accepted sources; overlapping ranges count once
+toward duration. Unknown or shorter-than-100ms source durations cannot make a
+requirement ready. Duration is uploaded metadata, not an independent video
+probe. The Director checks labeled approved material; it does not visually
+inspect the recording or judge audio quality.
+
+Explicit usable sections constrain initial proposal choices. Missing footage,
+pending reviews and retakes lead back to the existing scoped shot/assignment
+pages. Simultaneous or repeated Create missing shot requests do not duplicate
+the task. Completed projects permit editorial work; new coverage planning or
+shots require reopening. Archived productions must be restored before editing.
+
+EDITABLE CUTS AND HISTORY
+
+Named cuts retain independent inclusion, order, trims, cards, fade and output
+settings. Every changed save keeps an immutable numbered revision. Save as new
+cut creates a separate version; restore makes a new current revision from a
+historical snapshot. A historical or archived view cannot autosave over the
+latest version. Newly accepted footage remains unselected in existing cuts.
+
+Finished uploads carry the saved timeline ID/revision and exact source-edit
+data. Upload/finalization/publication revalidate the selected sources and their
+saved revision. Withdrawing unused bin footage does not invalidate an otherwise
+valid rendered movie. A cut with finished exports retains its source history;
+archive it instead of deleting it as an unused draft.
+
+OPTIONAL ASSISTED EDITING
+
+The existing OpenAI key/model connection supports both shot-list and editorial
+proposals. Requests share the configured daily allowance. Core production and
+the manual builder require no AI key.
+
+Editorial inputs are limited to a saved brief, coverage requirements, accepted
+clip labels, usable-section notes and bounded timestamped review-note excerpts.
+Video/audio bytes, references, member/account records and casting profiles are
+not sent. Current source candidates and range boundaries constrain generated
+output. A response cannot invent a source or extend a curated section.
+
+Proposals are saved before application. You can edit the sequence before saving
+a new named cut. Changed evidence makes an old proposal stale; stale application
+rolls back without a partial timeline. Lost browser responses retain exact
+request identities for recovery; incomplete/refused/invalid provider output
+creates no cut. No provider request automatically assigns work or publishes.
+
+UPGRADE
+
+Use UPGRADE.txt for an existing installation. Back up and retain the full
+storage directory, configuration and database. Replace application files, sign
+in and hard-refresh the browser. Do not reinstall. Schema 10 adds coverage and
+sections; 11 adds editable cuts/history; 12 adds editorial proposals. The final
+schema is 12. Fresh installation still uses install.php and its admin form;
+there is no installation, license or security key.
+
+VERIFICATION
+
+122 HTTP integration tests and 130 JavaScript tests passed. 58 production PHP
+files and 23 production JavaScript files pass syntax checks. Full details and
+the evidence-based 9/10 release score are in RELEASE_REVIEW.txt.
+
+A prior browser preview was rejected by automatic URL security review, which
+also prohibited alternate browser workarounds. No such workaround was used.
+This release does not claim a live-browser visual pass, actual hosting/MySQL,
+physical camera/phone/audio checks, Safari/iOS acceptance, or a paid AI request.
+Provider tests use fixtures. These remaining checks belong to the installed
+acceptance sequence in RELEASE_REVIEW.txt.
+
+The deployment ZIP contains no tests, QA adapters, credentials, accounts,
+database or real media. The separate source bundle includes the complete
+application, tests, synthetic fixtures, review notes and verification evidence.

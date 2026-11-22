@@ -1,0 +1,118 @@
+/* Personal camera & Lucky-style temporary device pairing. Everything outside previews is light. */
+.pt-direct-upload,.pt-phone-panel{min-width:0;background:#fff;color:#271c26;border:1px solid #e8dce2;border-radius:15px;padding:20px;display:grid;gap:12px}
+.pt-direct-upload .pt-section-heading,.pt-phone-panel .pt-section-heading{margin:0}
+.pt-direct-upload .pt-section-heading h2,.pt-phone-panel .pt-section-heading h2{font-size:20px;margin:0}
+.pt-direct-upload .pt-note,.pt-phone-panel .pt-note{margin:0;color:#725d6c}
+.pt-direct-upload :is(input,select),.pt-phone-panel :is(input,select){background:#fff!important;color:#211b23!important;border:1px solid #d8c9d1!important;border-radius:8px;min-width:0}
+.pt-phone-actions{display:flex;flex-wrap:wrap;gap:8px}
+.pt-phone-invite{display:grid;gap:12px;padding:14px;background:#fff8fa;border:1px solid #eedde4;border-radius:12px}
+.pt-phone-qr{width:min(215px,100%);margin:auto;background:#fff;padding:9px;border-radius:8px;border:1px solid #eedfe5}
+.pt-phone-qr svg{display:block;width:100%;height:auto}
+.pt-phone-devices,.pt-phone-live-feeds{display:grid;gap:9px;min-width:0}
+.pt-phone-device{background:#fffafc;border:1px solid #f0e3e9;padding:10px;border-radius:9px;display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.pt-phone-device strong{font-size:13px}.pt-phone-device span{font-size:12px;color:#655261;margin-right:auto}
+.pt-phone-live-card{display:grid;gap:8px;border:1px solid #e9dbe2;border-radius:10px;padding:12px;background:#fff}
+.pt-phone-live-card video{display:block;width:100%;height:auto;max-height:260px;border-radius:8px;background:#151515;aspect-ratio:16/9;object-fit:contain}
+.pt-phone-live-card small{color:#625461}
+
+/* v1.13: full-viewport, standalone camera surface. The public and editor forms
+ * retain their light style; only the camera monitor/controls use the dark UI. */
+.azh-phone-body,.azh-phone-body *{box-sizing:border-box}
+html:has(.azh-phone-body){height:100%;background:#0d111b}
+.azh-phone-body{background:#0d111b!important;color:#f6f6fa!important;margin:0!important;height:100dvh;min-height:100dvh;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+.azh-phone-capture{height:100%;min-height:0;max-width:none!important;width:100%;margin:0!important;padding:0!important;display:flex;flex-direction:column;position:relative;isolation:isolate}
+.azh-phone-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) clamp(12px,2vw,26px) 10px;min-height:64px;position:relative;z-index:4;background:#131927;box-shadow:0 1px 0 #ffffff13}
+.azh-phone-title{display:flex;align-items:center;flex-wrap:wrap;gap:9px;min-width:0}
+.azh-phone-brand{font-weight:900;font-size:20px;letter-spacing:-.045em;color:#fff;text-decoration:none;white-space:nowrap}
+.azh-phone-brand span{color:#ff83b8}.azh-phone-private{font-size:10px;letter-spacing:.13em;font-weight:800;color:#d99fbd}
+.azh-phone-header-actions{display:flex;align-items:center;gap:10px}
+.azh-phone-connection-pill{color:#e3cada;background:#ffffff12;border:1px solid #ffffff2b;border-radius:80px;padding:6px 10px;font-size:11px;font-weight:700;max-width:150px;text-align:center}
+.azh-phone-connection-pill.is-approved{border-color:#6ce5ac55;color:#a8efc3;background:#14372a}
+.azh-phone-icon-button{color:#f6e5ef!important;background:#ffffff13!important;border:1px solid #ffffff3d!important;border-radius:10px!important;min-height:38px;min-width:40px;cursor:pointer;font-size:19px}
+.azh-phone-stage{flex:1;min-height:120px;position:relative;background:#06080d;overflow:hidden;display:grid;place-items:center}
+.azh-phone-stage video#phone-preview{display:block;width:100%;height:100%;position:absolute;inset:0;object-fit:cover;background:#080b10}
+.azh-phone-empty-stage{display:grid;gap:9px;place-items:center;color:#c6c8d0;pointer-events:none;z-index:1;text-align:center}
+.azh-phone-empty-stage .azh-phone-lens{font-size:62px;color:#d89bbd;line-height:1}
+.azh-phone-empty-stage strong{font-size:clamp(18px,2.2vw,27px);color:#f9ecf3}
+.azh-phone-empty-stage small{font-size:13px;color:#b7b7bf}
+.azh-phone-stage-badges{position:absolute;z-index:2;left:clamp(12px,3vw,30px);top:16px;display:flex;gap:8px}
+.azh-phone-record-badge,.azh-phone-live-badge{font:800 13px/1.3 ui-monospace,monospace;padding:8px 12px;border-radius:40px;color:#fff;background:#c72e53;box-shadow:0 3px 17px #0009}
+.azh-phone-live-badge{background:#17553b}
+.azh-phone-start-button{position:absolute;z-index:2;top:52%;left:50%;transform:translate(-50%,-50%);border-radius:30px!important;background:#f9ecf5!important;color:#271923!important;border:1px solid #fff!important;padding:15px 22px!important;font-weight:800}
+.azh-phone-status{position:absolute;z-index:3;bottom:14px;left:50%;transform:translateX(-50%);width:max-content;max-width:min(calc(100% - 24px),700px);margin:0!important;padding:9px 16px;border:1px solid #ffffff3a;border-radius:14px;background:#111724df;color:#fff!important;text-align:center;font-size:13px;font-weight:600;line-height:1.4;overflow-wrap:anywhere;box-shadow:0 6px 30px #0008}
+.azh-phone-status.is-error{background:#541e32e8;border-color:#ffa3bd;color:#fff!important}
+.azh-phone-claim{position:absolute;z-index:5;top:50%;left:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 28px));padding:25px;display:grid;gap:12px;border:1px solid #d9afc7;border-radius:20px;background:#fff;color:#26212a;box-shadow:0 22px 65px #0009}
+.azh-phone-claim h1{font-size:26px;margin:0;color:#251e25}.azh-phone-claim p{margin:0;color:#625460;line-height:1.5;font-size:14px}.azh-phone-claim label{font-size:13px;font-weight:700;color:#281923}
+.azh-phone-claim input,.azh-phone-upload-drawer input{background:#fff!important;color:#201c20!important;border:1px solid #d6cad2!important;border-radius:9px!important;font-size:16px!important;padding:11px!important;width:100%;min-height:45px}
+.azh-phone-claim .pm-button{min-height:46px}
+.azh-phone-toolbar{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:15px;padding:13px 18px calc(12px + env(safe-area-inset-bottom,0px));background:#131927;min-height:104px;border-top:1px solid #ffffff21;z-index:4}
+.azh-phone-action-row{display:flex;gap:clamp(7px,3vw,22px);align-items:center;justify-content:center}
+.azh-phone-action{display:grid;justify-items:center;gap:2px;place-content:center;width:60px;height:60px;border-radius:14px;border:1px solid #ffffff25;background:#ffffff12;color:#fff;font-size:24px;cursor:pointer}
+.azh-phone-action small{font-size:10px;font-weight:700}.azh-phone-action:disabled{opacity:.35;cursor:not-allowed}
+.azh-phone-record-action{display:grid;place-items:center;width:70px;height:70px;border:3px solid white;border-radius:50%;background:#111923;cursor:pointer}
+.azh-phone-record-dot{width:48px;height:48px;border-radius:50%;background:#f84769;transition:transform .15s}
+.azh-phone-record-action:active .azh-phone-record-dot{transform:scale(.92)}
+.azh-phone-record-action:disabled{opacity:.5;cursor:not-allowed}
+.azh-phone-live-controls{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.azh-phone-live-controls .pm-button{font-size:12px!important;padding:9px 12px!important;background:#293243!important;color:#fff!important;border-color:#ffffff42!important}
+.azh-phone-live-controls .pm-button:disabled{opacity:.4}
+.azh-phone-upload-drawer{position:absolute;z-index:8;bottom:calc(118px + env(safe-area-inset-bottom,0px));right:20px;display:grid;gap:10px;width:min(380px,calc(100% - 28px));max-height:min(590px,calc(100dvh - 170px));overflow-y:auto;overscroll-behavior:contain;background:#fff;color:#241d26;border:1px solid #ead1e2;border-radius:18px;padding:18px;box-shadow:0 20px 70px #000a}
+.azh-phone-drawer-header{display:flex;justify-content:space-between;align-items:start;gap:10px}.azh-phone-drawer-header>div{display:grid;gap:3px}
+.azh-phone-drawer-header strong{font-size:19px}.azh-phone-drawer-header small{color:#776572;font-size:11px}
+.azh-phone-upload-drawer .azh-phone-icon-button{background:#fcf1f8!important;color:#8d3460!important;border-color:#ead2e3!important}
+.azh-phone-field{font-size:12px;font-weight:800;color:#3a2732;display:block;margin-top:4px}
+.azh-phone-upload-drawer .pm-button{min-height:43px}
+.azh-phone-upload-drawer #phone-playback{width:100%;max-height:24vh;display:block;object-fit:contain;border-radius:10px;background:#090909}
+.azh-phone-recorded{display:grid;gap:10px}
+.azh-phone-upload-drawer #phone-upload-progress{display:block;width:100%;height:12px;accent-color:#ce3c76}
+.azh-phone-upload-hint{margin:0!important;font-size:12px!important;line-height:1.5;color:#705564!important;overflow-wrap:anywhere}
+.azh-phone-foot{padding:5px 16px 7px;background:#101522;color:#9f9eaa;display:flex;justify-content:space-between;gap:15px;font-size:10px;flex-wrap:wrap}
+.azh-phone-body [hidden]{display:none!important}
+@media(max-width:700px){
+ .azh-phone-heading{min-height:57px;padding:calc(6px + env(safe-area-inset-top,0px)) 12px 7px}
+ .azh-phone-brand{font-size:18px}.azh-phone-private{font-size:9px}.azh-phone-connection-pill{font-size:10px;padding:5px 7px}
+ .azh-phone-toolbar{gap:8px;padding:8px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+ .azh-phone-action{width:54px;height:54px}.azh-phone-record-action{height:66px;width:66px}.azh-phone-record-dot{width:45px;height:45px}
+ .azh-phone-live-controls .pm-button{min-height:33px!important;font-size:11px!important;padding:5px 9px!important}
+ .azh-phone-upload-drawer{left:10px;right:10px;bottom:calc(102px + env(safe-area-inset-bottom,0px));width:auto;max-height:57dvh;padding:15px}
+ .azh-phone-foot{font-size:9px}
+}
+@media(max-height:550px) and (orientation:landscape){
+ .azh-phone-heading{min-height:42px;padding:3px 14px}
+ .azh-phone-toolbar{min-height:72px;padding:6px}.azh-phone-action{width:45px;height:45px}.azh-phone-record-action{width:55px;height:55px}.azh-phone-record-dot{width:38px;height:38px}
+ .azh-phone-upload-drawer{bottom:78px;max-height:calc(100dvh - 118px)}.azh-phone-foot{display:none}
+}
+
+/* Camera 1.14: one bottom control row, no redundant footer copy. */
+.azh-phone-brand{text-decoration:none!important;color:#fff!important}
+.azh-phone-brand:focus-visible{outline:2px solid #f8b8d5;outline-offset:4px;border-radius:3px}
+.azh-phone-toolbar{margin-top:auto;flex:0 0 auto;width:100%;padding:10px 12px calc(13px + env(safe-area-inset-bottom,0px));min-height:94px}
+.azh-phone-action-row{width:100%;max-width:480px;gap:clamp(6px,2.2vw,15px);justify-content:space-around}
+.azh-phone-live-action{width:82px;max-width:22vw;flex:none;border-color:#bc668c;background:#4c2946}
+.azh-phone-live-action.is-sharing{background:#144d41;border-color:#83ddc0}
+.azh-phone-live-action small{font-size:10px;line-height:1.1;color:#fff;white-space:normal}
+.azh-phone-upload-drawer{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+.azh-phone-clip-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.azh-phone-clip-actions>*{flex:1;min-width:100px;max-width:none;text-align:center}
+.azh-phone-trim-editor{display:grid;gap:11px;padding:15px;border-radius:13px;background:#fff5fa;border:1px solid #e6bdcf;color:#30212e}
+.azh-phone-trim-editor h2{font-size:18px;color:#281a25;margin:0}.azh-phone-trim-editor p{font-size:12px;line-height:1.55;color:#655264;margin:0}
+.azh-phone-trim-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.azh-phone-trim-grid label{display:grid;gap:5px;font-size:12px;font-weight:750;color:#3c2834}
+.azh-phone-trim-grid input{min-width:0;width:100%;background:#fff!important;color:#251c26!important;border:1px solid #d7bfcb;border-radius:8px;padding:10px}
+.azh-phone-trim-editor .pm-button{font-size:12px;padding:8px;white-space:normal}
+#phone-trim-status{font-size:12px;overflow-wrap:anywhere;color:#5c4d5a}
+#phone-trim-status.is-error{color:#a52a4e}
+@media(max-width:480px){.azh-phone-action{width:51px;height:56px}.azh-phone-record-action{width:65px;height:65px}.azh-phone-live-action{width:73px}.azh-phone-upload-drawer{right:7px;width:calc(100% - 14px);max-height:calc(100dvh - 190px)}}
+
+.azh-phone-audience-disclosure{position:relative;z-index:6;margin:0;padding:9px 13px;background:#fff0f6;color:#7e2753;font:600 12px/1.45 Arial,sans-serif;border-top:1px solid #e6b7cd}
+
+/* v1.18: camera microphone sharing requires explicit opt-in. */
+.azh-phone-live-mic-choice{display:flex;gap:8px;align-items:center;font-size:12px;line-height:1.45;color:#e7d6e2;padding:9px 2px;}
+.azh-phone-live-mic-choice input{width:18px;height:18px;flex:0 0 18px;accent-color:#d95591;}
+
+/* A Live Director invited phone may opt into sending its private camera
+   preview while recording; this control never enables phone audio. */
+.azh-phone-record-share-choice{display:flex;align-items:center;gap:5px;color:#fff0f7;font-size:11px;white-space:nowrap;}
+.azh-phone-record-share-choice[hidden]{display:none!important;}
+.azh-phone-record-share-choice input{width:15px;height:15px;accent-color:#f09bc3;}
+@media(max-width:530px){.azh-phone-record-share-choice{font-size:10px;max-width:125px;white-space:normal;line-height:1.2}}

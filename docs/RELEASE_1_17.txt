@@ -1,0 +1,74 @@
+AZHOTTIE STUDIO 1.17.0 — DIRECTOR PREVIEW / TAKE, OVERLAYS, PUBLIC SHOWS
+
+LIVE DIRECTOR
+- live-director.php is a standalone full-height control room. No universal website
+  header, admin sidebar, page breadcrumb, or Recent recordings section.
+- Connected local/USB cameras and live-approved phone feeds are on the left.
+  Each active source has PREVIEW and TAKE buttons. PREVIEW is private; only
+  TAKE changes the Program canvas. The left private preview monitor also has
+  Take preview -> Program.
+- New sources DO NOT automatically replace the broadcast. If the Program
+  source disconnects, the Program falls back to holding slate; the operator
+  chooses a new source (or enables auto switch).
+- Manual Next camera and 30-second fixed / 15–45 second randomized switching
+  remain available. New transitions: Cut, 0.6-second cross dissolve, and
+  0.6-second fade through black.
+- Configurable Program overlays: brand label, selected-camera label, a custom
+  plain-text title (max 90 chars) in upper/lower third. The overlays and
+  transitions are applied to the captured Program canvas itself, so they are
+  included both in WebRTC viewing and Program recordings. Image/logo uploads,
+  layered graphics, title animation, and audio mixing are not included here.
+- Camera preview remains private to the operator. The live room retains the
+  previous limit of six simultaneous browser viewers; the Director browser
+  must stay open. No streaming server/SFU is provisioned.
+
+ADMIN AND PUBLIC SAVED SHOWS
+- live-productions.php remains the separate Admin Studio Saved Live Productions
+  page, with title, description, cover upload, playback, and publication.
+- New live-shows.php is a visitor-facing catalog of PUBLICLY approved live
+  recordings, without a sign-in requirement. Logged-in fans still use live.php
+  to watch the active live Program and members-only replays.
+- Members-only publish is the DEFAULT. Publishing a recording to members does
+  NOT make it public. An admin must separately click Make public and confirm
+  that the whole recording and cover will be available without login.
+- When returned to members-only or unpublished, anonymous requests for video
+  and cover are again denied. Public browsing and playback only return
+  explicitly published/public recordings belonging to active accounts.
+- New public list endpoint live-public-api.php is read-only. Public media
+  requests stream files from protected private storage through per-request
+  publication checks. HTTP Range seeks remain supported. Draft/private
+  recordings do not appear in public or member archives.
+- Existing published recordings remain MEMBERS-ONLY during the upgrade.
+
+UPGRADE — SCHEMA 24 -> 25
+1. End any live broadcast and stop upload/recording before replacing files.
+2. Back up the entire site, database, and storage directory.
+3. Extract the full ZIP's azhottie-studio folder into your website root.
+   Overwrite application code only. KEEP existing storage/config.php, database,
+   recordings, media, and uploads intact. Do not rerun install.php.
+4. On first request, the schema automatically adds publication_audience with
+   default 'members' to existing saved live productions (schema 25).
+5. Hard-refresh live-director.php, live-productions.php, and live-shows.php.
+6. Leave new public page empty until an admin explicitly makes a show public.
+
+HOSTED ACCEPTANCE (REQUIRED FOR 10/10)
+[ ] Confirm desktop and phone layouts: Director has no main header/page scroll.
+[ ] Local webcam and QR-approved phone appear in the left source list.
+[ ] Connecting a camera does not automatically put it on Program.
+[ ] Preview is private; Take switches Program; transitions render correctly.
+[ ] Custom overlay, logo and camera-label switches show in Program and recording.
+[ ] Fan signed in on a separate device sees the same Program video.
+[ ] Program recording exports and saves into private gallery.
+[ ] New show appears in Admin Saved Live Productions as private draft.
+[ ] Publish to members: signed-out user gets no video or cover.
+[ ] Make public (explicit admin confirmation): visitor sees and plays show.
+[ ] Unpublish or switch to members-only: visitor loses access immediately.
+[ ] Confirm MySQL migration works on actual HostGator configuration.
+[ ] Check USB permissions, multiple camera streams and network/TURN needs.
+
+LOCAL CHECK LIMITATIONS
+- Full Node tests, PHP syntax checks and PHP live-contract checks run here.
+- Container PHP has PDO but no SQLite/MySQL driver, so a real database
+  migration/HTTP integration test cannot run in this environment.
+- Headless Chromium did not produce a screenshot in the local sandbox.
+- Real hardware/WebRTC/recording export and visual acceptance are not verified.

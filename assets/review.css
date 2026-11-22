@@ -1,0 +1,64 @@
+/* Model-linked sessions, take review, and saved finished cuts. */
+#new-interview-dialog{width:min(620px,calc(100% - 32px))}
+#new-interview-dialog .field-help{font-size:.875rem;line-height:1.5}
+#interview-questionnaire{font-size:1rem;font-weight:550;overflow-wrap:anywhere}
+.phone-connections{margin-bottom:24px}
+.phone-connections .panel-heading{align-items:center;gap:20px;flex-wrap:wrap}
+.phone-connections .field-help{margin-top:8px;font-size:.875rem}
+.take-review-panel{margin:0 24px 24px;padding:20px;border:1px solid var(--border);border-radius:12px;background:var(--panel-2)}
+.review-panel-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
+.review-panel-heading h3{overflow-wrap:anywhere;max-width:80%;line-height:1.5}
+.review-summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:9px;color:var(--muted);font-size:.875rem}
+.review-summary .badge{font-size:.8125rem;padding:5px 8px;white-space:normal}
+.review-controls{display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px;margin:16px 0}
+.review-status-field{margin:0;min-width:190px;flex:1;max-width:300px;font-size:.875rem}
+.review-status-field select{font-size:.9375rem;min-height:42px}
+.favorite-button{white-space:nowrap;font-size:.875rem!important;min-height:40px!important}
+.favorite-button.is-favorite{border-color:var(--accent-border);background:var(--accent-soft);color:#ffc5dc}
+.review-note-form{display:grid;gap:12px;margin:18px 0}
+.review-note-form .field{margin:0;font-size:.875rem}
+.review-note-form>button{justify-self:start}
+.review-note-list{display:grid;gap:0;margin-top:18px}
+.review-note{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:start;gap:12px;border-top:1px solid var(--border);padding:15px 0}
+.review-note p{font-size:.9375rem;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.review-note .text-button{font-size:.875rem;min-height:36px;padding:4px 6px}
+.note-time{display:inline-flex;align-items:center;justify-content:center;background:var(--accent-soft);border:1px solid var(--accent-border);border-radius:7px;color:var(--accent);padding:7px 9px;min-height:36px;font:500 .875rem ui-monospace,SFMono-Regular,Consolas,monospace}
+.note-time:hover{background:var(--panel-3)}
+.clip-review-block{margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+.clip-review-block .review-note{grid-template-columns:auto minmax(0,1fr)}
+.clip-review-block .review-note .text-button{grid-column:2;justify-self:start;padding:0}
+.finished-save-form{margin:20px 24px 24px;padding:22px;border:1px solid var(--accent-border);border-radius:12px;background:var(--accent-soft);display:grid;gap:16px}
+.finished-save-form h3{font-size:1.2rem;margin:5px 0 10px}
+.finished-save-form .field{margin:0;font-size:.9375rem}
+.finished-save-form .field-help{font-size:.875rem;line-height:1.6}
+.finished-save-form .eyebrow{color:var(--accent)}
+.finished-save-form .action-group{align-items:center}
+.finished-versions-panel{margin:26px 0}
+.finished-versions-panel .panel-heading{gap:18px;flex-wrap:wrap}
+.finished-version{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 24px;border-top:1px solid var(--border)}
+.finished-version>div:first-child{min-width:0}
+.finished-version .version-title{display:block;font-size:1rem;font-weight:550;overflow-wrap:anywhere}
+.finished-version .field-help{font-size:.875rem;margin-top:5px}
+.finished-version .text-button{font-size:.875rem}
+.camera-rotation-field,.camera-switch-actions{grid-column:1/-1}
+.camera-rotation-list{display:flex;flex-wrap:wrap;gap:12px 20px;margin-top:6px}
+.camera-rotation-list .checkbox-field{font-size:.875rem;min-height:36px;min-width:0;max-width:100%;align-items:center}
+.camera-rotation-list .checkbox-field span{overflow-wrap:anywhere}
+.camera-rotation-list .checkbox-field input{flex:none}
+.camera-switch-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.camera-switch-actions .field-help{font-size:.875rem;flex:1;min-width:200px}
+@media(max-width:620px){
+  .take-review-panel{margin:0 18px 18px;padding:16px}
+  .review-panel-heading{gap:10px}
+  .review-panel-heading h3{max-width:none}
+  .review-controls{gap:12px}
+  .review-status-field{width:100%;max-width:none}
+  .review-note{grid-template-columns:auto minmax(0,1fr);gap:10px}
+  .review-note .text-button{grid-column:2;justify-self:start;padding:0}
+  .finished-save-form{margin:18px;padding:16px}
+  .finished-save-form .button{white-space:normal}
+  .finished-version{padding:18px;align-items:flex-start;flex-direction:column;gap:12px}
+  .finished-versions-panel .panel-heading{align-items:flex-start;flex-direction:column}
+  .camera-rotation-list{display:grid;grid-template-columns:minmax(0,1fr);gap:5px}
+  .phone-connections .panel-heading{align-items:flex-start;flex-direction:column}
+}

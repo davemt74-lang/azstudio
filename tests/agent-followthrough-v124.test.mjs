@@ -1,0 +1,60 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {validWorkAction} from '../assets/agent-workspace.js';
+const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
+const server=read('includes/agent-followthrough.php'),api=read('agent-workspace-api.php');
+const ui=read('assets/agent-workspace.js');
+const id='a'.repeat(32);
+test('followthrough schema is additive and deduplicates by assignee and state',()=>{
+  assert.match(server,/function az_upgrade_agent_followthrough_schema/);
+  assert.match(server,/UNIQUE \(assignment_id,recipient_id,rule,fingerprint\)/);
+  assert.match(server,/FOREIGN KEY \(recipient_id\) REFERENCES users/);
+  assert.match(server,/UPDATE studio_schema SET version=30/);
+  assert.match(read('includes/database.php'),/az_upgrade_agent_followthrough_schema/);
+});
+test('cron is private CLI-only and reports partial scans, not fabricated completion',()=>{
+  const cron=read('includes/agent-followthrough-cron.php');
+  assert.match(cron,/PHP_SAPI !== 'cli'/);
+  assert.match(cron,/az_agent_followthrough_run\(\)/);
+  assert.match(cron,/exit\(\$result\['truncated'\]\?2:0\)/);
+  assert.match(read('includes/.htaccess'),/Require all denied/);
+  assert.match(server,/LOCK_EX\|LOCK_NB/);
+  assert.match(server,/PDO::PARAM_INT/);
+  assert.match(server,/beginTransaction\(\)/);
+  assert.match(server,/rollBack\(\)/);
+});
+test('unanswered, deadline, overdue and review rules are based on verified assignment state',()=>{
+  for(const r of ['unanswered_24h','unanswered_48h','due_72h','overdue_model','overdue_admin','review_48h'])assert.match(server,new RegExp(r));
+  assert.match(server,/p.status='active'/);
+  assert.match(server,/s.status='active'/);
+  assert.match(server,/m.status='active'/);
+  assert.match(server,/u.status='active'/);
+  assert.match(server,/o.status='active'/);
+  assert.match(server,/AND p.owner_id=\?/);
+});
+test('admin POST action is CSRF and owner-scoped; stale revisions and spam are rejected',()=>{
+  assert.match(api,/az_require_auth\(true\)/);
+  assert.match(api,/az_require_csrf\(\)/);
+  assert.match(api,/az_has_role\(\$user,'admin'\)/);
+  assert.match(api,/az_agent_followthrough_run\(\(int\)\$user\['id'\]\)/);
+  assert.match(server,/WHERE a.id=\? AND p.owner_id=\?/);
+  assert.match(server,/stale_revision/);
+  assert.match(server,/reminder_throttled/);
+  assert.match(server,/12\*3600/);
+  assert.match(server,/agent_followthrough_deliveries/);
+  assert.match(server,/function az_agent_followthrough_resolve_assignment/);
+  assert.match(read('includes/work.php'),/az_agent_followthrough_resolve_assignment\(\$assignmentId\)/);
+});
+test('Brain offers confirmation-backed model reminders, never auto-accept or auto-publish',()=>{
+  const backend=read('includes/agent-workspace.php');
+  assert.match(backend,/\['type'=>'remind'/);
+  assert.equal(validWorkAction({type:'remind',id,revision:2}),true);
+  assert.equal(validWorkAction({type:'remind',id,revision:0}),false);
+  assert.equal(validWorkAction({type:'remind',id:'bad',revision:2}),false);
+  assert.match(ui,/window.confirm\('Send this model an in-app assignment reminder/);
+  assert.match(ui,/request\('agent-workspace-api.php',action,body\)/);
+  assert.match(ui,/Check assignments now/);
+  assert.match(ui,/Scheduled scans have not run yet/);
+  assert.match(backend,/followthrough_.*AZHottie Agent/);
+});

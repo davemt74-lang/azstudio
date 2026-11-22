@@ -1,0 +1,62 @@
+AZHOTTIE STUDIO v1.20.0 — MY VIDEOS & USER SUBMISSIONS
+November 21, 2026
+
+MODEL VIDEO WORKFLOW
+- New My Videos page under the creator sidebar for models.
+- Reuses owner-owned private My Media gallery assets, including edited copies.
+- Create/edit an independent title and description without creating an assignment.
+- Private draft -> submitted for admin review (explicit rights/participant consent)
+  -> published only on admin approval. Separate changes requested and rejected
+  states keep clear admin notes; no automatic public visibility.
+- Model can withdraw, unpublish, or remove a post without deleting its private
+  gallery original. Editing a public/pending post takes it offline until reviewed.
+- Changing a gallery cover also revokes an existing approval until resubmission.
+
+ADMIN MODERATION
+- New Admin Studio > User Submissions queue: protected preview, reviewer notes,
+  approve/publish, request changes, reject with reason, and unpublish.
+- `dashboard.php` and `admin-studio.php` provide pending/published/changes counts
+  and a direct queue link. These are real database counts, not sample analytics.
+- Approved creator videos join the existing public Watch feed and its detail
+  player. Public projections expose only approved post metadata, credit, covers
+  and video; no personal-media filename, storage path or private account details.
+- Active model account + model role + confirmed rights + published status are
+  all required for public access. Source files are streamed with HTTP range
+  support, and nonpublic videos require ownership or admin authentication.
+
+LIGHT CONTAINERS / READABILITY
+- My Videos and User Submissions cards and dialogs: explicit white background,
+  dark readable text, soft borders, no accidental black containers.
+- Shared member library overview, interview cards, question text, and segment
+  cards no longer combine dark fill with dark text. Actual video screens remain
+  intentionally dark. Mobile sections use ordinary document scrolling.
+
+DATABASE / HOSTING
+- Automatic SQLite/MySQL migration from schema v25 to v26 creates model_videos
+  with owner/media identity, consent, revision, review and publication fields.
+- Preserve existing storage/database/config. DO NOT rerun install.php.
+- PHP + suitable PDO driver + database permissions required in production.
+
+VERIFICATION
+- Local Node regression suite: 326 tests passed, including seven feature tests.
+- PHP syntax scan: 115 PHP source files passed php -l.
+- Python SQLite checks: 3 migration/uniqueness/public-gating checks passed.
+- Chromium browser smoke with mocked API: create + submit + consent, admin
+  preview + request changes, mobile width and CSS computed color checks passed.
+- Frontend on mobile width 390px had no horizontal document overflow.
+- No hosted application database, uploaded model media or real admin/model logins
+  were used in this test pass; production confirmation remains outstanding.
+
+PRODUCTION ACCEPTANCE CHECKLIST
+[ ] Backup site, database and complete storage directory.
+[ ] Deploy application code and verify automatic schema version reaches 26.
+[ ] Confirm My Videos navigation for model, and no non-model access.
+[ ] Upload a real personal video, create a private draft, and confirm no leak.
+[ ] Submit after rights consent and confirm an admin queue entry.
+[ ] Admin watches real media, requests changes / rejects with notes.
+[ ] Model revises and resubmits; admin approves and Watch shows video + cover.
+[ ] Verify media range playback in browser and correct public credit.
+[ ] Withdraw/unpublish and confirm public media links return not-found.
+[ ] Test an unapproved direct media URL logged out and as another model.
+[ ] Review readability and layout on iPhone and desktop.
+[ ] Confirm v1.19.1 live phone connection, fan viewer and recording acceptance.

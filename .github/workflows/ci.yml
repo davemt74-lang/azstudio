@@ -1,0 +1,70 @@
+name: AZHottie Studio CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  javascript:
+    name: JavaScript regression tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm test
+
+  php:
+    name: PHP syntax and casting rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: sqlite3, pdo_sqlite
+          coverage: none
+      - name: Lint PHP application and test files
+        run: |
+          find . -type f -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n 1 php -l
+      - name: Test casting and assignment follow-through rules
+        run: |
+          php tests/agent_casting_rules.php
+          php tests/agent_followthrough_rules.php
+          php tests/live_agent_rules.php
+
+  fixtures:
+    name: SQLite permissions and migration fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python tests/agent_casting_sql_fixture.py
+          python tests/agent_followthrough_sql_smoke.py
+          python tests/live_agent_sql_smoke.py
+
+  deployment:
+    name: Build safe deployment archive
+    runs-on: ubuntu-latest
+    needs: [javascript, php, fixtures]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python scripts/package_deploy.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: azhottie-studio-deploy
+          path: dist/AZHottie_Studio_Full_Deploy.zip
+          if-no-files-found: error
+          retention-days: 14

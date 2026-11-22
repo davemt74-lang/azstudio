@@ -1,0 +1,12 @@
+/* v1.11: consistent white form surfaces on light AZHottie pages. Player canvases remain dark. */
+:where(main,.workspace,.azh-member-canvas,.auth-shell,.setup-card,.auth-card,.casting-page,.community-page) :is(form,fieldset):not(.azh-side-signout):not(.azh-global-header__signout){background:#fff!important;color:#211b22!important;color-scheme:light}
+:where(main,.workspace,.azh-member-canvas,.auth-shell,.setup-card,.auth-card,.casting-page,.community-page) :is(label,legend){color:#29212a!important}
+:where(main,.workspace,.azh-member-canvas,.auth-shell,.setup-card,.auth-card,.casting-page,.community-page) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="button"]):not([type="submit"]):not([type="reset"]),select,textarea){
+  color:#1c1820!important;background:#fff!important;border:1px solid #d4c9d1!important;color-scheme:light!important;caret-color:#1c1820;box-shadow:none!important;
+}
+:where(main,.workspace,.azh-member-canvas,.auth-shell,.setup-card,.auth-card,.casting-page,.community-page) :is(input,textarea)::placeholder{color:#766b76!important;opacity:1}
+:where(main,.workspace,.azh-member-canvas,.auth-shell,.setup-card,.auth-card,.casting-page,.community-page) :is(input,select,textarea):focus-visible{outline:2px solid #be4a82!important;outline-offset:2px}
+:where(main,.workspace,.azh-member-canvas,.auth-shell,.setup-card,.auth-card,.casting-page,.community-page) :is(.field,.form-field,.settings-section,.form-group,.form-card,.input-group):not(.pt-monitor){color:#26202a;background-color:#fff!important}
+:where(main,.workspace,.azh-member-canvas,.auth-shell,.setup-card,.auth-card,.casting-page,.community-page) :is(.field-hint,.field-help,.form-hint){color:#635965!important}
+:where(main,.workspace,.azh-member-canvas,.auth-shell,.setup-card,.auth-card,.casting-page,.community-page) input:disabled,
+:where(main,.workspace,.azh-member-canvas,.auth-shell,.setup-card,.auth-card,.casting-page,.community-page) textarea:disabled{background:#f2f0f2!important;color:#58505a!important}

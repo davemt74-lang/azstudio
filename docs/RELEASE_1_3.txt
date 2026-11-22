@@ -1,0 +1,84 @@
+AZHOTTIE STUDIO 1.3.0 — PRODUCTION WORK
+18 November 2026
+
+This release connects a project brief to a reviewed finished video.
+
+THE CONNECTED PATH
+
+1. An administrator creates a project in Productions, optionally links a
+   permitted event or appointment, and builds its shot list.
+2. A shot invites specific contributors or offers places to eligible members.
+   Models/professionals accept assignments or claim open places in My work.
+3. The member records or uploads one or more takes. Each upload is attached to
+   the exact assignment, contributor and shot, with resumable chunks and durable
+   completion receipts. Draft takes are submitted explicitly for review.
+4. The producer plays the footage, marks favorites, records timestamped notes,
+   and accepts it or requests a retake. New attempts preserve earlier history.
+5. Accepted footage enters the project editor. Interview cards, no cards, or
+   per-clip cards support interview, production and mixed projects.
+6. The administrator exports and explicitly saves a finished version, chooses
+   a cover, edits its public credit, and publishes the selected cut to Watch.
+
+ACCOUNT AND PROJECT SCOPE
+
+One account can have multiple existing AZHottie roles. Models/professionals
+see their own work and eligible open briefs. They do not receive the producer's
+interview library or other contributors' private footage. An administrator
+manages projects owned by that administrator. Suspension, role removal, project
+closure and assignment changes are checked again while media is uploaded.
+
+Projects can be Draft, Active, Completed or Archived. A shot can be Active,
+Closed or Archived. Open claims reserve contributor places atomically.
+Producer camera contributions retain their own provenance and do not consume
+a member place. Project scheduling links do not create bookings or registrations.
+Deadlines use America/Phoenix, consistent with the private calendar.
+
+MEDIA AND REVIEW
+
+Member capture uses the same capture engine as the studio, with scoped local
+recovery drafts. Multiple-file uploads can be resumed in the same browser and
+account. Keep originals until the server confirms saving. Accepted or rejected
+takes remain in the assignment's review history; retakes are additional attempts.
+
+The studio recording room keeps manual/fixed/random camera rotation, supported
+local and USB inputs, and optional approved-phone live feeds. QR approval and
+uploads remain distinct from live network interoperability. Phone submissions
+target active production shots and enter producer review.
+
+Mixed projects import an owned, shortlisted, nonprivate interview take as a
+separate stored copy with source provenance. Original-source withdrawal also
+withdraws it from new edits and related public cuts. The server checks selected
+source IDs when saving a finished export and when publishing it. Public posts
+remain explicit actions; restore never silently republishes.
+
+OPTIONAL AI SCOPE
+
+An administrator can configure an OpenAI API key and compatible Responses API
+model. The assistant sends a saved brief and shot-title context to produce an
+editable shot-list proposal. It does not send video/reference files or account
+records. Provider usage belongs to the configured account.
+
+Proposals are saved, validated, and editable. Adding a proposal is an atomic
+operation with stale-project checks and repeat-request protection. New shots
+start unassigned. Incomplete responses, refusals, timeouts, interrupted requests,
+or invalid proposals create no shots. Core production does not require AI.
+
+This release does not claim AI video understanding or automatic video assembly
+from semantic footage analysis. The existing browser editor performs the actual
+rendering. AI editing suggestions and server-side rendering remain later work.
+
+UPDATE AND VERIFICATION
+
+Use UPGRADE.txt for an existing installation. Keep storage/config.php, the entire
+storage directory, and the database. Do not run the installer again. Schema 8
+adds production work; schema 9 adds the optional assistant. No installation,
+license or security key is required.
+
+RELEASE_REVIEW.txt records the tests, corrections and limits. The v1.3 visual
+browser walkthrough was blocked by the browser's URL security policy. Live
+hosting, MySQL, physical cameras/phone networking, Safari/iOS and a real provider
+request remain installation checks; they are not represented as tested here.
+
+The deployment ZIP excludes test/QA/development files and contains no account,
+configuration, database, recording or API credential. The separate source ZIP
+includes the tests and labeled local QA fixtures for continued development.

@@ -1,0 +1,39 @@
+AZHOTTIE STUDIO v1.17.0 — RELEASE REVIEW
+
+SCORE: 9/10 verified locally. Do NOT score 10/10 until the hosted acceptance
+checklist in docs/RELEASE_1_17.txt passes with real devices and accounts.
+
+VERIFIED IN LOCAL SESSION
+- 280/280 JavaScript Node tests passed (including 14 new Director and audience
+  regression scenarios).
+- 100/100 production PHP files passed php -l syntax checks.
+- 11 focused PHP live contract checks passed.
+- Static HTTP GET: live-studio.css, live-director.js, live-shows.js,
+  live-productions.js and favicon.svg all returned 200.
+- Public gallery HTML served with HTTP 200 in unconfigured local environment.
+- Public catalog JSON returned 503 while local studio was uninstalled, expected.
+- New media/cover access requires public publication+audience+active account,
+  or the existing signed-in owner/member/admin checks.
+- New cameras enter private Preview only, not Program; disconnect returns to
+  holding slate. Transition/overlay controls modify the Program canvas.
+
+UNVERIFIED / BLOCKED
+- This container's PHP has PDO but lacks pdo_mysql and pdo_sqlite drivers;
+  real schema upgrade and database permission checks cannot run locally.
+- Headless Chromium stalled instead of generating a usable screenshot.
+- Actual HostGator PHP/MySQL operation, QR-connected phone streams,
+  local USB cameras, WebRTC fan playback, and recorded video render not tested.
+- A public release of adult-themed footage requires the administrator to
+  determine applicable age, release and distribution requirements.
+
+REVIEW FIXES
+- Removed universal masthead/sidebar and duplicate recording panel from Director.
+- Added private Preview and explicit per-source Take controls.
+- Prevented newly connected or unexpectedly disconnected cameras from
+  automatically broadcasting different source footage.
+- Added Cut, Cross dissolve and Fade-through-black transition options.
+- Added on-canvas brand, camera label and lower/upper custom title overlays.
+- Introduced a separately approved public recorded-show audience; existing
+  members-only publications remain members-only in schema v25.
+- Preserved the original signed-in fan Live page and Admin Saved Productions.
+- Confirmed ZIP is a full replacement application rather than a patch.
