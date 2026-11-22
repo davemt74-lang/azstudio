@@ -13,7 +13,7 @@ $admin=az_has_role($user,'admin');
 <title>Commerce &amp; Creator Briefs · AZHottie</title><meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css">
-<link rel="stylesheet" href="assets/commerce.css?v=1.31.0"></head>
+<link rel="stylesheet" href="assets/commerce.css?v=1.32.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0"></head>
 <body data-page="commerce"><?php az_render_universal_header('commerce',$user);az_render_member_layout_open('commerce',$user); ?>
 <main class="azh-commerce" id="azh-commerce" data-role="<?= $admin?'admin':'model' ?>" data-csrf="<?= az_h(az_csrf_token()) ?>">
   <header class="azh-commerce-hero"><div><p class="azh-eyebrow">AZHOTTIE · COMMERCE AGENT</p><h1>Commerce<span>.</span></h1>
@@ -26,6 +26,7 @@ $admin=az_has_role($user,'admin');
     <button type="button" role="tab" data-tab="promotions" aria-selected="false">Video affiliates</button>
     <button type="button" role="tab" data-tab="orders" aria-selected="false">Orders &amp; earnings</button>
     <button type="button" role="tab" data-tab="analytics" aria-selected="false">Sales analytics</button>
+    <?php if($admin): ?><button type="button" role="tab" data-tab="local" aria-selected="false">Local Orders</button><?php endif; ?>
     <?php if($admin): ?><button type="button" role="tab" data-tab="live" aria-selected="false">Live shopping</button><?php endif; ?>
   </nav>
   <section class="azh-commerce-panel" data-panel="products" aria-label="Products">
@@ -38,7 +39,28 @@ $admin=az_has_role($user,'admin');
           <label>Creator commission (%)<input name="commissionPercent" type="number" min="0" max="50" step="0.01" value="10" required></label></div>
         <label>Checkout provider<select name="checkoutMode"><option value="external">External seller · manual order reconciliation</option><option value="stripe">Stripe Checkout · verified webhooks</option></select></label>
         <label>External checkout URL (HTTPS)<input name="checkoutUrl" type="url" maxlength="500" placeholder="https://your-seller.example/checkout" autocomplete="off"></label>
-        <p class="azh-commerce-hint">Stripe Checkout requires server-side keys, webhook secret and a trusted public URL. No card details are entered or stored in AZHottie.</p>
+        <p class="azh-commerce-hint">Stripe Checkout requires private server keys. If this product offers only cash pickup/delivery, its external checkout URL may be left blank.</p>
+        <details id="azh-product-local-settings" class="azh-commerce-product-local">
+          <summary><strong>Cash payment &amp; local fulfillment for this product</strong><span>Optional · per-product controls</span></summary>
+          <div class="azh-commerce-local-fields">
+            <input type="hidden" name="localRevision" value="0">
+            <label class="azh-commerce-checkbox"><input name="localEnabled" type="checkbox"> Offer pay-with-cash on this product</label>
+            <label class="azh-commerce-checkbox"><input name="pickupEnabled" type="checkbox"> Allow cash at local pickup</label>
+            <label>Pickup location name<input name="pickupLocation" maxlength="160" placeholder="My shop / studio"></label>
+            <label>Pickup address shown to buyers<input name="pickupAddress" maxlength="320" placeholder="Pickup address"></label>
+            <label>Pickup hours / instructions<input name="pickupHours" maxlength="200" placeholder="By appointment · staff confirmation required"></label>
+            <label>Extra pickup instructions<textarea name="pickupInstructions" maxlength="500" rows="2"></textarea></label>
+            <label class="azh-commerce-checkbox"><input name="deliveryEnabled" type="checkbox"> Allow cash on local delivery</label>
+            <label>Delivery ZIP codes for this product<input name="deliveryZips" maxlength="1500" placeholder="85001, 85003, 85004"></label>
+            <div class="azh-commerce-row">
+              <label>Delivery state<input name="deliveryState" maxlength="2" value="AZ" required></label>
+              <label>Delivery fee for this product (USD)<input name="deliveryFeeDollars" type="number" step="0.01" min="0" max="10000" value="0.00" required></label>
+            </div>
+            <label>Minimum merchandise subtotal for delivery (USD)<input name="deliveryMinDollars" type="number" step="0.01" min="0" max="1000000" value="0.00" required></label>
+            <label>Delivery instructions<textarea name="deliveryInstructions" maxlength="500" rows="2" placeholder="Local delivery details and limitations"></textarea></label>
+            <p class="azh-commerce-hint">Each product has independent cash availability, pickup address, ZIP coverage, delivery fees and minimums. Buyers submit unpaid requests. Staff must verify any applicable tax and confirm the final amount before acceptance.</p>
+          </div>
+        </details>
         <label>Visibility<select name="state"><option value="draft">Draft</option><option value="active">Active</option><option value="archived">Archived</option></select></label>
         <div class="azh-commerce-actions"><button type="submit">Save product</button><button type="reset" data-reset-product>New product</button></div>
       </form></div><?php endif; ?>
@@ -79,6 +101,24 @@ $admin=az_has_role($user,'admin');
   <section class="azh-commerce-panel" data-panel="analytics" aria-label="Commerce performance" hidden>
     <div id="commerce-analytics" class="azh-commerce-analytics" aria-live="polite"></div>
   </section>
+  <?php if($admin): ?>
+  <section class="azh-commerce-panel" data-panel="local" aria-label="Local cash order management" hidden>
+    <div id="azh-local-admin" data-csrf="<?= az_h(az_csrf_token()) ?>">
+      <div class="azh-commerce-editor">
+        <h2>Cash Pickup &amp; Delivery Orders</h2>
+        <p>Configure payment and delivery independently inside each product's editor. Here, review requests, confirm taxes and totals, collect cash, and track fulfillment.</p>
+        <div class="azh-commerce-actions">
+          <button type="button" id="azh-local-refresh" class="azh-commerce-small">Refresh cash orders</button>
+          <button type="button" id="azh-local-edit-products" class="azh-commerce-small">Manage product settings</button>
+        </div>
+        <p id="azh-local-queue-summary" role="status"></p>
+        <p id="azh-local-admin-status" role="status" aria-live="polite"></p>
+      </div>
+      <div id="azh-local-orders-list" class="azh-commerce-list"></div>
+      <div id="azh-local-private-details" class="azh-commerce-editor" hidden></div>
+    </div>
+  </section>
+  <?php endif; ?>
   <?php if($admin): ?><section class="azh-commerce-panel" data-panel="live" aria-label="Live shopping" hidden>
     <div class="azh-commerce-editor"><h2>Feature a product during Live</h2>
       <p>Start a broadcast in Live Director, then choose an active, checkout-ready product. Viewers will see that product beside the Live player while the session is on air.</p>
@@ -89,5 +129,5 @@ $admin=az_has_role($user,'admin');
   </section><?php endif; ?>
   <p class="azh-commerce-disclaimer">External orders remain administrator-attested; Stripe orders require signed payment-provider events. Commissions remain estimated and no automatic payouts occur. The Agent cannot approve, sell, pay or refund without an authorized human action.</p>
 </main>
-<?php az_render_member_layout_close(); ?><script type="module" src="assets/commerce.js?v=1.31.0"></script>
+<?php az_render_member_layout_close(); ?><script type="module" src="assets/commerce.js?v=1.32.0"></script><?php if($admin): ?><script type="module" src="assets/commerce-local-admin.js?v=1.32.0"></script><?php endif; ?>
 </body></html>
