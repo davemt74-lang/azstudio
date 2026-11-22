@@ -114,7 +114,10 @@ function az_commerce_row(string $id): array
 }
 function az_commerce_active(array $row): bool
 {
-    return $row['state']==='active' && (($row['checkout_mode']??'external')==='external' ? $row['checkout_url']!=='' : az_stripe_product_ready($row));
+    if($row['state']!=='active')return false;
+    $cash=(int)($row['local_enabled']??0)===1&&az_local_options()['available'];
+    return $cash || (($row['checkout_mode']??'external')==='external'
+        ? $row['checkout_url']!=='' : az_stripe_product_ready($row));
 }
 function az_commerce_model_ids(): array
 {
@@ -209,25 +212,27 @@ function az_commerce_product_save(array $user,array $body): array
     $url=az_commerce_url($body['checkoutUrl']??'');
     $mode=az_text($body['checkoutMode']??'external',12,'Checkout mode');
     $state=az_text($body['state']??'draft',16,'Product state');
+    $localEnabled=az_bool($body['localEnabled']??false,'Cash pickup or delivery for this product');
+    $cashReady=$localEnabled&&az_local_options()['available'];
     if(!in_array($mode,['external','stripe'],true)||!in_array($state,['draft','active','archived'],true)
-        ||($state==='active'&&$mode==='external'&&$url===''))
+        ||($state==='active'&&$mode==='external'&&$url===''&&!$cashReady))
         throw new AzHttpError(400,'Active external products need an HTTPS checkout link.','invalid_product_state');
-    if($state==='active'&&$mode==='stripe'&&!az_stripe_config()['ready'])
+    if($state==='active'&&$mode==='stripe'&&!az_stripe_config()['ready']&&!$cashReady)
         throw new AzHttpError(503,'Configure Stripe keys and a trusted public URL before activating Stripe products.','checkout_unavailable');
     if($mode==='stripe')$url='';
     $id=az_text($body['id']??'',32,'Product ID');$actor=(int)$user['id'];
-    return az_commerce_write(static function(PDO $db)use($id,$actor,$title,$description,$price,$commission,$url,$mode,$state,$body):array{
+    return az_commerce_write(static function(PDO $db)use($id,$actor,$title,$description,$price,$commission,$url,$mode,$state,$localEnabled,$body):array{
         $now=az_now();
         if($id===''){
             $idNew=az_id();
-            $db->prepare("INSERT INTO commerce_products(id,owner_id,title,description,price_cents,currency,checkout_url,checkout_mode,commission_bps,state,created_at,updated_at) VALUES(?,?,?,?,?,'USD',?,?,?,?,?,?)")
-                ->execute([$idNew,$actor,$title,$description,$price,$url,$mode,$commission,$state,$now,$now]);
+            $db->prepare("INSERT INTO commerce_products(id,owner_id,title,description,price_cents,currency,checkout_url,checkout_mode,commission_bps,local_enabled,state,created_at,updated_at) VALUES(?,?,?,?,?,'USD',?,?,?,?,?,?,?)")
+                ->execute([$idNew,$actor,$title,$description,$price,$url,$mode,$commission,$localEnabled?1:0,$state,$now,$now]);
             $idOut=$idNew;
         }else{
             $old=az_commerce_row($id);
             $revision=az_integer($body['revision']??0,1,PHP_INT_MAX,'Product revision');
-            $q=$db->prepare('UPDATE commerce_products SET title=?,description=?,price_cents=?,checkout_url=?,checkout_mode=?,commission_bps=?,state=?,revision=revision+1,updated_at=? WHERE id=? AND revision=?');
-            $q->execute([$title,$description,$price,$url,$mode,$commission,$state,$now,$id,$revision]);
+            $q=$db->prepare('UPDATE commerce_products SET title=?,description=?,price_cents=?,checkout_url=?,checkout_mode=?,commission_bps=?,local_enabled=?,state=?,revision=revision+1,updated_at=? WHERE id=? AND revision=?');
+            $q->execute([$title,$description,$price,$url,$mode,$commission,$localEnabled?1:0,$state,$now,$id,$revision]);
             if($q->rowCount()!==1)throw new AzHttpError(409,'Product changed. Reload before saving.','revision_conflict');
             $idOut=$id;
         }
@@ -441,18 +446,19 @@ function az_commerce_live_select(array $user,array $body): array
 }
 function az_commerce_public_products(): array
 {
-    $q=az_db()->query("SELECT id,title,description,price_cents,currency,checkout_url,checkout_mode,state FROM commerce_products
-        WHERE state='active' AND ((checkout_mode='external' AND checkout_url<>'') OR checkout_mode='stripe')
+    $q=az_db()->query("SELECT id,title,description,price_cents,currency,checkout_url,checkout_mode,state,local_enabled FROM commerce_products
+        WHERE state='active' AND ((checkout_mode='external' AND checkout_url<>'') OR checkout_mode='stripe' OR local_enabled=1)
         ORDER BY updated_at DESC LIMIT 48");
-    $rows=array_filter($q->fetchAll(PDO::FETCH_ASSOC),static fn($r)=>($r['checkout_mode']==='external'||az_stripe_product_ready($r)));
+    $rows=array_filter($q->fetchAll(PDO::FETCH_ASSOC),static fn($r)=>az_commerce_active($r));
     return array_values(array_map(static fn($r)=>['id'=>$r['id'],'title'=>$r['title'],'description'=>$r['description'],
         'priceCents'=>(int)$r['price_cents'],'currency'=>$r['currency'],
-        'checkoutMode'=>$r['checkout_mode'],'checkoutUrl'=>$r['checkout_mode']==='external'?$r['checkout_url']:''], $rows));
+        'checkoutMode'=>$r['checkout_mode'],'stripeReady'=>az_stripe_product_ready($r),
+        'localEnabled'=>(int)$r['local_enabled']===1,'checkoutUrl'=>$r['checkout_mode']==='external'?$r['checkout_url']:''], $rows));
 }
 function az_commerce_live_feature(): ?array
 {
     $room=az_live_active_room();if(!$room)return null;
-    $q=az_db()->prepare("SELECT p.id,p.title,p.description,p.price_cents,p.currency,p.checkout_url,p.checkout_mode,p.state,f.promotion_id
+    $q=az_db()->prepare("SELECT p.id,p.title,p.description,p.price_cents,p.currency,p.checkout_url,p.checkout_mode,p.local_enabled,p.state,f.promotion_id
         FROM commerce_live_features f JOIN commerce_products p ON p.id=f.product_id AND p.state='active'
         WHERE f.room_id=?");
     $q->execute([$room['id']]);$r=$q->fetch();
@@ -464,12 +470,13 @@ function az_commerce_live_feature(): ?array
     }
     return ['roomId'=>$room['id'],'id'=>$r['id'],'title'=>$r['title'],'description'=>$r['description'],
         'priceCents'=>(int)$r['price_cents'],'currency'=>$r['currency'],'checkoutMode'=>$r['checkout_mode'],
+        'stripeReady'=>az_stripe_product_ready($r),'localEnabled'=>(int)$r['local_enabled']===1,
         'promotionId'=>$promotion,'checkoutUrl'=>$r['checkout_mode']==='external'?$r['checkout_url']:''];
 }
 function az_commerce_video_products(string $videoId): array
 {
     if(!az_valid_id($videoId))return [];
-    $q=az_db()->prepare("SELECT a.id AS promotion_id,a.product_id,p.title,p.description,p.price_cents,p.currency,p.checkout_url,p.checkout_mode,p.state
+    $q=az_db()->prepare("SELECT a.id AS promotion_id,a.product_id,p.title,p.description,p.price_cents,p.currency,p.checkout_url,p.checkout_mode,p.local_enabled,p.state
         FROM commerce_promotions a JOIN commerce_products p ON p.id=a.product_id
         JOIN model_videos v ON v.id=a.video_id AND v.user_id=a.model_id
         JOIN users u ON u.id=a.model_id AND u.status='active'
@@ -482,6 +489,7 @@ function az_commerce_video_products(string $videoId): array
         $rows[]=['id'=>$r['product_id'],'title'=>$r['title'],'description'=>$r['description'],
             'promotionId'=>$r['promotion_id'],'videoId'=>$videoId,'priceCents'=>(int)$r['price_cents'],
             'currency'=>$r['currency'],'checkoutMode'=>$r['checkout_mode'],
+            'stripeReady'=>az_stripe_product_ready($r),'localEnabled'=>(int)$r['local_enabled']===1,
             'checkoutUrl'=>$r['checkout_mode']==='external'?$r['checkout_url']:''];
     }
     return $rows;
@@ -493,11 +501,12 @@ function az_commerce_state(array $user): array
     $q=$db->prepare("SELECT p.*,b.title AS brief_title,b.instructions AS brief_instructions,b.state AS brief_state,b.revision AS brief_revision,
         i.state AS my_interest FROM commerce_products p LEFT JOIN commerce_briefs b ON b.product_id=p.id
         LEFT JOIN commerce_interests i ON i.product_id=p.id AND i.model_id=?"
-        .($admin?'':" WHERE p.state='active' AND b.state='active' AND ((p.checkout_mode='external' AND p.checkout_url<>'') OR p.checkout_mode='stripe')")." ORDER BY p.updated_at DESC LIMIT 100");
+        .($admin?'':" WHERE p.state='active' AND b.state='active' AND ((p.checkout_mode='external' AND p.checkout_url<>'') OR p.checkout_mode='stripe' OR p.local_enabled=1)")." ORDER BY p.updated_at DESC LIMIT 100");
     $q->execute([$id]);$products=$q->fetchAll(PDO::FETCH_ASSOC);
     $list=array_map(static function($r)use($admin):array{
         $item=['id'=>$r['id'],'title'=>$r['title'],'description'=>$r['description'],'priceCents'=>(int)$r['price_cents'],
-            'currency'=>$r['currency'],'checkoutMode'=>$r['checkout_mode'],'checkoutUrl'=>$r['checkout_mode']==='external'?$r['checkout_url']:'','state'=>$r['state'],
+            'currency'=>$r['currency'],'checkoutMode'=>$r['checkout_mode'],'checkoutUrl'=>$r['checkout_mode']==='external'?$r['checkout_url']:'',
+            'localEnabled'=>(int)$r['local_enabled']===1,'stripeReady'=>az_stripe_product_ready($r),'state'=>$r['state'],
             'commissionBps'=>(int)$r['commission_bps'],'revision'=>(int)$r['revision'],
             'brief'=>($r['brief_title']===null?null:['title'=>$r['brief_title'],'instructions'=>$r['brief_instructions'],
                'state'=>$r['brief_state'],'revision'=>(int)$r['brief_revision']]),'myInterest'=>$r['my_interest']];
@@ -540,7 +549,7 @@ function az_commerce_briefing(array $user): array
         $products=(int)$db->query("SELECT COUNT(*) FROM commerce_products WHERE state='active'")->fetchColumn();
         $interests=(int)$db->query("SELECT COUNT(*) FROM commerce_interests WHERE state='interested'")->fetchColumn();
         $promos=(int)$db->query("SELECT COUNT(*) FROM commerce_promotions WHERE state='pending'")->fetchColumn();
-        $orders=(int)$db->query("SELECT COUNT(*) FROM commerce_orders WHERE state='recorded'")->fetchColumn();
+        $orders=(int)$db->query("SELECT COUNT(*) FROM commerce_orders WHERE provider='manual' AND state='recorded'")->fetchColumn();
         $paid=(int)$db->query("SELECT COUNT(*) FROM commerce_orders WHERE state='paid'")->fetchColumn();
         $verified=(int)$db->query("SELECT COUNT(*) FROM commerce_orders WHERE provider='stripe' AND state IN ('paid','partially_refunded')")->fetchColumn();
         if($interests)$cards[]=az_agent_workspace_card('commerce','Creator interests awaiting approval',$interests.' models requested participation in product briefs.','commerce.php',1);
@@ -579,7 +588,7 @@ function az_commerce_chat_snapshot(array $user): array
 function az_commerce_scan(): array
 {
     $cutoff=gmdate('Y-m-d\TH:i:s\Z',time()-48*3600);
-    $q=az_db()->prepare("SELECT o.id,p.title,o.recorded_by FROM commerce_orders o JOIN commerce_products p ON p.id=o.product_id WHERE o.state='recorded' AND o.created_at<=? ORDER BY o.created_at LIMIT 100");
+    $q=az_db()->prepare("SELECT o.id,p.title,o.recorded_by FROM commerce_orders o JOIN commerce_products p ON p.id=o.product_id WHERE o.provider='manual' AND o.state='recorded' AND o.created_at<=? ORDER BY o.created_at LIMIT 100");
     $q->execute([$cutoff]);$rows=$q->fetchAll(PDO::FETCH_ASSOC);
     foreach($rows as $row)az_commerce_queue_admins('order:'.$row['id'].':overdue48h',(int)$row['recorded_by'],
         'order_attention','Order still needs reconciliation',$row['title'].' · External payment status has been unconfirmed for over 48 hours.',true);

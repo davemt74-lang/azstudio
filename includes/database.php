@@ -69,6 +69,7 @@ function az_db(): PDO
     if (function_exists('az_upgrade_agent_publishing_schema') && az_schema_version($GLOBALS['az_database']) >= 34) { az_upgrade_agent_publishing_schema($GLOBALS['az_database']); }
     if (function_exists('az_upgrade_commerce_schema') && az_schema_version($GLOBALS['az_database']) >= 35) { az_upgrade_commerce_schema($GLOBALS['az_database']); }
     if (function_exists('az_upgrade_commerce_stripe_schema') && az_schema_version($GLOBALS['az_database']) >= 36) { az_upgrade_commerce_stripe_schema($GLOBALS['az_database']); }
+    if (function_exists('az_upgrade_commerce_local_schema') && az_schema_version($GLOBALS['az_database']) >= 37) { az_upgrade_commerce_local_schema($GLOBALS['az_database']); }
     return $GLOBALS['az_database'];
 }
 
@@ -138,6 +139,7 @@ function az_create_schema(PDO $db): void
     if (function_exists('az_upgrade_agent_publishing_schema') && az_schema_version($db) >= 34) { az_upgrade_agent_publishing_schema($db); }
     if (function_exists('az_upgrade_commerce_schema') && az_schema_version($db) >= 35) { az_upgrade_commerce_schema($db); }
     if (function_exists('az_upgrade_commerce_stripe_schema') && az_schema_version($db) >= 36) { az_upgrade_commerce_stripe_schema($db); }
+    if (function_exists('az_upgrade_commerce_local_schema') && az_schema_version($db) >= 37) { az_upgrade_commerce_local_schema($db); }
 }
 
 
