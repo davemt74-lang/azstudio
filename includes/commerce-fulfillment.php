@@ -228,7 +228,7 @@ function az_inventory_reserve(PDO $db,string $productId,int $quantity,string $st
     if($q->fetchColumn()!==false)return; // Idempotent retry; source identity is stable.
     $available=(int)$stock['on_hand']-(int)$stock['reserved'];
     if($quantity>$available)throw new AzHttpError(409,'This product no longer has sufficient stock.','insufficient_stock');
-    $updated=$db->prepare('UPDATE commerce_product_fulfillment SET reserved=reserved+?,revision=revision+1,updated_at=? WHERE product_id=? AND stock_mode=? AND on_hand-reserved>=?');
+    $updated=$db->prepare('UPDATE commerce_product_fulfillment SET reserved=reserved+?,revision=revision+1,updated_at=? WHERE product_id=? AND stock_mode=? AND on_hand-reserved>=0+?');
     $updated->execute([$quantity,az_now(),$productId,'tracked',$quantity]);
     if($updated->rowCount()!==1)throw new AzHttpError(409,'Inventory changed before your order.','insufficient_stock');
     $db->prepare("INSERT INTO commerce_stock_reservations(stock_key,product_id,order_id,checkout_attempt_id,
