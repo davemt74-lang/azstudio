@@ -1,0 +1,30 @@
+
+[data-local-order][hidden], [data-local-status][hidden]{display:none!important}
+.azh-local-dialog{box-sizing:border-box;width:min(660px,calc(100vw - 28px));max-width:none;max-height:calc(100dvh - 32px);overflow-y:auto;padding:clamp(16px,3vw,30px);background:#fff;color:#302530;border:1px solid #e6dde5;border-radius:18px;box-shadow:0 24px 80px #160b1333}
+.azh-local-dialog::backdrop{background:#151017ad}
+.azh-local-head{display:flex;justify-content:space-between;gap:12px;align-items:start}
+.azh-local-head h2{font-size:clamp(27px,4vw,40px);margin:6px 0 16px;letter-spacing:-.04em}
+.azh-local-head h2 span{color:#c55673}.azh-local-head p{margin:0;font-size:11px;letter-spacing:.13em;font-weight:800;color:#ba5d76}
+.azh-local-close{min-height:42px;min-width:42px;font-size:24px;background:#f3eaf0;border:0;border-radius:9px;cursor:pointer}
+.azh-local-notice{border-left:3px solid #b8758a;padding:12px 16px;background:#fbf4f7;line-height:1.5}
+.azh-local-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.azh-local-dialog label{display:grid;gap:6px;font-size:13px;font-weight:650;min-width:0}
+.azh-local-dialog input,.azh-local-dialog select,.azh-local-dialog textarea{box-sizing:border-box;display:block;max-width:100%;width:100%;font:inherit;line-height:1.4;border:1px solid #cec3cb;border-radius:9px;padding:11px;background:white;color:#332733}
+.azh-local-dialog textarea{resize:vertical}
+.azh-local-fields>label:has(textarea),.azh-local-address{grid-column:1/-1}
+.azh-local-address{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:14px;border-radius:12px;background:#faf6f8}
+.azh-local-address>p,.azh-local-address>label:first-of-type{grid-column:1/-1}
+.azh-local-address p{font-weight:750;margin:0}
+.azh-local-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.azh-local-dialog [hidden]{display:none!important}
+.azh-local-service{white-space:pre-wrap;line-height:1.55;color:#6e5d68}
+.azh-local-estimate{font-weight:750;font-size:17px}
+.azh-local-status{min-height:1em;color:#a14661}
+.azh-local-primary,.azh-local-buttons button,#azh-local-cancel{padding:12px 16px;border:0;border-radius:10px;min-height:44px;background:#302632;color:#fff;font-weight:750;cursor:pointer}
+.azh-local-dialog button:disabled{opacity:.5}
+.azh-local-buttons{display:flex;flex-wrap:wrap;gap:10px}
+.azh-local-status-result{padding:15px;background:#faf5f8;border-radius:11px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
+#azh-local-status-token,#azh-local-receipt-token{font-family:ui-monospace,monospace;font-size:12px;overflow-wrap:anywhere}
+.azh-local-dialog-open{overflow:hidden}
+.azh-local-checkout-button{background:#fff!important;color:#5d354a!important;border:1px solid #d7b0bf!important}
+@media(max-width:600px){.azh-local-dialog{position:fixed;inset:0;margin:0;width:100vw;max-height:100dvh;height:100dvh;border-radius:0;border:0;padding:16px;overflow-y:auto}.azh-local-fields,.azh-local-address{grid-template-columns:minmax(0,1fr)}.azh-local-address>label:first-of-type{grid-column:auto}}

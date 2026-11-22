@@ -1,3 +1,9 @@
+# AZHottie Studio — v1.32.0
+
+**Pay with Cash, Local Pickup & Local Delivery — configured on each product.** In Commerce > Products > Create/Edit, set cash availability, pickup location and hours, delivery ZIP coverage, fees, minimums and instructions independently for every item. Shoppers can request pickup/delivery from Shop, approved shoppable videos and Live, without paying online. The shared Local Orders queue handles staff quotes, acceptance, cash collection, pickup/delivery fulfillment and full cash refunds. Private contact details are encrypted at rest and excluded from Agent Chat, Brain, creator accounts and public receipts. Cash commissions begin only after staff record actual collection; Stripe-signed and manually recorded payments remain separately labeled. Schema 37 → 38, cash opt-in defaults OFF. See `docs/RELEASE_1_32_0.txt`.
+
+---
+
 # AZHottie Studio — v1.31.0
 
 **Verified Commerce and Affiliate Attribution:** Optional Stripe-hosted checkout and signed webhook reconciliation, provider-verified paid orders, creator-video and Live attribution, refunds, disputes, shared Agent notifications/Chat/Brain, and separate verified-versus-admin-recorded analytics. Existing external seller links remain available but do not provide automatic payment evidence. No automatic creator payouts, fulfillment or tax handling. Schema 36→37. See `docs/RELEASE_1_31_0.txt`.

@@ -210,6 +210,9 @@ function az_agent_workspace_brain(array $user): array
     $commerce=az_commerce_briefing($user);
     foreach($commerce['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,$commerce['counts']);
+    $localCommerce=az_local_briefing($user);
+    foreach($localCommerce['cards'] as $item)$cards[]=$item;
+    $summary=array_merge($summary,$localCommerce['counts']);
     $schedule=az_agent_schedule_briefing($user);
     foreach($schedule['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,['upcomingSchedule'=>$schedule['counts']['upcoming'],'scheduleConflicts'=>$schedule['counts']['conflicts']]);

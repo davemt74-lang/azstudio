@@ -38,9 +38,19 @@ if(root){
       const meta=make('div','azh-commerce-actions');text(meta,'small','Creator commission '+(p.commissionBps/100).toFixed(2)+'%');
       if(p.state==='active'&&p.checkoutMode==='external'&&p.checkoutUrl)link(meta,p.checkoutUrl,'External checkout ↗');
       if(p.checkoutMode==='stripe')text(meta,'small',state.stripe?.available?'Stripe checkout configured ('+state.stripe.mode+')':'Stripe not configured');
+      if(p.localEnabled)text(meta,'small','Cash pickup/delivery available · product-specific');
       if(admin)choice(meta,'Edit product',()=>{
         const f=$('commerce-product-form');for(const k of ['id','title','description','checkoutUrl','checkoutMode','state','revision'])f.elements.namedItem(k).value=p[k]??'';
         f.elements.priceDollars.value=(p.priceCents/100).toFixed(2);f.elements.commissionPercent.value=(p.commissionBps/100).toFixed(2);
+        const l=p.localSettings||{};
+        f.elements.localRevision.value=l.revision??0;
+        for(const k of ['localEnabled','pickupEnabled','deliveryEnabled'])
+          f.elements[k].checked=k==='localEnabled'?Boolean(l.enabled):Boolean(l[k]);
+        for(const k of ['pickupLocation','pickupAddress','pickupHours','pickupInstructions','deliveryZips','deliveryState','deliveryInstructions'])
+          f.elements[k].value=l[k]??(k==='deliveryState'?'AZ':'');
+        f.elements.deliveryFeeDollars.value=((l.deliveryFeeCents||0)/100).toFixed(2);
+        f.elements.deliveryMinDollars.value=((l.deliveryMinCents||0)/100).toFixed(2);
+        document.getElementById('azh-product-local-settings').open=Boolean(l.enabled);
         f.scrollIntoView({behavior:'smooth',block:'start'});
       });
       c.append(meta);
@@ -103,9 +113,9 @@ if(root){
       if(o.state==='recorded')pending++;
       if(['paid','partially_refunded'].includes(o.state))commission+=Number(o.commission_cents);
       const c=card(list,o.product_title,o.state.toUpperCase()+' · '+money(o.amount_cents),
-        'Quantity '+o.quantity+' · '+(o.provider==='stripe'?'Stripe verified':'Admin recorded')+
+        'Quantity '+o.quantity+' · '+(o.provider==='stripe'?'Stripe verified':(o.provider==='cash'?'Staff cash order':'Admin recorded'))+
         (admin?' · Order '+o.external_reference:'')+' · Creator commission '+money(['paid','partially_refunded'].includes(o.state)?o.commission_cents:0));
-      if(admin&&o.provider!=='stripe'&&(['recorded','paid'].includes(o.state))){
+      if(admin&&o.provider==='manual'&&(['recorded','paid'].includes(o.state))){
         const a=make('div','azh-commerce-actions');
         const reconcile=decision=>{
           const evidence=decision==='cancelled'?'':window.prompt('Enter the verified external payment/refund reference:','');
@@ -141,6 +151,8 @@ if(root){
       ['Verified commission liability',money(a.verified.commissionCents),'Estimates; not disbursed'],
       ['Stripe refunds',money(a.verified.refundedCents),'Includes partial refunds'],
       ['Manual recorded net',money(a.manual.netCents),'Admin attested · not provider-verified'],
+      ['Cash merchandise net',money(a.cash?.netCents||0),'Staff-recorded collection; excludes cash delivery fees and taxes'],
+      ['Cash commission estimates',money(a.cash?.commissionCents||0),'Created only after cash collection'],
       ['Checkout paid / started',a.checkout.paid+' / '+a.checkout.started,'Paid-per-start '+(a.checkout.paymentRatePercent??'—')+'% · not page views']
     ]){
       const c=make('article','azh-commerce-kpi');text(c,'small',name);text(c,'strong',value);text(c,'p',help);grid.append(c);
@@ -168,7 +180,7 @@ if(root){
     if(admin){
       const products=state.products;
       setOptions('[data-products]',products.map(p=>[p.id,p.title]),'Choose product');
-      setOptions('[data-active-products]',products.filter(p=>p.state==='active'&&(p.checkoutMode==='stripe'||p.checkoutUrl)).map(p=>[p.id,p.title]),'Choose active product');
+      setOptions('[data-active-products]',products.filter(p=>p.state==='active'&&(p.stripeReady||p.checkoutUrl||p.localEnabled)).map(p=>[p.id,p.title]),'Choose active product');
       const selected=$('commerce-live-form')?.elements?.productId?.value;
       setOptions('[data-live-promotions]',[['','No creator attribution'],...state.promotions.filter(p=>p.state==='approved'&&p.product_id===selected).map(p=>[p.id,p.video_title])],'No creator attribution');
       setOptions('[data-approved-products]',products.filter(p=>p.myInterest==='approved').map(p=>[p.id,p.title]),'Choose approved product');
@@ -189,10 +201,25 @@ if(root){
       e.preventDefault();const d=formData('commerce-product-form');
       const cents=Math.round(Number(d.priceDollars)*100),bps=Math.round(Number(d.commissionPercent)*100);
       if(!Number.isSafeInteger(cents)||!Number.isSafeInteger(bps)){status('Enter valid decimal amounts.',true);return;}
+      const f=$('commerce-product-form'),fee=Math.round(Number(d.deliveryFeeDollars)*100),minimum=Math.round(Number(d.deliveryMinDollars)*100);
+      if(!Number.isSafeInteger(fee)||!Number.isSafeInteger(minimum)||fee<0||minimum<0){
+        status('Enter valid cash delivery fees and minimum order amounts.',true);return;
+      }
+      const localSettings={revision:Number(d.localRevision||0),
+        enabled:f.elements.localEnabled.checked,pickupEnabled:f.elements.pickupEnabled.checked,
+        deliveryEnabled:f.elements.deliveryEnabled.checked,pickupLocation:d.pickupLocation||'',
+        pickupAddress:d.pickupAddress||'',pickupHours:d.pickupHours||'',
+        pickupInstructions:d.pickupInstructions||'',deliveryZips:d.deliveryZips||'',
+        deliveryState:d.deliveryState||'AZ',deliveryFeeCents:fee,deliveryMinCents:minimum,
+        deliveryInstructions:d.deliveryInstructions||''};
       void mutate('saveProduct',{id:d.id||'',revision:d.revision?Number(d.revision):undefined,title:d.title,description:d.description,
-        priceCents:cents,commissionBps:bps,checkoutMode:d.checkoutMode,checkoutUrl:d.checkoutUrl,state:d.state},'Product saved.');
+        priceCents:cents,commissionBps:bps,checkoutMode:d.checkoutMode,checkoutUrl:d.checkoutUrl,state:d.state,
+        localSettings},'Product and product-specific cash settings saved.');
     });
-    $('commerce-product-form').addEventListener('reset',()=>{const form=$('commerce-product-form');form.elements.id.value='';form.elements.revision.value='';});
+    $('commerce-product-form').addEventListener('reset',()=>{const form=$('commerce-product-form');form.elements.id.value='';
+      form.elements.revision.value='';form.elements.localRevision.value='0';
+      document.getElementById('azh-product-local-settings').open=false;
+    });
     $('commerce-brief-form').addEventListener('submit',e=>{
       e.preventDefault();const f=$('commerce-brief-form'),d=formData('commerce-brief-form');
       const current=state.products.find(p=>p.id===d.productId)?.brief;

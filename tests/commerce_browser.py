@@ -26,8 +26,15 @@ def html_for(role):
     if admin:
         parts.append('''<form id="commerce-product-form" class="azh-commerce-form"><input name="id"><input name="revision">
 <input name="title" required><textarea name="description"></textarea>
-<input name="priceDollars" type="number"><input name="commissionPercent" type="number">
+<input name="priceDollars" type="number" step="0.01"><input name="commissionPercent" type="number" step="0.01">
 <input name="checkoutUrl"><select name="checkoutMode"><option value="external">External</option><option value="stripe">Stripe</option></select><select name="state"><option value="active">Active</option></select>
+<details id="azh-product-local-settings"><summary>Cash and local fulfillment per product</summary>
+<input name="localRevision" value="0">
+<input name="localEnabled" type="checkbox"><input name="pickupEnabled" type="checkbox"><input name="deliveryEnabled" type="checkbox">
+<input name="pickupLocation"><input name="pickupAddress"><input name="pickupHours"><input name="pickupInstructions">
+<input name="deliveryZips"><input name="deliveryState" value="AZ">
+<input name="deliveryFeeDollars" type="number" value="0"><input name="deliveryMinDollars" type="number" value="0">
+<input name="deliveryInstructions"></details>
 <button type="submit">Save</button><button type="reset" data-reset-product>Reset</button></form>''')
     parts.append('''<div id="commerce-products-list"></div></section>
 <section data-panel="briefs" hidden>''')
@@ -59,6 +66,10 @@ def state_for(role):
     product={'id':PID,'title':'Sample Product','description':'Creator-facing product overview',
         'priceCents':1250,'currency':'USD','checkoutUrl':'https://seller.example/checkout',
         'state':'active','checkoutMode':'external','commissionBps':1000,'revision':1,
+        'localEnabled':True,'localSettings':{'revision':1,'enabled':True,'pickupEnabled':True,
+        'deliveryEnabled':False,'pickupLocation':'Sample Pickup A','pickupAddress':'123 Example St, Phoenix AZ',
+        'pickupHours':'By confirmation','pickupInstructions':'Wait for confirmation','deliveryZips':'',
+        'deliveryState':'AZ','deliveryFeeCents':0,'deliveryMinCents':0,'deliveryInstructions':''},
         'brief':{'title':'Creator Spotlight','instructions':'Create a short video review','state':'active','revision':1},
         'myInterest':None if not admin else None}
     return {'role':role,'products':[product],
@@ -68,7 +79,7 @@ def state_for(role):
                        'product_title':'Sample Product','video_title':'My product video','state':'pending',
                        'video_status':'published'}] if admin else [],
         'orders':[{'id':ORDER,'external_reference':'external-order-0001','product_id':PID,
-                   'product_title':'Sample Product','state':'recorded','quantity':1,'amount_cents':1250,
+                   'product_title':'Sample Product','state':'recorded','provider':'manual','quantity':1,'amount_cents':1250,
                    'commission_cents':0}] if admin else [],
         'videos':[{'id':VID,'title':'My video','revision':1}] if not admin else [],
         'liveFeature':None,'stripe':{'available':False,'mode':'test'},
@@ -103,7 +114,20 @@ def run():
                 assert page.get_by_text('Sample Product').count()>=1,(role,width,'missing product')
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+2'),(role,width,'overflow')
                 page.locator('[data-tab=analytics]').click()
-                assert page.locator('.azh-commerce-kpi').count()==6,(role,width,'analytics cards')
+                assert page.locator('.azh-commerce-kpi').count()==8,(role,width,'analytics cards')
+                if admin:
+                    page.locator('[data-tab=products]').click()
+                    page.locator('#commerce-products-list .azh-commerce-card button').first.click()
+                    assert page.locator('[name=localEnabled]').is_checked(),('product cash selected',width)
+                    assert page.locator('[name=pickupAddress]').input_value()=='123 Example St, Phoenix AZ',('per-product pickup details',width)
+                    validity=page.locator('#commerce-product-form').evaluate(
+                        "(f)=>({valid:f.checkValidity(),invalid:[...f.elements].filter(e=>e.willValidate&&!e.validity.valid).map(e=>e.name)})")
+                    assert validity['valid'],('product editor invalid',width,validity)
+                    with page.expect_request(lambda req:'action=saveProduct' in req.url,timeout=8000) as request:
+                        page.locator('#commerce-product-form button[type=submit]').click()
+                    payload=json.loads(request.value.post_data)
+                    assert payload['localSettings']['pickupAddress']=='123 Example St, Phoenix AZ',('per-product payload',width,payload)
+                    page.wait_for_function("document.querySelector('#commerce-status').textContent.includes('product-specific')",timeout=8000)
                 page.locator('[data-tab=briefs]').click()
                 assert page.locator('#commerce-brief-list .azh-commerce-card').count()==1,(role,width,'brief render')
                 if admin:
