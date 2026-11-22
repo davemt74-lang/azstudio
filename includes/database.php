@@ -74,6 +74,7 @@ function az_db(): PDO
     if(function_exists('az_upgrade_commerce_carrier_schema') && az_schema_version($GLOBALS['az_database'])>=39) {az_upgrade_commerce_carrier_schema($GLOBALS['az_database']);}
     if (function_exists('az_upgrade_commerce_customer_shipping_schema') && az_schema_version($GLOBALS['az_database']) >= 40) { az_upgrade_commerce_customer_shipping_schema($GLOBALS['az_database']); }
     if (function_exists('az_upgrade_commerce_settlement_schema') && az_schema_version($GLOBALS['az_database']) >= 41) { az_upgrade_commerce_settlement_schema($GLOBALS['az_database']); }
+    if (function_exists('az_upgrade_commerce_provider_schema') && az_schema_version($GLOBALS['az_database']) >= 42) { az_upgrade_commerce_provider_schema($GLOBALS['az_database']); }
     return $GLOBALS['az_database'];
 }
 
@@ -148,6 +149,7 @@ function az_create_schema(PDO $db): void
     if (function_exists('az_upgrade_commerce_carrier_schema') && az_schema_version($db) >= 39) { az_upgrade_commerce_carrier_schema($db); }
     if (function_exists('az_upgrade_commerce_customer_shipping_schema') && az_schema_version($db) >= 40) { az_upgrade_commerce_customer_shipping_schema($db); }
     if (function_exists('az_upgrade_commerce_settlement_schema') && az_schema_version($db) >= 41) { az_upgrade_commerce_settlement_schema($db); }
+    if (function_exists('az_upgrade_commerce_provider_schema') && az_schema_version($db) >= 42) { az_upgrade_commerce_provider_schema($db); }
 }
 
 

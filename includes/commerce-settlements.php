@@ -59,9 +59,9 @@ function az_payout_allocated(PDO $db,string $orderId,?string $state=null): int
     $sql="SELECT COALESCE(SUM(l.amount_cents),0) FROM commerce_payout_allocations l
         JOIN commerce_payout_batches b ON b.id=l.batch_id WHERE l.order_id=?";
     $args=[$orderId];
-    if($state==='paid'){$sql.=" AND b.state='paid'";}
+    if($state==='paid'){$sql.=" AND b.state IN ('paid','transferred')";}
     elseif($state==='reserved'){$sql.=" AND b.state IN ('draft','approved')";}
-    else $sql.=" AND b.state IN ('draft','approved','paid')";
+    else $sql.=" AND b.state IN ('draft','approved','paid','transferred')";
     $q=$db->prepare($sql);$q->execute($args);return (int)$q->fetchColumn();
 }
 function az_payout_model_balance(int $model,bool $includeOrders=false): array
@@ -90,12 +90,15 @@ function az_payout_model_balance(int $model,bool $includeOrders=false): array
             ];
         }
     }
+    $q=$db->prepare("SELECT COALESCE(SUM(amount_cents),0) FROM commerce_connect_transfers t
+        JOIN commerce_payout_batches b ON b.id=t.batch_id WHERE b.model_id=? AND t.status='transferred'");
+    $q->execute([$model]);$connectTransferred=(int)$q->fetchColumn();
     return ['modelId'=>$model,'eligibleCents'=>$eligible,'heldCents'=>$held,
-        'reservedCents'=>$reserved,'recordedPaidCents'=>$paid,
+        'reservedCents'=>$reserved,'recordedPaidCents'=>$paid,'connectTransferredCents'=>$connectTransferred,
         'overpaidCents'=>$debt,'newPayoutBlocked'=>$debt>0,
         'holdDays'=>az_payout_hold_days(),
         'orders'=>$includeOrders?$rows:[],
-        'basis'=>'Gross merchandise commissions only; payment, settlement hold, delivery, returns and disputes are checked before drafting/approving a payout. Paid is a staff-confirmed external transfer, not money sent by AZHottie.'];
+        'basis'=>'Gross merchandise commissions only; payment, settlement hold, delivery, returns and disputes are checked before drafting/approving a payout. Paid amounts include recorded external payments and verified platform transfers into connected accounts; a Stripe Connect transfer is not proof of a bank deposit.'];
 }
 function az_payout_models(array $user): array
 {
@@ -111,7 +114,8 @@ function az_payout_models(array $user): array
         $result[]=['id'=>(int)$m['id'],'name'=>$m['name'],
             'eligibleCents'=>$balance['eligibleCents'],'heldCents'=>$balance['heldCents'],
             'reservedCents'=>$balance['reservedCents'],'paidCents'=>$balance['recordedPaidCents'],
-            'overpaidCents'=>$balance['overpaidCents']];
+            'overpaidCents'=>$balance['overpaidCents'],
+            'connectAccount'=>az_connect_account_state($user,(int)$m['id'])];
     }
     return $result;
 }
@@ -138,7 +142,8 @@ function az_payout_batches(array $user): array
         'evidenceReference'=>$r['state']==='paid'?$r['evidence_reference']:'',
         'revision'=>(int)$r['revision'],
         'createdAt'=>$r['created_at'],'approvedAt'=>$r['approved_at'],
-        'confirmedAt'=>$r['confirmed_at']
+        'confirmedAt'=>$r['confirmed_at'],
+        'connectTransfer'=>az_connect_transfer_status($user,$r['id'])
     ],$q->fetchAll(PDO::FETCH_ASSOC));
 }
 /** Recheck all allocations, not merely the aggregate batch amount. */
@@ -226,6 +231,8 @@ function az_payout_change(array $user,array $body): array
             ||($action==='paid'&&$batch['state']!=='approved')
             ||($action==='cancel'&&!in_array($batch['state'],['draft','approved'],true)))
             throw new AzHttpError(409,'Payout cannot make that transition.','invalid_transition');
+        if(in_array($action,['paid','cancel'],true)&&az_connect_transfer_row($batchId)!==null)
+            throw new AzHttpError(409,'A Connect transfer is pending, completed, or needs provider reconciliation.','connect_transfer_existing');
         if($action!=='cancel')az_payout_verify_batch($db,$batch);
         $now=az_now();
         if($action==='approve'){
@@ -262,11 +269,12 @@ function az_payout_role_state(array $user): array
     az_agent_workspace_assert($user);
     if(az_has_role($user,'admin')){
         return ['role'=>'admin','models'=>az_payout_models($user),'batches'=>az_payout_batches($user),
-            'holdDays'=>az_payout_hold_days(),'notice'=>'Payouts are external manual records. AZHottie never transfers funds.'];
+            'holdDays'=>az_payout_hold_days(),'providerFeatures'=>az_provider_features(),
+            'notice'=>'Manual bank payouts and Stripe Connect transfers have distinct provider states. Only an authorized staff member may initiate either.'];
     }
     return ['role'=>'model','balance'=>az_payout_model_balance((int)$user['id'],true),
-        'batches'=>az_payout_batches($user),
-        'notice'=>'Paid means staff recorded a separate external transfer; no money is sent automatically by AZHottie.'];
+        'batches'=>az_payout_batches($user),'connectAccount'=>az_connect_account_state($user,(int)$user['id']),
+        'notice'=>'External paid records and Stripe Connect transfers are distinct; a Connect transfer does not prove bank deposit.'];
 }
 function az_payout_briefing(array $user): array
 {

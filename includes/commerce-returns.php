@@ -212,7 +212,7 @@ function az_return_row(string $id): array
 {
     if(!az_valid_id($id))throw new AzHttpError(404,'Return case not found.','not_found');
     $q=az_db()->prepare("SELECT r.*,o.state AS order_state,o.provider,o.quantity AS order_quantity,
-        o.amount_cents,o.refunded_cents,o.commission_bps,o.commission_cents,
+        o.amount_cents,o.refunded_cents,o.provider_payment_id,o.provider_total_cents,o.commission_bps,o.commission_cents,
         o.product_id,o.promotion_id,o.paid_at,p.title,p.owner_id,m.model_id
         FROM commerce_returns r JOIN commerce_orders o ON o.id=r.order_id
         JOIN commerce_products p ON p.id=o.product_id
@@ -231,12 +231,16 @@ function az_return_public_view(array $r): array
         'revision'=>(int)$r['revision'],'createdAt'=>$r['created_at'],'updatedAt'=>$r['updated_at'],
         'provider'=>$r['provider'],'refundReference'=>$r['refund_reference'],
         'replacementReference'=>$r['replacement_reference'],
+        'providerRefund'=>az_provider_refund_public(az_provider_refund_row($r['id'])),
+        'returnLabel'=>az_return_label_snapshot($r['id']),
+        'approvedRefundCents'=>isset($r['amount_cents'],$r['order_quantity'])&&$r['order_quantity']>0
+            ?intdiv((int)$r['amount_cents']*(int)$r['quantity'],(int)$r['order_quantity']):null,
         'verifiedPayoutStatus'=>'No refund or payout initiated by submitting a return request'];
 }
 function az_return_admin_list(array $user): array
 {
     az_commerce_admin($user);
-    $q=az_db()->query("SELECT r.*,o.provider,p.title
+    $q=az_db()->query("SELECT r.*,o.provider,o.quantity AS order_quantity,o.amount_cents,p.title
         FROM commerce_returns r JOIN commerce_orders o ON o.id=r.order_id
         JOIN commerce_products p ON p.id=o.product_id
         ORDER BY CASE WHEN r.status IN ('requested','authorized','received','inspected','refund_approved','exchange_approved') THEN 0 ELSE 1 END,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 const AZ_ROOT = __DIR__ . '/..';
 const AZ_STORAGE = AZ_ROOT . '/storage';
 const AZ_CONFIG_FILE = AZ_STORAGE . '/config.php';
-const AZ_VERSION = '1.36.0';
+const AZ_VERSION = '1.37.0';
 
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/production.php';
@@ -38,6 +38,10 @@ require_once __DIR__ . '/commerce-customer-shipping.php';
 require_once __DIR__ . '/commerce-returns.php';
 require_once __DIR__ . '/commerce-return-actions.php';
 require_once __DIR__ . '/commerce-settlements.php';
+require_once __DIR__ . '/commerce-provider-operations.php';
+require_once __DIR__ . '/commerce-provider-refunds.php';
+require_once __DIR__ . '/commerce-return-labels.php';
+require_once __DIR__ . '/commerce-connect-transfers.php';
 if (is_file(__DIR__ . '/scheduling.php')) { require_once __DIR__ . '/scheduling.php'; }
 if (is_file(__DIR__ . '/publication.php')) { require_once __DIR__ . '/publication.php'; }
 if (is_file(__DIR__ . '/work.php')) { require_once __DIR__ . '/work.php'; }

@@ -225,6 +225,9 @@ function az_agent_workspace_brain(array $user): array
     $settlement=az_payout_briefing($user);
     foreach($settlement['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,$settlement['counts']);
+    $provider=az_provider_briefing($user);
+    foreach($provider['cards'] as $item)$cards[]=$item;
+    $summary=array_merge($summary,$provider['counts']);
     $schedule=az_agent_schedule_briefing($user);
     foreach($schedule['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,['upcomingSchedule'=>$schedule['counts']['upcoming'],'scheduleConflicts'=>$schedule['counts']['conflicts']]);
