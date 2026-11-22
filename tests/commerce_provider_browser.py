@@ -117,6 +117,10 @@ def run():
             window.azProviderModelEnhance(model,x.model,refresh);
           };
           window.providerStates={refund:null,label:null,transfer:null,connect:null};
+          // The real admin UI refreshes cards after provider feature config loads.
+          // Mirror that to avoid races on slower 320px Chrome runs.
+          document.getElementById('azh-returns-refresh')?.addEventListener('click',refreshProviderCards);
+          document.getElementById('azh-payout-refresh')?.addEventListener('click',refreshProviderCards);
           refreshProviderCards();
         }""")
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+2'),('overflow initial',admin,width)
