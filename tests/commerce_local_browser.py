@@ -80,6 +80,7 @@ def run():
             assert 'Awaiting confirmation' in page.locator('#azh-local-status-result').inner_text()
             page.locator('.azh-local-close').click()
             page.locator('#delivery-b').click()
+            page.wait_for_function("document.querySelector('#azh-local-method').value==='delivery'",timeout=8000)
             assert page.locator('#azh-local-method option').count()==1,('delivery options',width)
             assert page.locator('#azh-local-method').input_value()=='delivery',width
             assert page.locator('#azh-local-address').is_visible(),width
