@@ -44,6 +44,7 @@ jobs:
           php tests/agent_publishing_rules.php
           php tests/agent_publishing_integration.php
           php tests/commerce_integration.php
+          php tests/commerce_stripe_integration.php
 
   fixtures:
     name: SQLite permissions and migration fixtures

@@ -36,9 +36,10 @@ if(root){
     for(const p of state.products){
       const c=card(list,p.title,p.state.toUpperCase()+' · '+money(p.priceCents),p.description||'No description');
       const meta=make('div','azh-commerce-actions');text(meta,'small','Creator commission '+(p.commissionBps/100).toFixed(2)+'%');
-      if(p.state==='active'&&p.checkoutUrl)link(meta,p.checkoutUrl,'Hosted checkout ↗');
+      if(p.state==='active'&&p.checkoutMode==='external'&&p.checkoutUrl)link(meta,p.checkoutUrl,'External checkout ↗');
+      if(p.checkoutMode==='stripe')text(meta,'small',state.stripe?.available?'Stripe checkout configured ('+state.stripe.mode+')':'Stripe not configured');
       if(admin)choice(meta,'Edit product',()=>{
-        const f=$('commerce-product-form');for(const k of ['id','title','description','checkoutUrl','state','revision'])f.elements.namedItem(k).value=p[k]??'';
+        const f=$('commerce-product-form');for(const k of ['id','title','description','checkoutUrl','checkoutMode','state','revision'])f.elements.namedItem(k).value=p[k]??'';
         f.elements.priceDollars.value=(p.priceCents/100).toFixed(2);f.elements.commissionPercent.value=(p.commissionBps/100).toFixed(2);
         f.scrollIntoView({behavior:'smooth',block:'start'});
       });
@@ -100,10 +101,11 @@ if(root){
     let pending=0,commission=0;
     for(const o of state.orders){
       if(o.state==='recorded')pending++;
-      if(o.state==='paid')commission+=Number(o.commission_cents);
+      if(['paid','partially_refunded'].includes(o.state))commission+=Number(o.commission_cents);
       const c=card(list,o.product_title,o.state.toUpperCase()+' · '+money(o.amount_cents),
-        'Quantity '+o.quantity+(admin?' · Order '+o.external_reference:'')+' · Creator commission '+money(o.state==='paid'?o.commission_cents:0));
-      if(admin&&(['recorded','paid'].includes(o.state))){
+        'Quantity '+o.quantity+' · '+(o.provider==='stripe'?'Stripe verified':'Admin recorded')+
+        (admin?' · Order '+o.external_reference:'')+' · Creator commission '+money(['paid','partially_refunded'].includes(o.state)?o.commission_cents:0));
+      if(admin&&o.provider!=='stripe'&&(['recorded','paid'].includes(o.state))){
         const a=make('div','azh-commerce-actions');
         const reconcile=decision=>{
           const evidence=decision==='cancelled'?'':window.prompt('Enter the verified external payment/refund reference:','');
@@ -124,12 +126,51 @@ if(root){
       list.prepend(info);
     }
   }
+
+  function renderAnalytics(){
+    const target=$('commerce-analytics');target.replaceChildren();
+    const a=state.analytics;
+    if(!a){text(target,'p','Commerce analytics unavailable.');return;}
+    const heading=make('div','azh-commerce-analytics-heading');
+    text(heading,'h2','Commerce performance · last '+a.periodDays+' days');
+    text(heading,'p',a.basis);target.append(heading);
+    const grid=make('div','azh-commerce-kpi-grid');
+    for(const [name,value,help] of [
+      ['Verified Stripe net',money(a.verified.netCents),'Signed payment and refund events'],
+      ['Verified purchases',String(a.verified.orders),'Provider-confirmed paid checkouts'],
+      ['Verified commission liability',money(a.verified.commissionCents),'Estimates; not disbursed'],
+      ['Stripe refunds',money(a.verified.refundedCents),'Includes partial refunds'],
+      ['Manual recorded net',money(a.manual.netCents),'Admin attested · not provider-verified'],
+      ['Checkout paid / started',a.checkout.paid+' / '+a.checkout.started,'Paid-per-start '+(a.checkout.paymentRatePercent??'—')+'% · not page views']
+    ]){
+      const c=make('article','azh-commerce-kpi');text(c,'small',name);text(c,'strong',value);text(c,'p',help);grid.append(c);
+    }
+    target.append(grid);
+    const products=make('section','azh-commerce-analytics-products');text(products,'h3','Top verified products');
+    if(!a.topProducts.length)text(products,'p','No verified Stripe sales in this period yet.');
+    for(const product of a.topProducts){
+      const line=make('div','azh-commerce-analytics-line');
+      text(line,'strong',product.title);
+      text(line,'span',product.orders+' orders · '+money(product.netCents));
+      products.append(line);
+    }
+    target.append(products);
+    const sources=make('section','azh-commerce-analytics-products');text(sources,'h3','Attribution channels');
+    for(const ch of a.channels){
+      const line=make('div','azh-commerce-analytics-line');text(line,'strong',ch.channel);
+      text(line,'span',ch.orders+' verified orders · '+money(ch.netCents));sources.append(line);
+    }
+    if(!a.channels.length)text(sources,'p','Verified channel data appears after a completed Stripe checkout.');
+    target.append(sources);
+  }
   function render(){
-    renderProducts();renderBriefs();renderPromotions();renderOrders();
+    renderProducts();renderBriefs();renderPromotions();renderOrders();renderAnalytics();
     if(admin){
       const products=state.products;
       setOptions('[data-products]',products.map(p=>[p.id,p.title]),'Choose product');
-      setOptions('[data-active-products]',products.filter(p=>p.state==='active').map(p=>[p.id,p.title]),'Choose active product');
+      setOptions('[data-active-products]',products.filter(p=>p.state==='active'&&(p.checkoutMode==='stripe'||p.checkoutUrl)).map(p=>[p.id,p.title]),'Choose active product');
+      const selected=$('commerce-live-form')?.elements?.productId?.value;
+      setOptions('[data-live-promotions]',[['','No creator attribution'],...state.promotions.filter(p=>p.state==='approved'&&p.product_id===selected).map(p=>[p.id,p.video_title])],'No creator attribution');
       setOptions('[data-approved-products]',products.filter(p=>p.myInterest==='approved').map(p=>[p.id,p.title]),'Choose approved product');
       setOptions('[data-promotions]',[['','No attribution'],...state.promotions.filter(p=>p.state==='approved').map(p=>[p.id,p.product_title+' · '+p.video_title])],'No attribution');
       $('commerce-live-current').textContent=state.liveFeature?'Featured now: '+state.liveFeature.title:'No product currently featured in a live broadcast.';
@@ -149,7 +190,7 @@ if(root){
       const cents=Math.round(Number(d.priceDollars)*100),bps=Math.round(Number(d.commissionPercent)*100);
       if(!Number.isSafeInteger(cents)||!Number.isSafeInteger(bps)){status('Enter valid decimal amounts.',true);return;}
       void mutate('saveProduct',{id:d.id||'',revision:d.revision?Number(d.revision):undefined,title:d.title,description:d.description,
-        priceCents:cents,commissionBps:bps,checkoutUrl:d.checkoutUrl,state:d.state},'Product saved.');
+        priceCents:cents,commissionBps:bps,checkoutMode:d.checkoutMode,checkoutUrl:d.checkoutUrl,state:d.state},'Product saved.');
     });
     $('commerce-product-form').addEventListener('reset',()=>{const form=$('commerce-product-form');form.elements.id.value='';form.elements.revision.value='';});
     $('commerce-brief-form').addEventListener('submit',e=>{
@@ -161,12 +202,16 @@ if(root){
       e.preventDefault();const d=formData('commerce-order-form');void mutate('recordOrder',{productId:d.productId,externalReference:d.externalReference,quantity:Number(d.quantity),promotionId:d.promotionId},'External order recorded; payment is still unverified.');
     });
     $('commerce-live-form').addEventListener('submit',e=>{
-      e.preventDefault();const d=formData('commerce-live-form');void mutate('featureLive',{productId:d.productId},'Live product updated.');
+      e.preventDefault();const d=formData('commerce-live-form');void mutate('featureLive',{productId:d.productId,promotionId:d.promotionId},'Live product updated.');
     });
   }else{
     $('commerce-promotion-form').addEventListener('submit',e=>{
       e.preventDefault();void mutate('requestPromotion',formData('commerce-promotion-form'),'Video sent for administrator review.');
     });
   }
+  const liveSelect=$('commerce-live-form')?.elements?.productId;
+  liveSelect?.addEventListener('change',()=>{
+    setOptions('[data-live-promotions]',[['','No creator attribution'],...state.promotions.filter(p=>p.state==='approved'&&p.product_id===liveSelect.value).map(p=>[p.id,p.video_title])],'No creator attribution');
+  });
   void load().catch(e=>status(e.message,true));
 }

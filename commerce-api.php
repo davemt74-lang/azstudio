@@ -11,11 +11,16 @@ try {
     if($method==='GET' && $action==='public'){
         az_json(['ok'=>true,'data'=>az_is_installed()?az_commerce_public_products():[]]);
     }
+    if($method==='GET' && $action==='stripeStatus'){az_json(['ok'=>true,'data'=>az_stripe_public_status()]);}
     if($method==='GET' && $action==='liveFeature'){
         az_json(['ok'=>true,'data'=>az_is_installed()?az_commerce_live_feature():null]);
     }
     $user=az_require_auth(true);
     az_agent_workspace_assert($user);
+    if($method==='GET' && $action==='analytics'){
+        $user=az_require_auth(true);az_agent_workspace_assert($user);session_write_close();
+        az_json(['ok'=>true,'data'=>az_commerce_analytics($user)]);
+    }
     if($method==='GET' && $action==='state'){
         session_write_close();
         az_json(['ok'=>true,'data'=>az_commerce_state($user)]);

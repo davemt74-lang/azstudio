@@ -28,7 +28,7 @@ function az_render_watch_page(array $state): void
     $description = $video ? $video['description'] : 'Meet the people and personalities behind AZHottie. Watch interviews, creative stories, and a little Arizona attitude.';
     $pageUrl = static fn(int $page): string => $routes['watch'] . '?' . http_build_query(['search' => $search, 'page' => $page]);
     ?><!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#faf7f3"><meta name="description" content="<?= az_h($description) ?>"><?php if ($sample || $error !== ''): ?><meta name="robots" content="noindex,nofollow"><?php endif; ?><title><?= az_h($title) ?></title><link rel="icon" href="<?= az_h($routes['assets']) ?>favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="<?= az_h($routes['assets']) ?>watch.css"><link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#faf7f3"><meta name="description" content="<?= az_h($description) ?>"><?php if ($sample || $error !== ''): ?><meta name="robots" content="noindex,nofollow"><?php endif; ?><title><?= az_h($title) ?></title><link rel="icon" href="<?= az_h($routes['assets']) ?>favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="<?= az_h($routes['assets']) ?>watch.css"><link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/commerce.css?v=1.31.0"></head>
 <body class="watch-page">
 <?php if ($sample): ?><div class="watch-sample"><strong>SAMPLE DATA PREVIEW</strong><span>Fictional titles and synthetic footage · No production account or database access</span><a href="v12-account.php">Preview accounts</a></div><?php endif; ?>
 <?php az_render_universal_header('watch', $user); ?>
@@ -37,6 +37,30 @@ function az_render_watch_page(array $state): void
 <section class="watch-empty watch-error"><span class="watch-star" aria-hidden="true">✳</span><p class="watch-eyebrow">A MOMENT OFF CAMERA</p><h1>This one isn’t available.</h1><p><?= az_h($error) ?></p><a class="watch-button" href="<?= az_h($routes['watch']) ?>">Browse the videos </a></section>
 <?php elseif ($video): ?>
 <article class="watch-detail"><a class="watch-back" href="<?= az_h($routes['watch']) ?>">All videos</a><div class="watch-player"><video controls playsinline preload="metadata" data-engagement-kind="<?= az_h($video['origin']??'') ?>" data-engagement-id="<?= az_h($video['id']) ?>" data-engagement-csrf="<?= az_h(!$sample ? az_csrf_token() : '') ?>" src="<?= az_h($video['mediaUrl']) ?>"<?php if (!empty($video['coverUrl'])): ?> poster="<?= az_h($video['coverUrl']) ?>"<?php endif; ?> aria-label="<?= az_h($video['title']) ?>">Your browser does not support this video. <a href="<?= az_h($video['mediaUrl']) ?>">Open the video</a>.</video></div><div class="watch-detail-body"><div><p class="watch-eyebrow">THE AZHOTTIE CUT</p><h1><?= az_h($video['title']) ?></h1><p class="watch-meta"><?php if ($video['modelName'] !== ''): ?><span><?= az_h($video['modelName']) ?></span><?php endif; ?><?php if ($video['publishedAt']): ?><time datetime="<?= az_h($video['publishedAt']) ?>"><?= az_h(az_watch_date($video['publishedAt'])) ?></time><?php endif; ?><span><?= az_h(az_watch_duration((int)$video['durationMs'])) ?></span></p><?php if ($video['description'] !== ''): ?><div class="watch-description"><?= nl2br(az_h($video['description'])) ?></div><?php endif; ?></div><aside class="watch-invite"><span class="watch-star" aria-hidden="true">✳</span><h2>Good company.<br>Interesting possibilities.</h2><p>Follow the people behind the brand. Make room for your next AZHottie moment.</p><a class="watch-button" href="<?= az_h($user ? $routes['calendar'] : $routes['signup']) ?>"><?= $user ? 'Explore the calendar' : 'Join the community' ?></a></aside></div></article>
+<?php if(!empty($state['commerceProducts'])): ?>
+<section class="azh-commerce azh-commerce-watch" aria-label="Products featured in this video">
+ <div class="azh-commerce-eyebrow">SHOP THE VIDEO</div><h2>Featured products<span>.</span></h2>
+ <div class="azh-commerce-list azh-commerce-grid">
+ <?php foreach($state['commerceProducts'] as $p): ?>
+ <article class="azh-commerce-card"><p class="azh-commerce-eyebrow">CREATOR-APPROVED PRODUCT</p>
+  <h3><?= az_h($p['title']) ?></h3><p><?= az_h($p['description']) ?></p>
+  <strong>$<?= az_h(number_format($p['priceCents']/100,2)) ?> USD</strong>
+  <?php if($p['checkoutMode']==='stripe'): ?>
+   <form data-stripe-checkout data-csrf="<?= az_h(!$sample?az_csrf_token():'') ?>"
+     data-product-id="<?= az_h($p['id']) ?>" data-promotion-id="<?= az_h($p['promotionId']) ?>"
+     data-video-id="<?= az_h($p['videoId']) ?>" data-channel="video">
+     <button class="azh-commerce-cta" type="submit">Secure Stripe Checkout</button>
+     <small role="status" aria-live="polite"></small>
+   </form>
+  <?php else: ?>
+   <a class="azh-commerce-cta" href="<?= az_h($p['checkoutUrl']) ?>" target="_blank" rel="noopener noreferrer external nofollow">Visit external seller</a>
+  <?php endif; ?>
+ </article>
+ <?php endforeach; ?>
+ </div>
+ <p class="azh-commerce-disclaimer">Product commissions require approved attribution. External seller purchases cannot be verified here.</p>
+</section>
+<?php endif; ?>
 <?php else: ?>
 <section class="watch-hero"><div><p class="watch-eyebrow"><span aria-hidden="true">✳</span> ARIZONA ATTITUDE. PRESS PLAY.</p><h1>The stories<br>behind the <em>smile.</em></h1><p>Local faces. Candid conversations. A little mischief.<br>Meet the people making AZHottie their own.</p></div><div class="watch-hero-note" aria-hidden="true"><span>AZHOTTIE</span><b>ON<br>AIR<span>●</span></b><small>PERSONALITY INCLUDED.</small></div></section>
 <?php if (!empty($state['featured'])): $feature=$state['featured']; ?><section class="watch-featured" aria-label="Featured video"><p class="watch-eyebrow">EDITOR'S FEATURED PICK</p><h2><?= az_h($feature['headline']) ?></h2><p><?= az_h($feature['copy']) ?></p><a class="watch-button" href="<?= az_h($feature['video']['watchUrl']) ?>">Watch <?= az_h($feature['video']['title']) ?> →</a></section><?php endif; ?>
@@ -48,5 +72,5 @@ function az_render_watch_page(array $state): void
 <section class="watch-community"><div><p class="watch-eyebrow">MORE THAN A SCREEN</p><h2>There’s a place<br>for you <em>here.</em></h2><p>Events, classes, and time with your favorite professionals.<br>One account. Your kind of AZHottie.</p></div><a class="watch-button" href="<?= az_h($user ? $routes['calendar'] : $routes['signup']) ?>"><?= $user ? 'Open my calendar' : 'Join the community' ?></a></section>
 <?php endif; ?>
 </main><footer class="watch-footer"><a class="watch-wordmark" href="<?= az_h($routes['home']) ?>">AZHOTTIE<span>.</span></a><p>ARIZONA · LIFESTYLE · ENTERTAINMENT</p><span>© <?= date('Y') ?> AZHottie</span></footer>
-<?php if ($video && !$sample && $error===''): ?><script type="module" src="assets/watch-engagement.js?v=1.22.0"></script><?php endif; ?></body></html><?php
+<?php if ($video && !$sample && $error===''): ?><script type="module" src="assets/watch-engagement.js?v=1.22.0"></script><?php endif; ?><?php if(!empty($state['commerceProducts']) && !$sample): ?><script type="module" src="assets/commerce-checkout.js?v=1.31.0"></script><?php endif; ?></body></html><?php
 }

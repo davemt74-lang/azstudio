@@ -13,6 +13,7 @@ try {
         if (isset($_GET['id'])) {
             $id = az_text($_GET['id'], 32, 'Video');
             $state['video'] = az_public_watch_video($id);
+            if(($state['video']['origin']??'')==='creator')$state['commerceProducts']=az_commerce_video_products($id);
         } else {
             $state['feed'] = az_public_watch_feed($_GET);
             if ($state['search']==='' && (int)($_GET['page']??1)===1) $state['featured']=az_publishing_public_feature();

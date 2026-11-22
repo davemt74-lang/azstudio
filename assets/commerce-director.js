@@ -4,7 +4,7 @@ if(root){
   const status=document.getElementById('director-commerce-status'),preview=document.getElementById('director-commerce-preview');
   const title=document.getElementById('director-commerce-title'),description=document.getElementById('director-commerce-description');
   const price=document.getElementById('director-commerce-price');
-  let products=[],liveRoom='';
+  let products=[],liveRoom='',promotions=[];const promo=document.getElementById('director-commerce-promotion');
   const endpoint=new URL('commerce-api.php',document.baseURI);
   async function api(action,body=null){
     const url=new URL(endpoint);url.searchParams.set('action',action);
@@ -21,23 +21,32 @@ if(root){
   }
   async function refresh(){
     try{
-      const data=await api('state');products=data.products.filter(p=>p.state==='active'&&p.checkoutUrl);
+      const data=await api('state');promotions=data.promotions.filter(p=>p.state==='approved');products=data.products.filter(p=>p.state==='active'&&(p.checkoutMode==='stripe'||p.checkoutUrl));
       const saved=select.value;select.replaceChildren();
       select.add(new Option(products.length?'Select a product':'No active products',''));
       for(const p of products)select.add(new Option(p.title+' · '+new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(p.priceCents/100),p.id));
       if(products.some(p=>p.id===saved))select.value=saved;
+      const selectedProduct=select.value;promo.replaceChildren();promo.add(new Option('No creator attribution',''));
+      for(const p of promotions.filter(p=>p.product_id===selectedProduct))promo.add(new Option(p.video_title,p.id));
       const featured=await api('liveFeature');
       liveRoom=featured?.roomId||'';
       if(featured){
-        select.value=featured.id;showSelected(featured);status.textContent='On air · '+featured.title+' appears beside the viewer player.';
+        select.value=featured.id;
+        promo.replaceChildren();promo.add(new Option('No creator attribution',''));
+        for(const p of promotions.filter(p=>p.product_id===featured.id))promo.add(new Option(p.video_title,p.id));
+        promo.value=featured.promotionId||'';
+        showSelected(featured);status.textContent='On air · '+featured.title+' appears beside the viewer player.';
       }else{showSelected(null);status.textContent='Start a live session, then choose an active checkout-ready product.';}
     }catch(e){status.textContent=e.message;showSelected(null);}
   }
-  select.addEventListener('change',()=>showSelected(products.find(p=>p.id===select.value)||null));
+  select.addEventListener('change',()=>{showSelected(products.find(p=>p.id===select.value)||null);
+    promo.replaceChildren();promo.add(new Option('No creator attribution',''));
+    for(const p of promotions.filter(p=>p.product_id===select.value))promo.add(new Option(p.video_title,p.id));
+  });
   form.addEventListener('submit',async e=>{
     e.preventDefault();if(!select.value){status.textContent='Choose a product first.';return;}
     const button=form.querySelector('button[type=submit]');button.disabled=true;status.textContent='Updating live product…';
-    try{await api('featureLive',{productId:select.value});await refresh();}
+    try{await api('featureLive',{productId:select.value,promotionId:promo.value});await refresh();}
     catch(e){status.textContent=e.message;}finally{button.disabled=false;}
   });
   void refresh();
