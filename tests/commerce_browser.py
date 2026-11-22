@@ -21,13 +21,13 @@ def html_for(role):
 <p id="commerce-status"></p><nav class="azh-commerce-tabs">
 <button data-tab="products">Products</button><button data-tab="briefs">Creator briefs</button>
 <button data-tab="promotions">Video affiliates</button><button data-tab="orders">Orders</button>
-<button data-tab="live">Live shopping</button></nav>
+<button data-tab="live">Live shopping</button><button data-tab="analytics">Sales analytics</button></nav>
 <section data-panel="products">''']
     if admin:
         parts.append('''<form id="commerce-product-form" class="azh-commerce-form"><input name="id"><input name="revision">
 <input name="title" required><textarea name="description"></textarea>
 <input name="priceDollars" type="number"><input name="commissionPercent" type="number">
-<input name="checkoutUrl"><select name="state"><option value="active">Active</option></select>
+<input name="checkoutUrl"><select name="checkoutMode"><option value="external">External</option><option value="stripe">Stripe</option></select><select name="state"><option value="active">Active</option></select>
 <button type="submit">Save</button><button type="reset" data-reset-product>Reset</button></form>''')
     parts.append('''<div id="commerce-products-list"></div></section>
 <section data-panel="briefs" hidden>''')
@@ -46,10 +46,10 @@ def html_for(role):
         parts.append('''<form id="commerce-order-form" class="azh-commerce-form"><select name="productId" data-products></select>
 <input name="externalReference"><select name="promotionId" data-promotions></select>
 <input name="quantity" type="number" value="1"><button type="submit">Record</button></form>''')
-    parts.append('<div id="commerce-orders-list"></div></section>')
+    parts.append('<div id="commerce-orders-list"></div></section><section data-panel="analytics" hidden><div id="commerce-analytics"></div></section>')
     if admin:
         parts.append('''<section data-panel="live" hidden><form id="commerce-live-form" class="azh-commerce-form">
-<select name="productId" data-active-products></select><button type="submit">Feature Live</button></form>
+<select name="productId" data-active-products></select><select name="promotionId" data-live-promotions></select><button type="submit">Feature Live</button></form>
 <p id="commerce-live-current"></p></section>''')
     parts.append('</main></body></html>')
     return ''.join(parts)
@@ -58,7 +58,7 @@ def state_for(role):
     admin=role=='admin'
     product={'id':PID,'title':'Sample Product','description':'Creator-facing product overview',
         'priceCents':1250,'currency':'USD','checkoutUrl':'https://seller.example/checkout',
-        'state':'active','commissionBps':1000,'revision':1,
+        'state':'active','checkoutMode':'external','commissionBps':1000,'revision':1,
         'brief':{'title':'Creator Spotlight','instructions':'Create a short video review','state':'active','revision':1},
         'myInterest':None if not admin else None}
     return {'role':role,'products':[product],
@@ -71,7 +71,11 @@ def state_for(role):
                    'product_title':'Sample Product','state':'recorded','quantity':1,'amount_cents':1250,
                    'commission_cents':0}] if admin else [],
         'videos':[{'id':VID,'title':'My video','revision':1}] if not admin else [],
-        'liveFeature':None}
+        'liveFeature':None,'stripe':{'available':False,'mode':'test'},
+        'analytics':{'periodDays':30,'basis':'Synthetic data only',
+          'verified':{'orders':0,'netCents':0,'commissionCents':0,'refundedCents':0},
+          'manual':{'orders':0,'netCents':0},'checkout':{'started':0,'paid':0,'paymentRatePercent':None},
+          'topProducts':[],'channels':[],'trend':[]}}
 
 def run():
     with sync_playwright() as p:
@@ -98,6 +102,8 @@ def run():
                 page.locator('#commerce-products-list .azh-commerce-card').first.wait_for(timeout=8000)
                 assert page.get_by_text('Sample Product').count()>=1,(role,width,'missing product')
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+2'),(role,width,'overflow')
+                page.locator('[data-tab=analytics]').click()
+                assert page.locator('.azh-commerce-kpi').count()==6,(role,width,'analytics cards')
                 page.locator('[data-tab=briefs]').click()
                 assert page.locator('#commerce-brief-list .azh-commerce-card').count()==1,(role,width,'brief render')
                 if admin:

@@ -1,3 +1,9 @@
+# AZHottie Studio — v1.31.0
+
+**Verified Commerce and Affiliate Attribution:** Optional Stripe-hosted checkout and signed webhook reconciliation, provider-verified paid orders, creator-video and Live attribution, refunds, disputes, shared Agent notifications/Chat/Brain, and separate verified-versus-admin-recorded analytics. Existing external seller links remain available but do not provide automatic payment evidence. No automatic creator payouts, fulfillment or tax handling. Schema 36→37. See `docs/RELEASE_1_31_0.txt`.
+
+---
+
 # AZHottie Studio — v1.30.0
 
 **Commerce & Creator Affiliate Agent, first layer:** Admin-managed products with external checkout links, private creator briefs, model interest/approval, revision-bound published-video affiliations, manually recorded/reconciled external orders, creator commission estimates, and Live Director product spotlight. Commerce reuses the existing Agent notification bell, History, Brain, and persistent Chat (with deduplicated delivery and hourly follow-through). Customer payment processing, independently verified payment/refund webhooks and actual creator payouts are not included. Schema upgrades 35 → 36. See `docs/RELEASE_1_30_0.txt` and `UPGRADE.txt`.
