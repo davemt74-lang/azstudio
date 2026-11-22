@@ -227,12 +227,12 @@ function az_payout_change(array $user,array $body): array
         $batch=az_payout_batch_row($batchId);
         if((int)$batch['revision']!==$revision)
             throw new AzHttpError(409,'Payout changed. Reload before approving.','revision_conflict');
+        if(in_array($action,['paid','cancel'],true)&&az_connect_transfer_row($batchId)!==null)
+            throw new AzHttpError(409,'A Connect transfer is pending, completed, or needs provider reconciliation.','connect_transfer_existing');
         if(($action==='approve'&&$batch['state']!=='draft')
             ||($action==='paid'&&$batch['state']!=='approved')
             ||($action==='cancel'&&!in_array($batch['state'],['draft','approved'],true)))
             throw new AzHttpError(409,'Payout cannot make that transition.','invalid_transition');
-        if(in_array($action,['paid','cancel'],true)&&az_connect_transfer_row($batchId)!==null)
-            throw new AzHttpError(409,'A Connect transfer is pending, completed, or needs provider reconciliation.','connect_transfer_existing');
         if($action!=='cancel')az_payout_verify_batch($db,$batch);
         $now=az_now();
         if($action==='approve'){
