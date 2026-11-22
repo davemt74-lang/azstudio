@@ -1,0 +1,17 @@
+AZHottie Studio v1.30.0 — Commerce and Creator Affiliate Agent (first verified layer)
+
+Scope
+- Admin: product catalog, price (USD cents), external hosted checkout URL, creator commission rate, approval-gated brief, creator interest review, published video attribution approval, external-order recording and reconciliation.
+- Model: active creator briefs, interest and withdrawal, approved affiliations, own published video proposals, own attributed commissions from manually reconciled orders.
+- Public: checkout-ready active product catalog; live viewer receives the product selected for the verified active room. Checkout is hosted externally.
+- Shared Agent: transaction-coupled recipient outbox with idempotent delivery, real bell notifications and History; deterministic proactive Commerce Agent Updates thread in existing Agent Chat; Brain priority cards and bounded read-only chat snapshot; hourly follow-through for orders unconfirmed more than 48 hours.
+- Safety: No direct payment capture, webhooks, money movement, automatic social posting, payment-provider reconciliation, returns automation, or actual affiliate disbursements. Admin evidence input is not independent verification. Product prices in the site may differ from external checkout. Original commissions captured at order recording, with refund reversals. No private order refs sent to model.
+- Gate: PHP syntax, role/migration/SQLite tests and browser smoke, full existing suites. CI all green before merge. MySQL hosted migration, real checkout and webhook/provider integrations, and actual production observation are separate acceptance gates. Only a verified checkout integration should change order state autonomously.
+- No new standalone notification bell, agent conversation or background scheduling process. Shared private cron already exists; configured cPanel cron must continue running.
+
+Upgrade
+- Database schema 35 → 36 via existing database bootstrap. Always back up your database first.
+- Do not replace storage/config.php, storage/private data or uploaded media.
+- Manual order reconciliation requires a unique external reference and a payment or refund evidence reference. This is NOT provider-verified.
+- Smoke test roles with separate admin/model accounts, open/approve a brief and video, record and mark an external order, verify both roles' notification badge/History and Commerce Agent Updates thread, select Live product during broadcast, verify viewer and public catalog, then test refund and replay deduplication.
+
