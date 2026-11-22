@@ -225,7 +225,7 @@ function az_stripe_checkout_start(array $body): array
     }finally{flock($lock,LOCK_UN);fclose($lock);}
     if($attempt['state']==='open' && $attempt['redirect_url']!==null && $attempt['redirect_url']!=='')
         return ['checkoutUrl'=>$attempt['redirect_url'],'status'=>$attempt['state'],'mode'=>$attempt['mode']];
-    if(in_array($attempt['state'],['expired','paid'],true))
+    if(in_array($attempt['state'],['expired','paid','failed'],true))
         throw new AzHttpError(409,'Checkout already completed or expired. Start a fresh checkout.','checkout_finished');
     $session=az_stripe_create_remote(az_stripe_session_payload($attempt,$product,$c),$attempt['id'],$c['key']);
     $sessionId=(string)($session['id']??'');$url=(string)($session['url']??'');
@@ -286,12 +286,16 @@ function az_stripe_webhook_receive(string $raw,string $signature): array
             }
             if(in_array($type,['checkout.session.completed','checkout.session.async_payment_succeeded'],true)){
                 az_stripe_apply_payment($db,$obj);$recognized=true;
+            }elseif($type==='checkout.session.async_payment_failed'){
+                az_stripe_apply_failure($db,$obj);$recognized=true;
             }elseif($type==='checkout.session.expired'){
                 az_stripe_apply_expiry($db,$obj);$recognized=true;
             }elseif($type==='charge.refunded'){
                 az_stripe_apply_refund($db,$obj);$recognized=true;
             }elseif($type==='charge.dispute.created'){
                 az_stripe_apply_dispute($db,$obj);$recognized=true;
+            }elseif($type==='charge.dispute.closed'){
+                az_stripe_apply_dispute_closed($db,$obj);$recognized=true;
             }
             $db->prepare('INSERT INTO commerce_stripe_events(event_id,kind,received_at) VALUES(?,?,?)')
                 ->execute([$event['id'],substr($type,0,80),az_now()]);
@@ -344,6 +348,12 @@ function az_stripe_apply_payment(PDO $db,array $session): void
             'Verified creator sale','Stripe confirmed a paid order attributed to your approved product link. Estimated commission is tracked; payout is not automatic.','commerce.php',true);
     }
 }
+function az_stripe_apply_failure(PDO $db,array $session): void
+{
+    $r=az_stripe_attempt_for_session($db,$session);
+    $db->prepare("UPDATE commerce_checkout_attempts SET state='failed',redirect_url=NULL,updated_at=? WHERE id=? AND state='open'")
+        ->execute([az_now(),$r['id']]);
+}
 function az_stripe_apply_expiry(PDO $db,array $session): void
 {
     $r=az_stripe_attempt_for_session($db,$session);
@@ -368,8 +378,8 @@ function az_stripe_apply_refund(PDO $db,array $charge): void
     $refunded=max((int)$order['refunded_cents'],$refunded);
     if($refunded===(int)$order['refunded_cents'])return;
     $remaining=$amount-$refunded;
-    $state=$remaining===0?'refunded':'partially_refunded';
-    $commission=intdiv($remaining*(int)$order['commission_bps'],10000);
+    $state=in_array($order['state'],['disputed','reversed'],true)?$order['state']:($remaining===0?'refunded':'partially_refunded');
+    $commission=in_array($state,['disputed','reversed','refunded'],true)?0:intdiv($remaining*(int)$order['commission_bps'],10000);
     $db->prepare('UPDATE commerce_orders SET state=?,refunded_cents=?,commission_cents=?,updated_at=? WHERE id=? AND provider=?')
         ->execute([$state,$refunded,$commission,az_now(),$order['id'],'stripe']);
     az_commerce_queue_admins('stripe-refund:'.$order['id'].':'.$refunded,(int)$order['owner_id'],'stripe_refund',
@@ -396,4 +406,29 @@ function az_stripe_apply_dispute(PDO $db,array $dispute): void
     if(!empty($order['model_id']))az_commerce_queue('creator-dispute:'.$order['id'],(int)$order['owner_id'],(int)$order['model_id'],
         'stripe_dispute','Affiliate commission temporarily held',
         'A Stripe dispute is open on an attributed order; the estimated commission is withheld.','commerce.php',true);
+}
+
+/** Resolve a Stripe dispute using only provider-signed terminal outcomes. */
+function az_stripe_apply_dispute_closed(PDO $db,array $dispute): void
+{
+    $paymentId=$dispute['payment_intent']??null;
+    if(!is_string($paymentId)||!preg_match('/^pi_[A-Za-z0-9_]{6,}$/D',$paymentId))return;
+    $q=$db->prepare("SELECT o.*,p.owner_id,p.title,m.model_id FROM commerce_orders o
+        JOIN commerce_products p ON p.id=o.product_id LEFT JOIN commerce_promotions m ON m.id=o.promotion_id
+        WHERE o.provider='stripe' AND o.provider_payment_id=?");
+    $q->execute([$paymentId]);$order=$q->fetch();
+    if(!$order)throw new AzHttpError(409,'Payment not yet recorded. Stripe should retry.','payment_pending');
+    if($order['state']!=='disputed')return;
+    $outcome=(string)($dispute['status']??'');
+    if(!in_array($outcome,['won','lost','expired'],true))return;
+    $amount=(int)$order['amount_cents'];$remaining=max(0,$amount-(int)$order['refunded_cents']);
+    $state=$outcome==='won'?($remaining===0?'refunded':($remaining===$amount?'paid':'partially_refunded')):'reversed';
+    $commission=($outcome==='won'&&$remaining>0)?intdiv($remaining*(int)$order['commission_bps'],10000):0;
+    $db->prepare('UPDATE commerce_orders SET state=?,commission_cents=?,updated_at=? WHERE id=? AND provider=? AND state=?')
+       ->execute([$state,$commission,az_now(),$order['id'],'stripe','disputed']);
+    az_commerce_queue_admins('stripe-dispute-closed:'.$order['id'].':'.$outcome,(int)$order['owner_id'],'stripe_dispute_closed',
+        'Stripe dispute '.$outcome,$order['title'].' · Provider-confirmed dispute result updated revenue and creator commission.',true);
+    if(!empty($order['model_id']))az_commerce_queue('model-dispute-closed:'.$order['id'].':'.$outcome,
+        (int)$order['owner_id'],(int)$order['model_id'],'stripe_dispute_closed',
+        'Affiliate dispute '.$outcome,'A signed Stripe outcome updated your estimated commission. No payout was performed.','commerce.php',true);
 }

@@ -11,7 +11,7 @@ function az_commerce_analytics(array $user): array
         FROM commerce_orders o JOIN commerce_products p ON p.id=o.product_id
         LEFT JOIN commerce_checkout_attempts a ON a.id=SUBSTR(o.external_reference,8) AND o.provider='stripe'
         ".($admin?'':"JOIN commerce_promotions m ON m.id=o.promotion_id AND m.model_id=?")."
-        WHERE o.paid_at>=? AND o.state IN ('paid','partially_refunded','refunded','disputed')
+        WHERE o.paid_at>=? AND o.state IN ('paid','partially_refunded','refunded','disputed','reversed')
         ORDER BY o.paid_at DESC");
     $args=$admin?[$since]:[$id,$since];$q->execute($args);$orders=$q->fetchAll(PDO::FETCH_ASSOC);
     $empty=['orders'=>0,'grossCents'=>0,'refundedCents'=>0,'netCents'=>0,'commissionCents'=>0,'disputedCents'=>0];
@@ -21,18 +21,18 @@ function az_commerce_analytics(array $user): array
         $metrics=$kind==='verified'?$verified:$manual;
         $gross=(int)$o['amount_cents'];$refund=(int)$o['refunded_cents'];
         if($o['provider']!=='stripe'&&$o['state']==='refunded')$refund=$gross;
-        $net=in_array($o['state'],['refunded','disputed'],true)?0:max(0,$gross-$refund);
+        $net=in_array($o['state'],['refunded','disputed','reversed'],true)?0:max(0,$gross-$refund);
         $metrics['orders']++;$metrics['grossCents']+=$gross;
         $metrics['refundedCents']+=$refund;$metrics['netCents']+=$net;
-        $metrics['commissionCents']+=(int)($o['state']==='disputed'||$o['state']==='refunded'?0:$o['commission_cents']);
-        if($o['state']==='disputed')$metrics['disputedCents']+=$gross-$refund;
+        $metrics['commissionCents']+=(int)(in_array($o['state'],['disputed','reversed','refunded'],true)?0:$o['commission_cents']);
+        if(in_array($o['state'],['disputed','reversed'],true))$metrics['disputedCents']+=$gross-$refund;
         if($kind==='verified')$verified=$metrics;else $manual=$metrics;
         if($kind!=='verified')continue;
         $productId=$o['product_id'];
         if(!isset($products[$productId]))$products[$productId]=['id'=>$productId,'title'=>$o['product_title'],
             'orders'=>0,'netCents'=>0,'commissionCents'=>0];
         $products[$productId]['orders']++;$products[$productId]['netCents']+=$net;
-        $products[$productId]['commissionCents']+=(int)($o['state']==='disputed'||$o['state']==='refunded'?0:$o['commission_cents']);
+        $products[$productId]['commissionCents']+=(int)(in_array($o['state'],['disputed','reversed','refunded'],true)?0:$o['commission_cents']);
         $day=substr((string)$o['paid_at'],0,10);
         if(!isset($days[$day]))$days[$day]=['day'=>$day,'orders'=>0,'netCents'=>0];
         $days[$day]['orders']++;$days[$day]['netCents']+=$net;

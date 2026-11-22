@@ -90,6 +90,13 @@ $stored=$db->query("SELECT * FROM commerce_orders WHERE provider='stripe'")->fet
 $ok((int)$stored['commission_cents']===300,'12 percent creator commission snapshot');
 $ok(count(az_commerce_state($model)['orders'])===1&&count(az_commerce_state($other)['orders'])===0,'model account isolation');
 $err(static fn()=>az_commerce_order_review($admin,['id'=>$stored['id'],'decision'=>'refunded','evidenceReference'=>'bogus-ref123']),'provider_controlled');
+$dispute=['object'=>'dispute','payment_intent'=>'pi_fixture123456','status'=>'needs_response'];
+$opened=$event('evt_dispute12345','charge.dispute.created',$dispute);
+az_stripe_webhook_receive($opened,$signature($opened));
+$ok($db->query('SELECT state FROM commerce_orders')->fetchColumn()==='disputed','signed dispute holds commission');
+$won=$event('evt_disputewon12345','charge.dispute.closed',array_merge($dispute,['status'=>'won']));
+az_stripe_webhook_receive($won,$signature($won));
+$ok((int)$db->query('SELECT commission_cents FROM commerce_orders')->fetchColumn()===300,'provider-confirmed dispute win restores commission');
 $refund=['object'=>'charge','payment_intent'=>'pi_fixture123456','amount'=>2500,'amount_refunded'=>500];
 $partial=$event('evt_partial12345','charge.refunded',$refund);
 az_stripe_webhook_receive($partial,$signature($partial));

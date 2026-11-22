@@ -2,7 +2,7 @@ AZHottie Studio v1.31.0 — Verified Commerce
 - Back up database, whole site and private storage/config.php/uploads. Merge application files from the new ZIP; do not rerun install.php.
 - First database boot upgrades schema 36→37; verify on hosted MySQL.
 - Stripe Checkout requires private AZH_STRIPE_SECRET_KEY, AZH_STRIPE_WEBHOOK_SECRET and AZH_PUBLIC_BASE_URL. Live mode also requires AZH_STRIPE_ALLOW_LIVE=1.
-- Register https://YOUR-SITE/commerce-stripe-webhook.php for checkout.session.completed, checkout.session.async_payment_succeeded, checkout.session.expired, charge.refunded and charge.dispute.created.
+- Register https://YOUR-SITE/commerce-stripe-webhook.php for checkout.session.completed, checkout.session.async_payment_succeeded, checkout.session.expired, charge.refunded, charge.dispute.created and charge.dispute.closed.
 - Test with Stripe TEST mode first; confirm a paid creator-video order, correct model notifications/commission, duplicate replay, partial/full refund and shared Agent Chat. Verify shipping, tax and payout obligations separately.
 - Existing private Agent hourly cron remains required. No automatic payouts or shipping are included.
 - Do not certify production 10/10 before the real hosted provider integration and DB migration pass.
