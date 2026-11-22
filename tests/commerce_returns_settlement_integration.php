@@ -322,21 +322,10 @@ $ok(!array_key_exists('models',$otherPayout),
 $adminPayout=az_payout_role_state($admin);
 $ok($adminPayout['role']==='admin'&&count($adminPayout['batches'])>=1,
     'administrator sees payout audit and eligible creator summaries');
-// Post-payout refund produces a debt; no new payout can be issued.
-$case3=az_return_admin_create($admin,['orderId'=>$exchangeOrder,'kind'=>'refund',
-    'quantity'=>1,'reason'=>'Additional quality issue after the exchange']);
-$case3Id=$case3['id'];
-az_return_admin_transition($admin,['id'=>$case3Id,'revision'=>1,
-    'decision'=>'authorize','confirm'=>true,'evidence'=>'verified-email-006']);
-az_return_admin_transition($admin,['id'=>$case3Id,'revision'=>2,'decision'=>'receive']);
-az_return_admin_transition($admin,['id'=>$case3Id,'revision'=>3,
-    'decision'=>'inspect','condition'=>'damaged','restockQuantity'=>0]);
-az_return_admin_transition($admin,['id'=>$case3Id,'revision'=>4,
-    'decision'=>'approve_refund','confirm'=>true]);
+// A later cash refund on the originally exchanged order reduces earned
+// commission after the external payout. No duplicate return case is fabricated.
 az_local_admin_action($admin,['id'=>$exchangeOrder,'revision'=>6,
     'decision'=>'refund','confirmCash'=>true,'reason'=>'Post-payout refund physically repaid']);
-az_return_admin_transition($admin,['id'=>$case3Id,'revision'=>5,
-    'decision'=>'confirm_refund','confirm'=>true,'evidence'=>'cash-refund-receipt-006']);
 $debt=az_payout_model_balance(1);
 $ok($debt['overpaidCents']>=125&&$debt['newPayoutBlocked'],
     'paid commission later reversed by refund becomes explicit overpayment liability');
