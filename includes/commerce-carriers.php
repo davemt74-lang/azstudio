@@ -358,7 +358,14 @@ function az_carrier_buy(array $user,array $body): array
     if(!preg_match('/^rate_[A-Za-z0-9_]{6,}$/D',$rateId))
         throw new AzHttpError(400,'Invalid carrier rate.','rate_invalid');
     $lock=az_carrier_order_lock($id);
+    // Serialize real label charges against the existing shared Stripe refund and
+    // shipping-state lock so a simultaneous refund cannot authorize a new charge.
+    $commerceLock=null;
     try{
+        $commerceLock=az_community_lock();
+        $order=az_carrier_shipment_row($id);
+        if($order['status']!=='packed')
+            throw new AzHttpError(409,'Parcel must still be packed.','parcel_not_packed');
         if(az_carrier_label_row($id))throw new AzHttpError(409,'Label already purchased or awaiting provider reconciliation; never buy it twice.','label_already_requested');
         $quote=az_carrier_quote_row($id);
         if(!$quote||strtotime($quote['expires_at'])<=time()||$quote['mode']!==$cfg['mode']
@@ -395,7 +402,10 @@ function az_carrier_buy(array $user,array $body): array
             // Return an actionable failure. Charge may have happened remotely.
             throw new AzHttpError(409,'Label purchase outcome is unconfirmed. Use Reconcile Label to inspect EasyPost. Do not purchase a second label.','label_outcome_unknown');
         }
-    }finally{flock($lock,LOCK_UN);fclose($lock);}
+    }finally{
+        if(is_resource($commerceLock)){flock($commerceLock,LOCK_UN);fclose($commerceLock);}
+        flock($lock,LOCK_UN);fclose($lock);
+    }
     try{az_commerce_dispatch(50);}catch(Throwable $e){error_log('Carrier activity dispatch deferred.');}
     return $response;
 }
