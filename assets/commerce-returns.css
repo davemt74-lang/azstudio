@@ -1,0 +1,19 @@
+
+.azh-return-public{max-width:980px}
+.azh-return-public .azh-commerce-editor{max-width:700px;margin:18px auto}
+.azh-return-public .azh-commerce-form button[type=submit]{min-height:46px}
+#azh-return-public-status{min-height:24px;line-height:1.5;color:#5e4251}
+#azh-return-public-status[data-error=true]{color:#a3294e}
+.azh-return-case{min-width:0;overflow-wrap:anywhere}
+.azh-return-case .azh-commerce-actions{gap:8px;flex-wrap:wrap}
+.azh-return-case .azh-commerce-small{min-height:40px}
+.azh-return-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,195px),1fr));gap:12px;margin:16px 0}
+.azh-return-kpi{padding:16px;border-radius:12px;background:#fff;border:1px solid #e5dbe3;display:grid;gap:8px}
+.azh-return-kpi small{color:#765c6d}.azh-return-kpi strong{font-size:24px;line-height:1.1}
+.azh-return-workflow{border:1px solid #e5dbe3;border-radius:12px;padding:14px;background:#fff}
+.azh-return-workflow h3{margin:0 0 10px}
+.azh-return-reason{white-space:pre-wrap;line-height:1.45}
+.azh-return-contact{padding:12px;background:#fbf5f9;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.azh-return-payout-banner{padding:12px 16px;border-radius:12px;background:#f9f4f7;color:#644b5c;line-height:1.5}
+.azh-return-subtle{font-size:12px;color:#7b6472}
+@media(max-width:600px){.azh-return-public .azh-commerce-editor{padding:16px}.azh-return-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
