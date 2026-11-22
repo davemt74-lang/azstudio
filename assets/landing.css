@@ -1,36 +1,210 @@
-@import url("./form-light.css");
-/* AZHottie v1.9, a bright model-led membership landing experience. */
-:root{--azh-ink:#262128;--azh-muted:#736a73;--azh-pink:#bf447b;--azh-blush:#fff1f5;--azh-border:#e8e0e4;font-family:Inter,Arial,Helvetica,sans-serif;color:var(--azh-ink);background:#fff}
-.azh-home{margin:0;background:white;color:var(--azh-ink);font:16px/1.65 Inter,Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
-.azh-home *{box-sizing:border-box}.azh-home a{text-decoration:none;color:inherit}.azh-home h1,.azh-home h2,.azh-home h3,.azh-home p{margin-top:0}.azh-home em{font-family:Georgia,'Times New Roman',serif;font-style:italic;font-weight:400;color:#bd467b}
-.azh-home :focus-visible{outline:3px solid #cd5a8b;outline-offset:4px}
-.azh-landing-kicker{font-size:11px;font-weight:800;letter-spacing:.18em;color:#ae4277;line-height:1.5;margin-bottom:21px!important}.azh-landing-sparkle{color:#d44a83;font-size:19px;vertical-align:-2px;margin-right:7px}
-.azh-landing-button{display:inline-flex;align-items:center;justify-content:center;gap:25px;min-height:51px;border-radius:9px;padding:13px 22px;font-size:14px;font-weight:780;transition:background .2s,transform .2s;border:1px solid transparent;line-height:1.3}
-.azh-landing-button:hover{transform:translateY(-2px)}.azh-landing-button-primary{background:#2b252c;color:white!important}.azh-landing-button-primary:hover{background:#a8386e}.azh-landing-button-outline{border-color:#bd4b7e;color:#a12e64!important;background:#fff}.azh-landing-button-outline:hover{background:#fff0f5}.azh-landing-text-link{font-size:14px;font-weight:710;color:#8f2a60!important;border-bottom:1px solid #d8adbf;padding-bottom:4px}
-.azh-landing-hero{max-width:1580px;margin:auto;display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:clamp(20px,3vw,48px);align-items:stretch;padding:clamp(24px,3.6vw,52px) clamp(18px,3.1vw,52px) clamp(46px,4vw,70px)}
-.azh-landing-hero-copy{display:flex;flex-direction:column;justify-content:center;min-width:0;padding:25px 0 27px clamp(0px,1.3vw,20px)}.azh-landing-hero-copy h1{font-size:clamp(49px,5.4vw,90px);line-height:1.02;letter-spacing:-.067em;max-width:630px;margin:0 0 29px;font-weight:760}
-.azh-landing-hero-copy h1 em{display:inline;color:#aa316c}.azh-landing-deck{font-size:clamp(17px,1.3vw,19px);color:#746b73;line-height:1.8;max-width:490px;margin:0 0 31px}
-.azh-landing-cta{display:flex;align-items:center;gap:25px;flex-wrap:wrap}.azh-landing-hero-details{display:flex;align-items:center;gap:16px;margin-top:clamp(36px,5vw,80px);font-size:10px;font-weight:770;line-height:1.8;letter-spacing:.11em;color:#a08996}
-.azh-landing-circle-mark{width:45px;height:45px;border:1px solid #e4d5dd;border-radius:50%;display:grid;place-items:center;color:#ae346d;font-size:13px;letter-spacing:0;font-weight:850}
-.azh-landing-hero-photo{min-width:0;position:relative;border-radius:16px;overflow:hidden;min-height:580px;background:#f4e5e8}.azh-landing-hero-photo img{width:100%;height:100%;object-fit:cover;object-position:57% 50%;display:block;position:absolute;inset:0}.azh-landing-hero-photo::after{content:'';position:absolute;inset:54% 0 0;background:linear-gradient(0deg,#31182d52,transparent);pointer-events:none}
-.azh-landing-hero-photo-tag{position:absolute;bottom:24px;left:24px;right:24px;display:flex;align-items:center;gap:14px;background:#ffffffed;border:1px solid #ffffff99;border-radius:10px;padding:16px 18px;z-index:1;max-width:320px;box-shadow:0 12px 30px #00000012}
-.azh-landing-tag-icon{width:40px;height:40px;background:#fbecf2;color:#bf4579;border-radius:50%;display:grid;place-items:center;font-size:25px;flex-shrink:0}.azh-landing-hero-photo-tag strong{font-size:11px;letter-spacing:.1em;display:block}.azh-landing-hero-photo-tag small{font-size:11px;color:#847583;display:block;margin-top:3px}
-.azh-landing-ticker{background:#f8f1f4;border-top:1px solid #f1e6eb;border-bottom:1px solid #f1e6eb;min-height:65px;display:flex;align-items:center;justify-content:center;gap:clamp(15px,3vw,57px);padding:12px 20px;flex-wrap:wrap;font-size:10px;font-weight:850;letter-spacing:.17em;color:#6e5c69}.azh-landing-ticker i{color:#ce79a0;font-size:16px;font-style:normal}
-.azh-landing-section{max-width:1440px;margin:auto;padding:105px clamp(20px,4vw,60px)}.azh-landing-section-intro{display:grid;grid-template-columns:1fr .7fr;gap:45px;align-items:end;margin-bottom:42px}
-.azh-landing-section h2,.azh-landing-story h2,.azh-experience-heading h2,.azh-landing-join h2,.azh-landing-casting h2{font-size:clamp(36px,4.3vw,63px);letter-spacing:-.055em;line-height:1.09;margin:0;font-weight:740}
-.azh-landing-section-intro>p{color:#7a6e77;font-size:16px;line-height:1.8;max-width:475px;margin:0}
-.azh-benefit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:21px}.azh-benefit-card{display:flex;flex-direction:column;border:1px solid #f0e0e8;border-radius:16px;padding:31px 31px 25px;min-height:315px;transition:transform .2s,border-color .2s;background:#fdf9fb}
-.azh-benefit-card:hover{transform:translateY(-4px);border-color:#d5a9c0}.azh-benefit-card-events{background:linear-gradient(135deg,#fff4f7 0%,#fff 80%)}.azh-benefit-card-spa{background:linear-gradient(135deg,#fcf7f4 0%,#fff 80%)}.azh-benefit-card-classes{background:linear-gradient(135deg,#f9f7fc 0%,#fff 80%)}.azh-benefit-ordinal{font-size:10px;letter-spacing:.14em;color:#ab6489;font-weight:820}.azh-benefit-icon{font-size:34px;color:#bb5b8e;margin:17px 0 17px}
-.azh-benefit-card h3{font-size:25px;line-height:1.18;letter-spacing:-.04em;margin:0 0 11px}.azh-benefit-card p{font-size:14px;color:#7c6c77;line-height:1.75;margin-bottom:22px}.azh-benefit-link{margin-top:auto;font-size:13px;font-weight:780;color:#a93469}.azh-benefit-link span{padding-left:6px}.azh-membership-note{font-size:12px;color:#91838d;text-align:center;margin:24px 0 0}
-.azh-landing-story{background:#f6edf1;padding:90px max(28px,calc((100% - 1360px)/2));display:grid;grid-template-columns:1fr 1fr;gap:clamp(35px,6vw,110px);align-items:center}.azh-story-intro>p:not(.azh-landing-kicker){color:#756671;line-height:1.85;font-size:17px;max-width:505px;margin:22px 0 25px}
-.azh-story-feature{background:#fff;border:1px solid #eadde4;border-radius:18px;min-height:410px;padding:clamp(28px,3vw,44px);display:flex;flex-direction:column;box-shadow:0 18px 48px #4a203015}
-.azh-story-tiny-label{font-size:10px;letter-spacing:.19em;font-weight:800;color:#ae497b}.azh-story-quote{display:flex;align-items:center;flex:1}.azh-story-quote p{font-family:Georgia,'Times New Roman',serif;font-size:clamp(28px,3vw,44px);line-height:1.25;letter-spacing:-.025em;margin:0}.azh-story-quote em{color:#b34c7e}.azh-story-star{font-size:30px;color:#d18eac;align-self:center;margin-right:26px}.azh-story-details{display:flex;justify-content:space-between;gap:14px;border-top:1px solid #eee3e8;padding-top:20px;color:#947f8c;font-size:9px;letter-spacing:.09em;font-weight:770}
-.azh-landing-experiences{width:min(100%,1440px);margin:auto;display:grid;grid-template-columns:.75fr 1.25fr;gap:clamp(30px,6vw,100px);padding:110px clamp(20px,4vw,60px)}.azh-experience-list article{border-bottom:1px solid #eadfe5;padding:25px 0;display:grid;grid-template-columns:39px 1fr 35px;gap:18px;align-items:start}.azh-experience-list article:first-child{padding-top:0}.azh-experience-number{font-size:13px;color:#ba608e;font-weight:810}.azh-experience-list h3{font-size:23px;letter-spacing:-.03em;margin:0 0 8px}.azh-experience-list p{font-size:14px;color:#80737d;line-height:1.72;margin:0}.azh-experience-list a{font-size:26px;color:#a63166;text-align:center}
-.azh-landing-join{max-width:1400px;overflow:hidden;position:relative;margin:0 auto 110px;background:#2c2630;color:white;border-radius:22px;padding:clamp(35px,5vw,75px);display:grid;grid-template-columns:1fr .8fr;gap:70px;align-items:center}.azh-join-decoration{position:absolute;right:-50px;bottom:-85px;font-size:380px;line-height:.7;opacity:.06;color:#fff;pointer-events:none}
-.azh-landing-join h2{color:#fff}.azh-landing-join em{color:#e7a7c6}.azh-landing-join>div:first-of-type>p:not(.azh-landing-kicker){color:#d1c1cb;max-width:560px;margin:25px 0}.azh-landing-join .azh-landing-button-primary{background:#fff;color:#33232c!important}.azh-landing-join .azh-landing-button-primary:hover{background:#f8e7f0}.azh-join-list{position:relative;z-index:1;background:#ffffff0c;border:1px solid #ffffff2a;border-radius:16px;padding:32px}.azh-join-list p{color:#ede2e9;font-size:15px;display:flex;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid #ffffff1a;margin:0}.azh-join-list p:last-child{border-bottom:0}.azh-join-list span{color:#f3a9cf;font-weight:850;font-size:18px}
-.azh-landing-casting{max-width:1360px;margin:0 auto 100px;padding:60px clamp(22px,4vw,66px);background:#fbf6f8;border:1px solid #f0e7ec;border-radius:21px;display:grid;grid-template-columns:1.25fr .75fr;align-items:center;gap:55px}.azh-landing-casting>div:first-child>p:not(.azh-landing-kicker){font-size:16px;color:#746774;line-height:1.8;max-width:590px;margin:22px 0 26px}.azh-casting-badge{justify-self:center;border:1px solid #eacbdc;width:270px;max-width:100%;min-height:270px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:13px;transform:rotate(-6deg);color:#af3e78;background:#fff}.azh-casting-badge span{font-size:35px}.azh-casting-badge strong{line-height:1.2;letter-spacing:.07em;font-size:16px}.azh-casting-badge small{font-size:9px;letter-spacing:.11em;color:#987f8b}
-.azh-landing-footer{border-top:1px solid #e9dee5;padding:36px clamp(20px,4vw,60px);display:flex;align-items:center;justify-content:space-between;gap:25px;flex-wrap:wrap}.azh-landing-wordmark{font-size:22px;font-weight:900;letter-spacing:.08em}.azh-landing-wordmark span{color:#c8487d}.azh-landing-footer p{font-size:10px;color:#9b8692;letter-spacing:.13em;margin:6px 0 0}.azh-landing-footer nav{display:flex;align-items:center;gap:19px;flex-wrap:wrap;font-size:12px;color:#655a64;font-weight:680}.azh-landing-footer nav a:hover{color:#b3396d}.azh-landing-footer small{color:#aa98a3;font-size:11px}
-@media(max-width:1100px){.azh-landing-hero{grid-template-columns:1fr 1fr}.azh-landing-hero-copy h1{font-size:clamp(45px,5vw,68px)}.azh-landing-hero-photo{min-height:500px}.azh-landing-story{padding:70px 30px}.azh-landing-join{margin-left:22px;margin-right:22px}.azh-landing-casting{margin-left:22px;margin-right:22px}}
-@media(max-width:830px){.azh-landing-hero{grid-template-columns:1fr;padding:30px 21px 45px;gap:25px}.azh-landing-hero-copy{padding:15px 0 0}.azh-landing-hero-copy h1{max-width:660px;font-size:clamp(49px,8vw,70px)}.azh-landing-hero-details{margin-top:32px}.azh-landing-hero-photo{min-height:370px}.azh-landing-ticker{gap:18px}.azh-landing-section{padding:70px 24px}.azh-landing-section-intro{grid-template-columns:1fr;gap:19px}.azh-benefit-grid{grid-template-columns:1fr 1fr}.azh-benefit-card{min-height:290px}.azh-landing-story{grid-template-columns:1fr;gap:35px}.azh-landing-experiences{grid-template-columns:1fr;padding:75px 24px;gap:35px}.azh-landing-join{grid-template-columns:1fr;gap:30px;padding:50px 32px}.azh-landing-casting{grid-template-columns:1fr;gap:24px}.azh-casting-badge{justify-self:end;min-height:185px;width:185px}.azh-casting-badge strong{font-size:11px}}
-@media(max-width:560px){.azh-landing-hero-copy h1{font-size:clamp(43px,12.8vw,62px)}.azh-landing-hero-photo{min-height:280px}.azh-landing-hero-photo-tag{left:12px;right:12px;bottom:12px;padding:10px;gap:9px}.azh-landing-hero-photo-tag strong{font-size:9px}.azh-landing-hero-photo-tag small{font-size:10px}.azh-landing-cta{gap:17px}.azh-landing-ticker{gap:12px;padding:17px}.azh-landing-ticker span{font-size:9px}.azh-landing-ticker i:nth-of-type(2n){display:none}.azh-benefit-grid{grid-template-columns:1fr}.azh-benefit-card{min-height:245px}.azh-landing-section h2,.azh-landing-story h2,.azh-landing-experiences h2,.azh-landing-join h2,.azh-landing-casting h2{font-size:clamp(35px,9vw,45px)}.azh-landing-story{padding:60px 20px}.azh-story-feature{min-height:330px}.azh-story-quote p{font-size:31px}.azh-landing-join{margin:0 14px 60px;padding:32px 22px}.azh-join-list{padding:19px}.azh-landing-casting{margin:0 14px 60px;padding:35px 22px}.azh-casting-badge{display:none}.azh-landing-footer{align-items:flex-start;flex-direction:column}}
-@media(prefers-reduced-motion:reduce){.azh-landing-button,.azh-benefit-card{transition:none}}
+@import url('./form-light.css');
+/* AZHottie Studio v1.29.1 — original reality-series landing page. */
+:root {
+  --azh-paper: #fffaf9;
+  --azh-ink: #282027;
+  --azh-muted: #756b74;
+  --azh-pink: #cc3477;
+  --azh-hot: #e82788;
+  --azh-blush: #fff0f6;
+  --azh-line: #eee2e8;
+}
+.azh-home {
+  margin: 0;
+  background: var(--azh-paper);
+  color: var(--azh-ink);
+  font: 16px/1.55 Inter, Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.azh-home *, .azh-home *::before, .azh-home *::after { box-sizing: border-box; }
+.azh-home a { color: inherit; text-decoration: none; }
+.azh-home h1, .azh-home h2, .azh-home h3, .azh-home p, .azh-home figure { margin: 0; }
+.azh-home h1, .azh-home h2, .azh-home h3 { line-height: 1.09; }
+.azh-home em { color: var(--azh-pink); font: italic 500 1em/1.04 Georgia, 'Times New Roman', serif; }
+.azh-home :focus-visible { outline: 3px solid #f452a0; outline-offset: 4px; }
+.azh-home-skip { position: absolute; z-index: 200; top: -70px; left: 20px; padding: 12px 18px; background: #fff; color: #912656!important; border: 1px solid #ba4280; border-radius: 9px; }
+.azh-home-skip:focus { top: 10px; }
+.azh-home-eyebrow { color: #a6356b; letter-spacing: .18em; font-size: 11px; font-weight: 850; text-transform: uppercase; line-height: 1.4; }
+.azh-home-spark { font-size: 20px; color: var(--azh-hot); margin-right: 8px; vertical-align: -2px; }
+.azh-home-dot { color: #d689af; margin: 0 10px; }
+.azh-home-dash { display: inline-block; width: 28px; border-top: 1px solid #c56792; vertical-align: middle; margin: 0 8px 3px; }
+.azh-home-button { display: inline-flex; align-items: center; justify-content: space-between; gap: 28px; border: 1px solid transparent; border-radius: 100px; font-size: 13px; font-weight: 800; line-height: 1.2; min-height: 52px; padding: 15px 22px; white-space: normal; transition: transform .2s, background .2s, border-color .2s; }
+.azh-home-button:hover { transform: translateY(-2px); }
+.azh-home-button span { font-size: 18px; line-height: 1; }
+.azh-home-button-primary { background: #c42b6c; color: white!important; box-shadow: 0 7px 15px #b7306719; }
+.azh-home-button-primary:hover { background: #9e1d59; }
+.azh-home-button-quiet { color: #45333e!important; background: white; border-color: #e7d0dc; }
+.azh-home-button-quiet:hover { background: #fff1f6; border-color: #db8aaf; }
+.azh-home-underlink { display: inline-flex; align-items: center; gap: 20px; border-bottom: 1px solid #c2779e; padding-bottom: 5px; color: #a62260!important; font-size: 13px; font-weight: 800; }
+.azh-home-underlink:hover { color: #6f1744!important; }
+
+/* Editorial opening: the approved photograph is displayed independently of headings. */
+.azh-home-opening { max-width: 1690px; margin: 0 auto; padding: clamp(22px,3.1vw,54px) clamp(16px,3.25vw,56px) 0; }
+.azh-home-masthead { display: grid; grid-template-columns: minmax(0,1.17fr) minmax(280px,.83fr); align-items: end; gap: clamp(28px,4.8vw,90px); padding: 0 4px clamp(25px,3.1vw,48px); }
+.azh-home-masthead-title h1 { max-width: 960px; margin-top: 17px; color: #29232a; font-size: clamp(50px,6.6vw,108px); font-weight: 800; letter-spacing: -.078em; line-height: .96; }
+.azh-home-masthead-title h1 em { color: #c22e72; letter-spacing: -.067em; }
+.azh-home-masthead-copy { padding-bottom: 4px; }
+.azh-home-masthead-copy p { max-width: 490px; color: #6c606c; line-height: 1.68; font-size: clamp(16px,1.4vw,20px); margin-bottom: 23px; }
+.azh-home-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.azh-home-hero-media { position: relative; margin: 0; background: #f8f0f4; border-radius: 16px; overflow: hidden; border: 1px solid #eee3e9; }
+.azh-home-hero-media picture { display: block; line-height: 0; }
+.azh-home-hero-media img { display: block; width: 100%; height: auto; aspect-ratio: 1754 / 896; object-fit: cover; }
+.azh-home-hero-caption { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 22px; background: #fffcfd; color: #9b697f; font-size: 10px; line-height: 1.6; font-weight: 800; letter-spacing: .17em; }
+.azh-home-chapters { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); margin-top: 27px; border-top: 1px solid var(--azh-line); border-bottom: 1px solid var(--azh-line); }
+.azh-home-chapters a { display: grid; align-items: center; grid-template-columns: 1fr auto; gap: 7px 10px; padding: 20px clamp(12px,2vw,28px); border-right: 1px solid var(--azh-line); transition: background .2s; }
+.azh-home-chapters a:first-child { padding-left: 4px; }
+.azh-home-chapters a:last-child { border-right: 0; }
+.azh-home-chapters a:hover { background: #fff1f5; }
+.azh-home-chapters a>span:first-child { grid-column: 1 / -1; color: #ab5e84; font-size: 10px; font-weight: 850; letter-spacing: .11em; }
+.azh-home-chapters strong { color: #332833; font-size: clamp(13px,1.34vw,17px); line-height: 1.3; }
+.azh-home-chapters a>span:last-child { color: #b42d6c; font-size: 21px; }
+.azh-home-marquee { margin-top: clamp(42px,5vw,82px); background: #faeaf1; min-height: 58px; padding: 15px 22px; display: flex; align-items: center; justify-content: center; gap: clamp(14px,3.1vw,56px); flex-wrap: wrap; border-block: 1px solid #f0dce5; }
+.azh-home-marquee span { color: #8b476b; font-size: 10px; letter-spacing: .15em; font-weight: 900; }
+.azh-home-marquee b { color: #d889b1; font-weight: 400; font-size: 15px; }
+
+/* Reality-series discovery */
+.azh-home-section { max-width: 1540px; margin: 0 auto; padding: clamp(70px,8vw,130px) clamp(18px,4vw,60px); }
+.azh-home-section-heading { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,.8fr); gap: clamp(30px,7vw,120px); align-items: end; margin-bottom: clamp(29px,4vw,58px); }
+.azh-home-section-heading h2, .azh-home-feature h2, .azh-home-casting h2, .azh-home-outro h2 { font-size: clamp(40px,5.35vw,78px); letter-spacing: -.064em; font-weight: 780; line-height: 1.03; margin-top: 18px; }
+.azh-home-section-aside { max-width: 440px; padding-bottom: 5px; }
+.azh-home-section-aside p, .azh-home-section-description { font-size: 17px; color: #756874; line-height: 1.75; margin-bottom: 20px; }
+.azh-home-shows-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: clamp(12px,1.8vw,25px); }
+.azh-home-show-card { display: flex; flex-direction: column; min-width: 0; min-height: 450px; border: 1px solid #e9dce3; border-radius: 16px; overflow: hidden; background: #fff; box-shadow: 0 11px 26px #5830490a; transition: transform .2s, box-shadow .2s; }
+.azh-home-show-card:hover { transform: translateY(-5px); box-shadow: 0 20px 35px #58304918; }
+.azh-home-show-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 22px 23px 8px; font-size: 10px; font-weight: 850; letter-spacing: .14em; color: #9a4674; }
+.azh-home-show-top span:last-child { color: #a39aa1; }
+.azh-home-show-art { flex: 1; min-height: 200px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.azh-home-show-art-photo { background: radial-gradient(ellipse at 30% 15%,#fff 0,#fff9fb 42%,#f7e5ed 100%); }
+.azh-home-art-aperture { display: grid; place-items: center; width: 162px; height: 162px; color: #bd417e; font-size: 124px; line-height: 1; border: 1px solid #efd6e3; border-radius: 50%; box-shadow: 0 0 0 19px #fff9fb,0 0 0 20px #e8bfcf; transform: rotate(12deg); }
+.azh-home-show-art-talk { background: linear-gradient(145deg,#fff3f7,#f8e8ef); gap: 20px; }
+.azh-home-art-quote { font: normal 230px/.65 Georgia,serif; color: #dd8eb3; transform: translateY(18px); }
+.azh-home-art-caption { font-size: clamp(17px,2vw,28px); font-weight: 870; letter-spacing: -.04em; line-height: 1.13; color: #7d315e; }
+.azh-home-show-art-live { background: radial-gradient(circle at 50% 60%,#fff 0,#fff8fb 36%,#f6e0eb 100%); flex-direction: column; gap: 13px; }
+.azh-home-art-play { width: 100px; height: 100px; display: grid; place-items: center; border-radius: 50%; border: 1px solid #dea5bf; color: #c43d7b; background: #fff; font-size: 32px; text-indent: 5px; box-shadow: 0 0 0 14px #ffffffa6; }
+.azh-home-art-live-label { color: #a85a83; font-size: 9px; line-height: 1.4; letter-spacing: .13em; font-weight: 850; text-align: center; }
+.azh-home-show-bottom { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; padding: 18px 23px 24px; min-height: 145px; }
+.azh-home-show-bottom h3 { font-size: clamp(20px,1.9vw,27px); letter-spacing: -.045em; font-weight: 800; margin-bottom: 10px; }
+.azh-home-show-bottom h3 span { color: var(--azh-pink); }
+.azh-home-show-bottom p { color: #80737d; font-size: 13px; line-height: 1.6; }
+.azh-home-round-arrow { flex: none; width: 42px; height: 42px; border: 1px solid #e8ccdc; border-radius: 50%; display: grid; place-items: center; color: #ad2b68; font-size: 23px; }
+
+/* Oversized typographic interlude (light-on-light, not a dark block) */
+.azh-home-feature { max-width: 1530px; min-height: 430px; margin: 5px auto 0; border: 1px solid #edcfdd; border-radius: 20px; background: linear-gradient(115deg,#fff6f9 0%,#fff0f6 55%,#f9e1ee 100%); padding: clamp(32px,5.8vw,77px); display: grid; grid-template-columns: .28fr 1fr .65fr; align-items: center; gap: clamp(20px,4vw,65px); overflow: hidden; position: relative; }
+.azh-home-feature-mark { font-size: clamp(70px,9vw,156px); font-weight: 900; letter-spacing: -.12em; line-height: 1; transform: rotate(-90deg); transform-origin: center; color: #e9b4cf; white-space: nowrap; }
+.azh-home-feature-mark span { color: #c64b8a; }
+.azh-home-feature-copy { position: relative; z-index: 1; }
+.azh-home-feature-copy h2 { margin-bottom: 22px; font-size: clamp(38px,4vw,65px); }
+.azh-home-feature-copy>p:not(.azh-home-eyebrow) { max-width: 610px; color: #766372; line-height: 1.8; font-size: 16px; margin-bottom: 25px; }
+.azh-home-feature-note { align-self: stretch; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; border: 1px solid #e7a6c5; border-radius: 50%; width: min(100%,310px); aspect-ratio: 1; background: #fffafcdb; transform: rotate(8deg); justify-self: center; text-align: center; color: #8f3265; padding: 25px; }
+.azh-home-feature-note span { font-size: 10px; letter-spacing: .18em; font-weight: 800; }
+.azh-home-feature-note strong { font-size: clamp(15px,2vw,24px); line-height: 1.16; letter-spacing: .03em; }
+.azh-home-feature-note small { font-size: 8px; letter-spacing: .09em; }
+
+/* Member world */
+.azh-home-world .azh-home-section-description { max-width: 500px; margin: 0; }
+.azh-home-world-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 18px; }
+.azh-home-world-card { display: flex; flex-direction: column; align-items: start; gap: 14px; min-height: 300px; background: #fff; border: 1px solid var(--azh-line); border-radius: 15px; padding: clamp(20px,2.5vw,34px); transition: transform .2s,border-color .2s; }
+.azh-home-world-card:hover { transform: translateY(-4px); border-color: #dca5bf; }
+.azh-home-world-card:nth-child(2) { background: #fff8fb; }
+.azh-home-world-card:nth-child(3) { background: #fffaf6; }
+.azh-home-world-symbol { background: #fff0f5; color: #bf407a; border-radius: 13px; display: grid; place-items: center; font-size: 30px; width: 56px; height: 56px; }
+.azh-home-world-count { font-size: 10px; font-weight: 860; color: #b4638a; letter-spacing: .14em; }
+.azh-home-world-card h3 { font-size: 26px; letter-spacing: -.048em; }
+.azh-home-world-card p { font-size: 14px; color: #776c75; line-height: 1.7; max-width: 390px; }
+.azh-home-world-link { margin-top: auto; padding-top: 11px; color: #b02d6a; font-weight: 800; font-size: 13px; }
+.azh-home-world-link span { margin-left: 7px; font-size: 19px; }
+.azh-home-disclaimer { margin-top: 22px!important; text-align: center; color: #94848f; font-size: 12px; line-height: 1.5; }
+
+/* Casting and close */
+.azh-home-casting { width: min(calc(100% - 42px), 1450px); margin: 0 auto clamp(45px,5.5vw,90px); min-height: 410px; position: relative; display: grid; grid-template-columns: 65px 1fr .72fr; gap: clamp(14px,3vw,44px); align-items: center; padding: clamp(28px,5vw,60px); border-radius: 20px; background: #fff; border: 1px solid var(--azh-line); overflow: hidden; }
+.azh-home-casting-vertical { align-self: stretch; writing-mode: vertical-rl; transform: rotate(180deg); color: #b65c8a; border-left: 1px solid #e8d2dd; padding-left: 22px; letter-spacing: .18em; font-size: 10px; font-weight: 850; }
+.azh-home-casting-content { position: relative; z-index: 1; }
+.azh-home-casting-content h2 { margin-bottom: 22px; }
+.azh-home-casting-content>p:not(.azh-home-eyebrow) { max-width: 585px; color: #796d76; line-height: 1.8; font-size: 16px; margin-bottom: 25px; }
+.azh-home-casting-motif { justify-self: center; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: min(100%,360px); aspect-ratio: 1; border: 1px solid #ebbed4; border-radius: 50%; background: radial-gradient(circle,#fff 20%,#fff4f8); padding: 20px; transform: rotate(-8deg); color: #ac3971; gap: 20px; }
+.azh-home-casting-motif span { font-size: 62px; line-height: 1; color: #d58bab; }
+.azh-home-casting-motif b { font-size: clamp(12px,1.7vw,20px); line-height: 1.2; letter-spacing: .04em; }
+.azh-home-casting-motif small { font-size: 9px; letter-spacing: .11em; }
+.azh-home-outro { max-width: 1440px; margin: 0 auto 70px; padding: 45px clamp(20px,4vw,56px); display: flex; align-items: center; gap: 32px; justify-content: space-between; border-block: 1px solid var(--azh-line); }
+.azh-home-outro-mark { color: #d792b4; font-size: 57px; }
+.azh-home-outro h2 { font-size: clamp(30px,3.7vw,49px); margin-top: 13px; }
+.azh-home-outro .azh-home-button { flex-shrink: 0; }
+.azh-home-footer { border-top: 1px solid var(--azh-line); background: #fff; padding: 37px clamp(20px,4vw,65px); display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.azh-home-footer-brand a { display: inline-block; font-size: 23px; font-weight: 900; letter-spacing: .09em; line-height: 1; }
+.azh-home-footer-brand a span { color: #c53b7c; }
+.azh-home-footer-brand p { color: #a18e9a; font-size: 9px; letter-spacing: .13em; font-weight: 780; margin-top: 9px; }
+.azh-home-footer nav { display: flex; gap: 13px 20px; flex-wrap: wrap; align-items: center; font-size: 12px; font-weight: 760; color: #66565f; }
+.azh-home-footer nav a:hover { color: #b8316a; }
+.azh-home-footer small { color: #a18f99; font-size: 11px; }
+
+@media (max-width: 1100px) {
+  .azh-home-masthead { grid-template-columns: 1fr .95fr; gap: 26px; }
+  .azh-home-masthead-title h1 { font-size: clamp(52px,7vw,84px); }
+  .azh-home-feature { margin: 0 20px; grid-template-columns: 1fr .55fr; }
+  .azh-home-feature-mark { display: none; }
+  .azh-home-feature-note { width: min(100%,250px); }
+}
+@media (max-width: 820px) {
+  .azh-home-masthead { grid-template-columns: 1fr; gap: 17px; padding-bottom: 25px; }
+  .azh-home-masthead-title h1 { font-size: clamp(53px,9.1vw,78px); }
+  .azh-home-masthead-copy p { max-width: 690px; margin-bottom: 18px; }
+  .azh-home-hero-caption { font-size: 9px; letter-spacing: .1em; }
+  .azh-home-chapters a { padding: 15px 10px; }
+  .azh-home-chapters a:first-child { padding-left: 10px; }
+  .azh-home-section-heading { grid-template-columns: 1fr; gap: 20px; }
+  .azh-home-shows-grid { grid-template-columns: 1fr 1fr; }
+  .azh-home-show-card { min-height: 430px; }
+  .azh-home-feature { grid-template-columns: 1fr; gap: 18px; }
+  .azh-home-feature-note { display: none; }
+  .azh-home-world-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .azh-home-casting { grid-template-columns: 35px 1fr; }
+  .azh-home-casting-motif { display: none; }
+}
+@media (max-width: 640px) {
+  .azh-home-opening { padding: 25px 13px 0; }
+  .azh-home-masthead { padding: 0 5px 22px; }
+  .azh-home-masthead-title h1 { font-size: clamp(47px,12vw,70px); line-height: .99; margin-top: 12px; }
+  .azh-home-masthead-copy p { font-size: 15px; }
+  .azh-home-actions { align-items: stretch; }
+  .azh-home-button { min-height: 48px; padding: 13px 17px; gap: 15px; }
+  .azh-home-hero-media { border-radius: 12px; }
+  .azh-home-hero-media img { aspect-ratio: 1.31 / 1; }
+  .azh-home-hero-caption { flex-direction: column; gap: 3px; align-items: start; padding: 10px 13px; font-size: 8px; }
+  .azh-home-chapters { margin-top: 15px; }
+  .azh-home-chapters a { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; padding: 12px 8px; }
+  .azh-home-chapters a>span:first-child { font-size: 8px; letter-spacing: 0; }
+  .azh-home-chapters a>span:last-child { display: none; }
+  .azh-home-chapters strong { font-size: 12px; }
+  .azh-home-marquee { gap: 10px 16px; padding: 14px 12px; margin-top: 37px; }
+  .azh-home-marquee span { font-size: 8px; text-align: center; }
+  .azh-home-marquee b:nth-of-type(even) { display: none; }
+  .azh-home-section { padding: 67px 17px; }
+  .azh-home-section-heading { margin-bottom: 27px; }
+  .azh-home-section-heading h2,.azh-home-casting h2 { font-size: clamp(40px,10vw,54px); }
+  .azh-home-shows-grid,.azh-home-world-grid { grid-template-columns: 1fr; }
+  .azh-home-show-card { min-height: 365px; }
+  .azh-home-show-art { min-height: 160px; }
+  .azh-home-show-bottom { min-height: 115px; }
+  .azh-home-feature { margin: 0 12px; padding: 35px 21px; min-height: unset; border-radius: 15px; }
+  .azh-home-feature h2 { font-size: clamp(39px,9vw,52px); }
+  .azh-home-world-card { min-height: 235px; }
+  .azh-home-casting { width: calc(100% - 24px); grid-template-columns: 1fr; padding: 33px 20px; }
+  .azh-home-casting-vertical { display: none; }
+  .azh-home-outro { margin: 0 12px 42px; padding: 30px 9px; gap: 13px; flex-wrap: wrap; justify-content: flex-start; }
+  .azh-home-outro-mark { font-size: 39px; }
+  .azh-home-outro>div { flex: 1 1 220px; }
+  .azh-home-outro .azh-home-button { margin-left: 52px; }
+  .azh-home-footer { flex-direction: column; align-items: flex-start; padding: 33px 18px; }
+}
+@media (max-width: 360px) {
+  .azh-home-masthead-title h1 { font-size: 43px; }
+  .azh-home-chapters strong { font-size: 11px; }
+  .azh-home-button { width: 100%; }
+  .azh-home-actions { display: grid; grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .azh-home-button,.azh-home-world-card,.azh-home-show-card,.azh-home-chapters a { transition: none; }
+}
+@media (max-width: 360px) {
+  .azh-home-outro .azh-home-button { margin-left: 0; width: 100%; }
+}

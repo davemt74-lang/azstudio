@@ -44,9 +44,9 @@ test('The question editor has add/delete question and answer controls with expli
  for(const text of ['Delete question','Add answer choice','remove-option','add-option','JSON.stringify(questions)','questions.length<=1','az-add-question'])assert.ok(editor.includes(text),text);
  assert.match(read('casting.php'),/az-question-editor-data/);
 });
-test('Landing page includes all real member routes, applications and the approved hero',()=>{
+test('Landing page preserves real routes and the approved all-white photoshoot',()=>{
  const page=read('index.php');
- for(const path of ['watch.php','appointments.php','classes.php','calendar.php','apply.php','signup.php','hero-angelic-studio.webp'])assert.ok(page.includes(path),path);
- assert.match(page,/model-led lifestyle and entertainment community/i);
+ for(const path of ['watch.php','live-shows.php','appointments.php','classes.php','calendar.php','apply.php','signup.php','hero-reality-white.webp'])assert.ok(page.includes(path),path);
+ assert.match(page,/original model-led stories/i);
  assert.doesNotMatch(page,/\$[0-9]+\/month|Subscribe now.*checkout/);
 });
