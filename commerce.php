@@ -13,7 +13,7 @@ $admin=az_has_role($user,'admin');
 <title>Commerce &amp; Creator Briefs · AZHottie</title><meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css">
-<link rel="stylesheet" href="assets/commerce.css?v=1.33.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0"></head>
+<link rel="stylesheet" href="assets/commerce.css?v=1.34.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0"></head>
 <body data-page="commerce"><?php az_render_universal_header('commerce',$user);az_render_member_layout_open('commerce',$user); ?>
 <main class="azh-commerce" id="azh-commerce" data-role="<?= $admin?'admin':'model' ?>" data-csrf="<?= az_h(az_csrf_token()) ?>">
   <header class="azh-commerce-hero"><div><p class="azh-eyebrow">AZHOTTIE · COMMERCE AGENT</p><h1>Commerce<span>.</span></h1>
@@ -149,7 +149,9 @@ $admin=az_has_role($user,'admin');
           <button type="button" id="azh-shipping-refresh" class="azh-commerce-small">Refresh shipments</button>
           <button type="button" id="azh-shipping-edit-products" class="azh-commerce-small">Edit shipping settings</button>
         </div>
-        <p id="azh-shipping-counts"></p><p id="azh-shipping-status" role="status" aria-live="polite"></p>
+        <p id="azh-shipping-counts"></p>
+        <p id="azh-carrier-status" role="status" aria-live="polite">Checking carrier provider configuration…</p>
+        <p id="azh-shipping-status" role="status" aria-live="polite"></p>
       </div>
       <div id="azh-shipping-orders" class="azh-commerce-list"></div>
       <section class="azh-commerce-editor" id="azh-shipping-private" aria-label="Private shipment destination" hidden></section>
@@ -184,5 +186,6 @@ $admin=az_has_role($user,'admin');
   </section><?php endif; ?>
   <p class="azh-commerce-disclaimer">External orders remain administrator-attested; Stripe orders require signed payment-provider events. Commissions remain estimated and no automatic payouts occur. The Agent cannot approve, sell, pay or refund without an authorized human action.</p>
 </main>
-<?php az_render_member_layout_close(); ?><script type="module" src="assets/commerce.js?v=1.33.0"></script><?php if($admin): ?><script type="module" src="assets/commerce-local-admin.js?v=1.32.0"></script><script type="module" src="assets/commerce-fulfillment-admin.js?v=1.33.0"></script><?php endif; ?>
+<?php az_render_member_layout_close(); ?><script type="module" src="assets/commerce.js?v=1.33.0"></script><?php if($admin): ?><script type="module" src="assets/commerce-local-admin.js?v=1.32.0"></script><script type="module" src="assets/commerce-fulfillment-admin.js?v=1.33.0"></script>
+<script type="module" src="assets/commerce-carrier-admin.js?v=1.34.0"></script><?php endif; ?>
 </body></html>

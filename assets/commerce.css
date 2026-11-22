@@ -43,3 +43,19 @@
 .azh-shipping-form label{display:grid;gap:5px;font-size:12px;min-width:min(100%,140px)}
 .azh-shipping-form input,.azh-shipping-form select{border:1px solid #d3c8d0;border-radius:9px;padding:10px;min-height:42px;max-width:100%}
 @media(max-width:600px){.azh-shipping-form{display:grid;grid-template-columns:minmax(0,1fr)}.azh-shipping-form label{width:100%;min-width:0}.azh-shipping-form input,.azh-shipping-form select{width:100%;box-sizing:border-box}}
+
+.azh-carrier-workflow{margin-top:14px;border-top:1px solid #e9dfe6;padding-top:14px;display:grid;gap:10px}
+.azh-carrier-title{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;font-weight:800;color:#5f3448}
+.azh-carrier-hint{font-size:12px;line-height:1.5;color:#715d6b;margin:0}
+.azh-carrier-fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.azh-carrier-fields label{font-size:12px;display:grid;gap:5px;min-width:0}
+.azh-carrier-fields input{width:100%;min-width:0;box-sizing:border-box;border:1px solid #d1c5cc;border-radius:8px;padding:9px}
+.azh-carrier-rates{display:grid;gap:8px}
+.azh-carrier-rate{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border:1px solid #e9dfe6;border-radius:12px;padding:10px}
+.azh-carrier-rate button,.azh-carrier-workflow button{border:1px solid #9b617a;border-radius:8px;padding:9px 12px;background:#fcf5f8;color:#63364d;font-weight:750;cursor:pointer}
+.azh-carrier-rate button:disabled,.azh-carrier-workflow button:disabled{opacity:.55;cursor:not-allowed}
+.azh-carrier-workflow input[type=checkbox]{width:18px;height:18px;accent-color:#a6506e}
+.azh-carrier-confirm{display:flex;align-items:start;gap:10px;font-size:12px;line-height:1.4;color:#574b56}
+.azh-carrier-label-link{display:inline-block;color:#9b4261;text-decoration:underline;font-weight:700}
+#azh-carrier-status{font-size:13px;color:#785968}
+@media(max-width:620px){.azh-carrier-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.azh-carrier-rate{display:grid}}
