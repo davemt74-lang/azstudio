@@ -41,6 +41,7 @@ az_upgrade_commerce_local_schema($db);
 az_upgrade_commerce_fulfillment_schema($db);
 $assert(az_schema_version($db)===39,'v1.33 migration');
 az_upgrade_commerce_carrier_schema($db);$assert(az_schema_version($db)===40,'carrier schema v40');
+az_upgrade_commerce_customer_shipping_schema($db);$assert(az_schema_version($db)===41,'customer carrier quote schema v41');
 az_upgrade_commerce_fulfillment_schema($db);
 $assert(az_schema_version($db)===40,'older schema migration replay preserves v40');
 $settings=[
