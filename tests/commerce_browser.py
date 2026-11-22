@@ -78,6 +78,7 @@ def run():
         browser=p.chromium.launch(headless=True,channel='chrome',args=['--no-sandbox'])
         results=[]
         for role in ('admin','model'):
+            admin = role == 'admin'
             for width in (1440,768,390,320):
                 page=browser.new_page(viewport={'width':width,'height':920})
                 calls=[];errors=[]
