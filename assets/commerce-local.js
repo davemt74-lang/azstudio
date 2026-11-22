@@ -3,8 +3,9 @@ const localEndpoint=new URL('commerce-local-api.php',document.baseURI);
 const localButtons=()=>[...document.querySelectorAll('[data-local-order]')];
 const money=c=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(c||0)/100);
 const token=()=>{const a=new Uint8Array(16);crypto.getRandomValues(a);return Array.from(a,b=>b.toString(16).padStart(2,'0')).join('');};
-async function localApi(action,body=null,csrf=''){
+async function localApi(action,body=null,csrf='',productId=''){
   const u=new URL(localEndpoint);u.searchParams.set('action',action);
+  if(productId)u.searchParams.set('productId',productId);
   const res=await fetch(u,{method:body===null?'GET':'POST',credentials:'same-origin',cache:'no-store',
     headers:body===null?{}:{'Content-Type':'application/json',...(csrf?{'X-CSRF-Token':csrf}:{})},
     ...(body!==null?{body:JSON.stringify(body)}:{})});
@@ -61,7 +62,7 @@ const localOpen=mode=>{
 localDialog.querySelector('.azh-local-close').addEventListener('click',()=>localDialog.close());
 localDialog.addEventListener('close',()=>{document.body.classList.remove('azh-local-dialog-open');localReturnFocus?.focus?.();});
 function localRefreshButtons(){
-  for(const button of localButtons())button.hidden=!(localOptions?.available&&button.dataset.localEnabled==='1');
+  for(const button of localButtons())button.hidden=button.dataset.localEnabled!=='1';
 }
 document.addEventListener('azh:local-product-updated',localRefreshButtons);
 function localPrice(){
@@ -80,9 +81,16 @@ function localPrice(){
     :'Delivery area: '+(localOptions?.deliveryState||'')+' ZIP codes '+(localOptions?.deliveryZips||[]).join(', ')+
       ' · Minimum: '+money(localOptions?.deliveryMinCents)+'. '+(localOptions?.deliveryInstructions||'');
 }
-function localBegin(button){
-  if(!localOptions?.available||button.dataset.localEnabled!=='1')return;
-  localActive=button;localToken=token();localForm.reset();localEl('azh-local-form-status').textContent='';
+async function localBegin(button){
+  if(button.dataset.localEnabled!=='1')return;
+  localActive=button;
+  try{
+    localOptions=await localApi('options',null,'',button.dataset.productId);
+    if(!localOptions.available)throw new Error('This product no longer offers local cash orders.');
+  }catch(error){
+    window.alert(error.message||'Cash order availability could not be confirmed.');return;
+  }
+  localToken=token();localForm.reset();localEl('azh-local-form-status').textContent='';
   localEl('azh-local-product').textContent=button.dataset.productTitle||'Local product';
   localMethod.replaceChildren();
   if(localOptions.pickupEnabled)localMethod.add(new Option('Pay cash at pickup','pickup'));
@@ -92,7 +100,7 @@ function localBegin(button){
 }
 document.addEventListener('click',e=>{
   const button=e.target.closest?.('[data-local-order]');
-  if(button){e.preventDefault();localBegin(button);}
+  if(button){e.preventDefault();void localBegin(button);}
   const statusButton=e.target.closest?.('[data-local-status]');
   if(statusButton){
     localEl('azh-local-status-result').hidden=true;localEl('azh-local-cancel').hidden=true;
@@ -157,5 +165,4 @@ localEl('azh-local-cancel').addEventListener('click',async()=>{
     localEl('azh-local-status-form').requestSubmit();
   }catch(error){localEl('azh-local-check-message').textContent=error.message;}
 });
-void localApi('options').then(o=>{localOptions=o;localRefreshButtons();})
-  .catch(()=>{localOptions=null;localRefreshButtons();});
+localRefreshButtons();
