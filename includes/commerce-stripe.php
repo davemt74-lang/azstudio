@@ -5,6 +5,17 @@ declare(strict_types=1);
  * orders. Merchant API keys live in server environment or protected config, never DB.
  * External-seller products continue to use manual, explicitly unverified records.
  */
+function az_stripe_has_column(PDO $db,string $table,string $column): bool
+{
+    if(!in_array($table,['commerce_products','commerce_orders','commerce_live_features'],true))throw new InvalidArgumentException('Unsafe schema table');
+    if($db->getAttribute(PDO::ATTR_DRIVER_NAME)==='mysql'){
+        $q=$db->prepare('SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name=? AND column_name=?');
+        $q->execute([$table,$column]);return (int)$q->fetchColumn()>0;
+    }
+    $q=$db->query('PRAGMA table_info('.$table.')');
+    foreach($q->fetchAll(PDO::FETCH_ASSOC) as $r)if($r['name']===$column)return true;
+    return false;
+}
 function az_upgrade_commerce_stripe_schema(PDO $db): void
 {
     if (az_schema_version($db)>=37 || az_schema_version($db)<36) return;
@@ -16,11 +27,17 @@ function az_upgrade_commerce_stripe_schema(PDO $db): void
         $mysql=$db->getAttribute(PDO::ATTR_DRIVER_NAME)==='mysql';
         $uid=$mysql?'BIGINT UNSIGNED':'INTEGER';
         $suffix=$mysql?' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci':'';
-        $db->exec("ALTER TABLE commerce_products ADD COLUMN checkout_mode VARCHAR(12) NOT NULL DEFAULT 'external'");
-        $db->exec("ALTER TABLE commerce_orders ADD COLUMN provider VARCHAR(16) NOT NULL DEFAULT 'manual'");
-        $db->exec("ALTER TABLE commerce_orders ADD COLUMN refunded_cents BIGINT NOT NULL DEFAULT 0");
-        $db->exec("ALTER TABLE commerce_orders ADD COLUMN provider_payment_id VARCHAR(128) NULL");
-        $db->exec("ALTER TABLE commerce_live_features ADD COLUMN promotion_id CHAR(32) NULL");
+        foreach([
+            ['commerce_products','checkout_mode',"VARCHAR(12) NOT NULL DEFAULT 'external'"],
+            ['commerce_orders','provider',"VARCHAR(16) NOT NULL DEFAULT 'manual'"],
+            ['commerce_orders','refunded_cents','BIGINT NOT NULL DEFAULT 0'],
+            ['commerce_orders','provider_payment_id','VARCHAR(128) NULL'],
+            ['commerce_live_features','promotion_id','CHAR(32) NULL']
+        ] as [$table,$column,$definition]){
+            // A crashed MySQL DDL is not transactional: each column is replay-safe.
+            if(!az_stripe_has_column($db,$table,$column))
+                $db->exec("ALTER TABLE $table ADD COLUMN $column $definition");
+        }
         $db->exec("CREATE TABLE IF NOT EXISTS commerce_checkout_attempts (
             id CHAR(32) PRIMARY KEY, attempt_key CHAR(64) NOT NULL UNIQUE,
             product_id CHAR(32) NOT NULL, promotion_id CHAR(32) NULL,
@@ -39,7 +56,7 @@ function az_upgrade_commerce_stripe_schema(PDO $db): void
             $q=$db->prepare('SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name=? AND index_name=?');
             foreach ([['commerce_checkout_attempts','commerce_checkout_product','(product_id,created_at)'],
                       ['commerce_orders','commerce_provider_payment','(provider_payment_id)']] as [$table,$index,$cols]){
-                $q->execute([$table,$index]);if(!(int)$q->fetchColumn())$db->exec("CREATE INDEX $index ON $table $cols");
+                $q->execute([$table,$index]);if(!(int)$q->fetchColumn())$db->exec("CREATE ".($index==='commerce_provider_payment'?'UNIQUE ':'')."INDEX $index ON $table $cols");
             }
         } else {
             $db->exec('CREATE INDEX IF NOT EXISTS commerce_checkout_product ON commerce_checkout_attempts(product_id,created_at)');
@@ -206,9 +223,9 @@ function az_stripe_checkout_start(array $body): array
             $attempt=$q->fetch();
         }
     }finally{flock($lock,LOCK_UN);fclose($lock);}
-    if($attempt['redirect_url']!==null && $attempt['redirect_url']!=='')
+    if($attempt['state']==='open' && $attempt['redirect_url']!==null && $attempt['redirect_url']!=='')
         return ['checkoutUrl'=>$attempt['redirect_url'],'status'=>$attempt['state'],'mode'=>$attempt['mode']];
-    if($attempt['state']==='expired'||$attempt['state']==='paid')
+    if(in_array($attempt['state'],['expired','paid'],true))
         throw new AzHttpError(409,'Checkout already completed or expired. Start a fresh checkout.','checkout_finished');
     $session=az_stripe_create_remote(az_stripe_session_payload($attempt,$product,$c),$attempt['id'],$c['key']);
     $sessionId=(string)($session['id']??'');$url=(string)($session['url']??'');
