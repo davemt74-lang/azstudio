@@ -35,6 +35,18 @@ def html_for(role):
 <input name="deliveryZips"><input name="deliveryState" value="AZ">
 <input name="deliveryFeeDollars" type="number" value="0"><input name="deliveryMinDollars" type="number" value="0">
 <input name="deliveryInstructions"></details>
+<details id="azh-product-shipping-settings"><summary>Inventory and shipping</summary>
+<input name="stockRevision" value="0"><input name="sku">
+<select name="stockMode"><option value="unlimited">Unlimited</option><option value="tracked">Tracked</option><option value="made_to_order">Made to order</option></select>
+<input name="stockOnHand" type="number" step="1" value="0"><input name="lowStockThreshold" type="number" value="2">
+<input name="stockAdjustmentReason"><input name="shippingEnabled" type="checkbox">
+<select name="shippingRate"><option value="flat">Flat</option><option value="free">Free</option></select>
+<input name="shippingFeeDollars" type="number" step="0.01" value="0.00">
+<input name="freeAboveDollars" type="number" step="0.01" value="0.00">
+<input name="weightGrams" type="number" value="0"><input name="lengthMm" type="number" value="0">
+<input name="widthMm" type="number" value="0"><input name="heightMm" type="number" value="0">
+<input name="handlingDays" type="number" value="3"><input name="shipCountry" value="US">
+<p id="azh-shipping-stock-snapshot"></p></details>
 <button type="submit">Save</button><button type="reset" data-reset-product>Reset</button></form>''')
     parts.append('''<div id="commerce-products-list"></div></section>
 <section data-panel="briefs" hidden>''')
@@ -70,6 +82,14 @@ def state_for(role):
         'deliveryEnabled':False,'pickupLocation':'Sample Pickup A','pickupAddress':'123 Example St, Phoenix AZ',
         'pickupHours':'By confirmation','pickupInstructions':'Wait for confirmation','deliveryZips':'',
         'deliveryState':'AZ','deliveryFeeCents':0,'deliveryMinCents':0,'deliveryInstructions':''},
+        'fulfillment':{'stockMode':'tracked','inStock':True,'available':8,'lowStock':False,
+            'shippingEnabled':True,'shippingFeeCents':500,'freeAboveCents':0,
+            'handlingDays':2,'shippingRate':'flat'},
+        'fulfillmentSettings':{'sku':'SAMPLE-001','revision':1,'stockMode':'tracked',
+            'onHand':8,'reserved':0,'available':8,'stockOnHand':8,'lowStockThreshold':2,
+            'shippingEnabled':True,'shippingRate':'flat','shippingFeeCents':500,
+            'freeAboveCents':0,'weightGrams':500,'lengthMm':200,'widthMm':150,'heightMm':100,
+            'handlingDays':2},
         'brief':{'title':'Creator Spotlight','instructions':'Create a short video review','state':'active','revision':1},
         'myInterest':None if not admin else None}
     return {'role':role,'products':[product],
@@ -120,6 +140,8 @@ def run():
                     page.locator('#commerce-products-list .azh-commerce-card button').first.click()
                     assert page.locator('[name=localEnabled]').is_checked(),('product cash selected',width)
                     assert page.locator('[name=pickupAddress]').input_value()=='123 Example St, Phoenix AZ',('per-product pickup details',width)
+                    assert page.locator('[name=sku]').input_value()=='SAMPLE-001',('product SKU load',width)
+                    assert page.locator('[name=shippingEnabled]').is_checked(),('product shipping toggle',width)
                     validity=page.locator('#commerce-product-form').evaluate(
                         "(f)=>({valid:f.checkValidity(),invalid:[...f.elements].filter(e=>e.willValidate&&!e.validity.valid).map(e=>e.name)})")
                     assert validity['valid'],('product editor invalid',width,validity)
@@ -127,7 +149,9 @@ def run():
                         page.locator('#commerce-product-form button[type=submit]').click()
                     payload=json.loads(request.value.post_data)
                     assert payload['localSettings']['pickupAddress']=='123 Example St, Phoenix AZ',('per-product payload',width,payload)
-                    page.wait_for_function("document.querySelector('#commerce-status').textContent.includes('product-specific')",timeout=8000)
+                    assert payload['fulfillmentSettings']['sku']=='SAMPLE-001',('product shipping payload SKU',width,payload)
+                    assert payload['fulfillmentSettings']['shippingFeeCents']==500,('product shipping fee snapshot',width,payload)
+                    page.wait_for_function("document.querySelector('#commerce-status').textContent.includes('inventory and shipping')",timeout=8000)
                 page.locator('[data-tab=briefs]').click()
                 assert page.locator('#commerce-brief-list .azh-commerce-card').count()==1,(role,width,'brief render')
                 if admin:
