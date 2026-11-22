@@ -60,7 +60,7 @@ def run():
             body=json.dumps({'ok':False,'error':{'message':'Fixture stops before real payment.'}}))
         else:route.abort()
       page.route('**/commerce-shipping-quote-api.php?*',handle)
-      page.route('**/commerce-checkout-api.php?*',handle)
+      page.route('**/commerce-checkout-api.php',handle)
       page.set_content(HTML)
       page.add_style_tag(path=str(ROOT/'assets/commerce.css'))
       page.add_style_tag(path=str(ROOT/'assets/commerce-shipping-checkout.css'))
