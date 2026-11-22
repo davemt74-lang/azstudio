@@ -95,7 +95,8 @@ if(shippingRoot){
         control(controls,'Flag an exception',()=>action(row,'exception',{},true));
       }
       if(row.status==='exception'){
-        add(card,'p','Requires manual review. Return to the carrier or customer and resolve before closing. No automatic carrier update is implied.');
+        add(card,'p','Requires manual review. Verify the carrier and customer before reopening.');
+        control(controls,'Reopen for packing',()=>action(row,'reopen',{},true));
       }
     }
     if(!rows.length)add(list,'p','No Stripe-paid shipping orders yet. Shipments appear only after signed payment events and a valid address.','azh-commerce-card');

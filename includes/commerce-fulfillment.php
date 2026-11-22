@@ -344,7 +344,7 @@ function az_fulfillment_shipment_action(array $user,array $body): array
     if(!az_valid_id($id))throw new AzHttpError(404,'Shipment not found.','not_found');
     $revision=az_integer($body['revision']??0,1,PHP_INT_MAX,'Shipment revision');
     $action=az_text($body['decision']??'',20,'Shipment action');
-    if(!in_array($action,['pack','ship','deliver','exception'],true))
+    if(!in_array($action,['pack','ship','deliver','exception','reopen'],true))
         throw new AzHttpError(400,'Unknown shipment action.','invalid_shipment_action');
     $carrier=az_text($body['carrier']??'',20,'Shipping carrier');
     $tracking=az_text($body['trackingNumber']??'',100,'Tracking number');
@@ -365,10 +365,10 @@ function az_fulfillment_shipment_action(array $user,array $body): array
         if($r['provider']!=='stripe'||!in_array($r['order_state'],['paid','partially_refunded'],true))
             throw new AzHttpError(409,'Only paid, non-disputed Stripe orders can ship.','payment_required');
         $allowed=['pack'=>['awaiting_dispatch'],'ship'=>['packed'],'deliver'=>['shipped'],
-            'exception'=>['awaiting_dispatch','packed','shipped']];
+            'exception'=>['awaiting_dispatch','packed','shipped'],'reopen'=>['exception']];
         if(!in_array($r['status'],$allowed[$action],true))
             throw new AzHttpError(409,'Shipment cannot make that transition.','invalid_transition');
-        $status=match($action){'pack'=>'packed','ship'=>'shipped','deliver'=>'delivered','exception'=>'exception'};
+        $status=match($action){'pack'=>'packed','ship'=>'shipped','deliver'=>'delivered','exception'=>'exception','reopen'=>'awaiting_dispatch'};
         $now=az_now();
         $q=$db->prepare('UPDATE commerce_shipments SET status=?,carrier=?,tracking_number=?,shipped_at=?,
             delivered_at=?,revision=revision+1,updated_at=?,last_actor_id=? WHERE order_id=? AND revision=?');
@@ -402,6 +402,14 @@ function az_fulfillment_briefing(array $user): array
         JOIN commerce_products p ON p.id=f.product_id AND p.state='active'
         WHERE f.stock_mode='tracked' AND f.on_hand-f.reserved<=f.low_stock_threshold")->fetchColumn();
     $counts['lowStockProducts']=(int)$low;
+    // Do not silently discard stock held for an unknown Stripe checkout state.
+    // The seller must reconcile the provider first; stale holds are an alert.
+    $cutoff=gmdate('Y-m-d\TH:i:s\Z',time()-48*3600);
+    $q=$db->prepare("SELECT COUNT(*) FROM commerce_stock_reservations r
+        JOIN commerce_checkout_attempts a ON a.id=r.checkout_attempt_id
+        WHERE r.status='held' AND a.state IN ('open','creating') AND a.created_at<=?");
+    $q->execute([$cutoff]);
+    $counts['staleStockHolds']=(int)$q->fetchColumn();
     $cards=[];
     if($counts['lowStockProducts'])$cards[]=az_agent_workspace_card('commerce','Product inventory running low',
         $counts['lowStockProducts'].' products are below their configured stock thresholds. Review quantities in Commerce.',
@@ -410,6 +418,9 @@ function az_fulfillment_briefing(array $user): array
         $cards[]=az_agent_workspace_card('commerce','Paid orders awaiting shipment',
             ($counts['shippingAwaitingDispatch']+$counts['shippingPacked']).' paid parcels need packing or carrier handoff.',
             'commerce.php',1);
+    if($counts['staleStockHolds'])$cards[]=az_agent_workspace_card('commerce','Unreconciled checkout inventory holds',
+        $counts['staleStockHolds'].' Stripe checkout holds are older than 48 hours. Verify provider payment/expiry before adjusting stock.',
+        'commerce.php',1);
     if($counts['shippingExceptions'])$cards[]=az_agent_workspace_card('commerce','Shipping exceptions require follow-up',
         $counts['shippingExceptions'].' shipments were flagged by staff for manual resolution.',
         'commerce.php',1);
@@ -428,5 +439,15 @@ function az_fulfillment_scan(): array
         (int)$r['owner_id'],'shipment_attention','Shipping order requires follow-up',
         $r['product_title'].' · Shipment has been in its current recorded state over 48 hours. Verify the carrier separately.',
         true);
-    return ['checked'=>count($rows),'dispatch'=>az_commerce_dispatch(100)];
+    $stale=$db=az_db();
+    $q=$db->prepare("SELECT a.id,p.title,p.owner_id FROM commerce_stock_reservations r
+        JOIN commerce_checkout_attempts a ON a.id=r.checkout_attempt_id
+        JOIN commerce_products p ON p.id=r.product_id
+        WHERE r.status='held' AND a.state IN ('open','creating') AND a.created_at<=? LIMIT 100");
+    $q->execute([$cutoff]);$pending=$q->fetchAll(PDO::FETCH_ASSOC);
+    foreach($pending as $hold)az_commerce_queue_admins(
+        'stale-checkout-hold:'.$hold['id'],(int)$hold['owner_id'],
+        'inventory_hold_attention','Checkout inventory needs provider reconciliation',
+        $hold['title'].' · An older unpaid checkout still holds stock. Confirm payment or expiry with Stripe before manual action.',true);
+    return ['checked'=>count($rows),'staleHolds'=>count($pending),'dispatch'=>az_commerce_dispatch(100)];
 }
