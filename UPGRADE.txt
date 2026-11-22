@@ -1,3 +1,13 @@
+AZHottie Studio v1.36.0 — Returns & Creator Payout Reconciliation
+- Back up the database and site, private storage/config.php, uploads and media. Deploy ZIP over application code without rerunning install.php or overwriting private files.
+- First database initialization upgrades schema 41→42. Verify on real hosted MySQL.
+- Public /returns.php accepts UNVERIFIED requests and never authorizes refunds. Admin Commerce > Returns & Exchanges verifies order ownership, authorizes, inspects/restocks goods and handles refunds/exchanges.
+- Refund approval NEVER moves funds. Record the actual Stripe/cash/external provider refund separately; Stripe payment confirmation requires the signed provider webhook. Staff then reconcile the return case with external refund evidence.
+- Commerce > Creator Payouts provides held/eligible/allocated/paid commission balances. Default holding period is 14 days (private AZH_COMMISSION_HOLD_DAYS=7..90); fulfilled delivery, payment and return/dispute holds are verified before payout drafts, approval and recording completed external transfers.
+- External payout transactions are NEVER initiated by AZHottie. Staff must actually send funds using their bank/provider before recording an evidence reference. Post-payout refunds block future payouts pending liability reconciliation.
+- Test admin and creator role isolation, one-time inspected restocking, exchange replacement reservations, refund proof, payout approval and overpayment blocks. Hosted MySQL and real bank/refund settlement are additional production release gates.
+- See docs/RELEASE_1_36_0.txt.
+
 AZHottie Studio v1.35.0 — Smart Checkout Shipping
 - Back up entire database, private storage/config.php, uploads and media. Deploy application files only; do not rerun install.php.
 - First installed application boot upgrades schema 40 to 41 for customer carrier quotes and Stripe checkout selections.

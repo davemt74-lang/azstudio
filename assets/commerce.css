@@ -61,3 +61,5 @@
 @media(max-width:620px){.azh-carrier-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.azh-carrier-rate{display:grid}}
 
 .azh-shipping-product-summary{min-width:0}.azh-commerce-card form[data-stripe-checkout]{min-width:0}
+
+.azh-commerce-tabs{max-width:100%;flex-wrap:wrap}.azh-commerce-panel[data-panel=payouts] h3{margin:20px 0 12px}.azh-commerce-card{overflow-wrap:anywhere}

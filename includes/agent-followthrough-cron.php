@@ -15,6 +15,8 @@ try {
     $result['commerce']=az_commerce_scan();
     $result['localCommerce']=az_local_scan();
     $result['shipping']=az_fulfillment_scan();
+    $result['returns']=az_returns_scan();
+    $result['settlements']=az_payout_scan();
     // Best-effort health-data retention; never roll back assignment reminders.
     try {$result['liveDiagnosticsPruned']=az_live_agent_prune();}
     catch (Throwable $healthError){error_log('Live Agent retention failed: '.$healthError->getMessage());}

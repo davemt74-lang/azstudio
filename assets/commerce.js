@@ -151,7 +151,7 @@ if(root){
     if(!list.childElementCount)card(list,'No orders recorded','ORDER HISTORY','Orders appear here after the admin records an external provider order.');
     if(!admin){
       const info=make('div','azh-commerce-summary');text(info,'strong','Recorded paid-order commissions: '+money(commission));
-      text(info,'p','These are unpaid estimates from admin-reconciled external orders. Refunded orders are excluded. No disbursement has been made.');list.prepend(info);
+      text(info,'p','These amounts are estimated commissions, not your payable balance. Open Creator Payouts for holding periods, returns, allocations and externally recorded payments.');list.prepend(info);
     }else{
       const info=make('div','azh-commerce-summary');text(info,'strong',pending+' orders awaiting external reconciliation');
       list.prepend(info);
