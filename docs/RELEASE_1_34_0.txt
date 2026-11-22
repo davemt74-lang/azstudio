@@ -1,0 +1,32 @@
+AZHottie Studio v1.34.0 — Multi-Carrier Shipping Rates, Label Purchase & Signed Tracking
+
+Provider and account setup
+- The first shipping-provider adapter uses EasyPost's REST API v2. Your EasyPost account must have the relevant USPS/UPS/FedEx carrier accounts enabled to return rates. An EasyPost-managed USPS account may be available by default; UPS and FedEx require configured carrier accounts or eligible wallet access.
+- Never place an API key or webhook secret in GitHub, browser JavaScript, Agent Chat, client-side settings, or a public URL. Configure privately in server environment (recommended) or protected storage/config.php['commerce']:
+    AZH_EASYPOST_API_KEY=EZTK... (Test) or EZAK... (Production)
+    AZH_EASYPOST_WEBHOOK_SECRET=<your EasyPost webhook's private signing secret>
+    AZH_EASYPOST_FROM_NAME=...
+    AZH_EASYPOST_FROM_STREET=...
+    AZH_EASYPOST_FROM_CITY=...
+    AZH_EASYPOST_FROM_STATE=AZ (two-letter US code)
+    AZH_EASYPOST_FROM_ZIP=...
+    AZH_EASYPOST_FROM_PHONE=...
+    AZH_EASYPOST_ALLOW_LIVE=0 by default (set 1 only when production labels are intended)
+    AZH_EASYPOST_ALLOW_LABEL_PURCHASES=0 by default (must explicitly set 1, including test labels)
+    AZH_EASYPOST_MAX_LABEL_CENTS=3000 by default (max cap per label, integer USD cents).
+- Register https://YOUR-SITE/commerce-carrier-webhook.php in EasyPost with HMAC signing; the webhook secret in the provider must exactly match your private server setting. Configure test and production webhook URLs separately for their respective environments. EasyPost tracker.updated events update carrier status, with duplicate and older events ignored. The webhook uses the standard EasyPost X-Hmac-Signature header and SHA-256 of raw body, with event ID deduplication.
+- No production charges will occur without a correctly configured production key, explicit allow-live toggle, allow-label-purchases toggle, an authorized administrator's review of a particular current rate, an explicit confirmation, and a private maximum cost limit. Test-mode labels use test funds/data, not real carrier postage.
+- Quotes request EasyPost shipment rates from the configured carrier accounts and the recipient's private address, origin address, and the explicitly staff-confirmed parcel weight and dimensions. Only carrier-provided rates appear; carrier service/delivery-day estimates are not promises.
+- A quote is valid for 15 minutes. Prices are compared with the separate flat/free shipping amount customers paid at checkout. Staff must manually verify the margin, packaging, and merchant obligations.
+- After the paid order is packed, an admin can purchase a specific listed rate, print the HTTPS EasyPost postage label, and confirm physical carrier handoff. Quote/label purchase is one per order, with a durable pending record committed before the provider request to prevent duplicate charges on timeout. If any label purchase response is uncertain, subsequent purchases are blocked. "Reconcile existing EasyPost label" performs GET, never a second purchase.
+- Paid EasyPost labels automatically create tracking records. Signed tracking webhooks can update actual carrier status, out-for-delivery, delivered, and exceptions in Commerce > Shipping; manual staff status remains separate. Official carrier tracking links are still available. If EasyPost does not provide a tracker ID, automatic updates are unavailable for that label; staff can track manually.
+- Shipping customer addresses remain AES-256-GCM encrypted in the existing private shipping table. Rate response snapshots, API responses to browsers, Agent Brain/Chat, notifications, analytics and logs exclude names, street addresses and phones. Carrier provider receives an address only to quote or purchase labels as authorized.
+- The existing Commerce Agent bell, History, Brain, and cron surface carrier exceptions, uncertain label purchase outcomes, and shipped/delivered states. No new notification or background service is added.
+- Existing v1.33 product-level shipping charges are STILL flat/free at customer checkout. Live carrier rates in v1.34 are available in the authenticated Shipping staff workspace after a verified paid order, NOT yet selected/charged dynamically by a customer at checkout. Customer-specific carrier checkout rate selection is a separate later phase.
+- This phase does not initiate refunds/returns, acquire live rate commitments for checkout, provide automatic carrier-label refunds, handle international shipments, automatically disburse creator commissions, or reconcile merchant tax. Existing approval safeguards remain.
+
+Migration and release
+- Upgrade schema version 39→40 (new carrier quotes, label purchase ledger, signed event dedup table, provider tracking status fields). Existing orders, shipping status, Stripe settings, local cash pickup/delivery, creator attributions and inventory are preserved.
+- Back up the entire database, site, private config, media and uploads. Deploy full application ZIP without rerunning install.php. Verify schema 40 on hosted MySQL.
+- In EasyPost TEST mode, run a paid Stripe TEST order with real US shipping address and packaging dimensions, compare rates, explicitly purchase a TEST label, print and verify status; trigger signed tracking event simulations and verify idempotence, address privacy, and existing Agent messages. Do not enable real label charges until the actual carrier accounts, address, packaging, service levels and postage costs have been reviewed.
+- Code-level 10/10 requires green CI on final merged commit for PHP migration+state machine, SQL fixtures, desktop/mobile Chrome, existing feature regressions and verified ZIP integrity. Production acceptance requires real hosted Stripe/EasyPost test accounts, actual webhook delivery and a physical package handoff.

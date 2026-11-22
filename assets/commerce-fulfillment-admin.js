@@ -71,7 +71,17 @@ if(shippingRoot){
       if(row.status==='awaiting_dispatch'){
         control(controls,'Mark packed',()=>action(row,'pack'));
       }
-      if(row.status==='packed'){
+      if(row.status==='packed'&&row.carrierIntegration?.label?.status==='purchased'){
+        control(controls,'Confirm handed to carrier',async()=>{
+          const label=row.carrierIntegration.label;
+          if(window.confirm('Has staff physically handed this labeled parcel to '+label.carrier+'?'))
+            await action(row,'ship',{
+              carrier:label.carrier==='FedEx'?'fedex':label.carrier.toLowerCase(),
+              trackingNumber:label.trackingNumber
+            });
+        });
+      }
+      if(row.status==='packed'&&!row.carrierIntegration?.label){
         const form=add(card,'form','','azh-shipping-form');
         const field=(name,label)=>{
           const wrap=add(form,'label',label),input=document.createElement(name==='carrier'?'select':'input');
@@ -98,6 +108,9 @@ if(shippingRoot){
         add(card,'p','Requires manual review. Verify the carrier and customer before reopening.');
         control(controls,'Reopen for packing',()=>action(row,'reopen',{},true));
       }
+      const providerBox=add(card,'section','','azh-carrier-workflow');
+      if(typeof window.azCarrierEnhance==='function')
+        window.azCarrierEnhance(providerBox,row,()=>void refresh());
     }
     if(!rows.length)add(list,'p','No Stripe-paid shipping orders yet. Shipments appear only after signed payment events and a valid address.','azh-commerce-card');
   }
