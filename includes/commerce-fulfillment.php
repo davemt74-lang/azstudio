@@ -320,7 +320,8 @@ function az_fulfillment_shipments(array $user): array
         'carrierTrackingStatus'=>$r['carrier_tracking_status'],
         'carrierTrackingUpdatedAt'=>$r['carrier_tracking_updated_at'],
         'carrierIntegration'=>az_carrier_order_snapshot($r['order_id']),
-        'parcel'=>az_carrier_default_parcel($r['order_id'])
+        'parcel'=>az_carrier_default_parcel($r['order_id']),
+        'customerSelectedRate'=>az_customer_ship_order_summary($r['order_id'])
     ],$q->fetchAll(PDO::FETCH_ASSOC));
 }
 function az_fulfillment_shipment_details(array $user,string $orderId): array

@@ -174,7 +174,10 @@ if(root){
       ['Manual recorded net',money(a.manual.netCents),'Admin attested · not provider-verified'],
       ['Cash merchandise net',money(a.cash?.netCents||0),'Staff-recorded collection; excludes cash delivery fees and taxes'],
       ['Cash commission estimates',money(a.cash?.commissionCents||0),'Created only after cash collection'],
-      ['Checkout paid / started',a.checkout.paid+' / '+a.checkout.started,'Paid-per-start '+(a.checkout.paymentRatePercent??'—')+'% · not page views']
+      ['Checkout paid / started',a.checkout.paid+' / '+a.checkout.started,'Paid-per-start '+(a.checkout.paymentRatePercent??'—')+'% · not page views'],
+      ['Carrier-selected paid orders',String(a.customerCarrier?.carrierPaidOrders||0),'Live rate selections confirmed by signed Stripe events'],
+      ['Carrier shipping charged',money(a.customerCarrier?.carrierShippingChargedCents||0),'Selected carrier fees collected with paid orders, before taxes'],
+      ['Purchased carrier postage',money(a.customerCarrier?.purchasedPostageCents||0),'EasyPost label costs recorded after staff authorization']
     ]){
       const c=make('article','azh-commerce-kpi');text(c,'small',name);text(c,'strong',value);text(c,'p',help);grid.append(c);
     }
