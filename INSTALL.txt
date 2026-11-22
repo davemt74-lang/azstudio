@@ -1,0 +1,379 @@
+AZHOTTIE INTERVIEW STUDIO — RELEASE 1.7.0
+INSTALLATION AND FIRST SESSION
+
+Already installed? Read UPGRADE.txt. Keep the existing storage directory and
+database; do not run the first-time installer again.
+
+1. UPLOAD THE PACKAGE
+
+Upload and extract the deployment ZIP into a PHP website root or a subfolder.
+The folder containing index.php is the application root.
+
+Examples:
+  https://example.com/
+  https://example.com/studio/
+
+Keep all included .htaccess files, including those inside storage and includes.
+Use HTTPS for camera/microphone capture and phone connections.
+
+2. CHECK THE HOST
+
+Required:
+  - PHP 8.1 or newer.
+  - PDO with pdo_sqlite or pdo_mysql.
+  - PHP sessions and file uploads enabled.
+  - post_max_size of at least 128 KB.
+  - upload_max_filesize of at least 64 KB.
+  - storage writable by PHP, including storage/media and storage/uploads.
+  - Database privileges to create tables/indexes and add columns for upgrades.
+
+Profile photos and video covers use one request, with a 5 MiB application
+limit. To allow the full image limit, set upload_max_filesize to at least 5M
+and post_max_size higher, such as 8M. Videos use smaller negotiated chunks.
+Covers accept JPG, PNG, or WebP, with each side at most 12,000 pixels and at
+most 40 megapixels in total.
+
+Use permissions appropriate for your hosting account. World-writable
+permissions are not required. Production does not need Node.js, Composer,
+FFmpeg, or a background worker.
+
+3. OPEN THE INSTALLER
+
+Visit install.php beneath your installation address, for example:
+  https://example.com/studio/install.php
+
+Enter your administrator name, email address, and password.
+NO INSTALLATION, LICENSE, OR SECURITY KEY IS REQUIRED.
+The administrator password is the normal login for your private studio.
+
+SQLite is the automatic default. For MySQL, first create an empty database and
+a database user in your hosting control panel, grant that user access, and
+enter the connection details in the installer.
+
+Select Create my studio. The installer creates the administrator, locks itself,
+and opens the private interview library.
+
+The current database schema is version 16. Existing installations migrate
+automatically; preserve their storage and configuration and use UPGRADE.txt.
+
+4. USE THE STUDIO
+
+  index.php                Public landing page
+  watch.php                Public feed of explicitly published finished videos
+  watch.php?id=...          One public video post and its shareable address
+  signup.php               Member registration and team-role requests
+  login.php                Member/administrator sign in
+  account.php              Own details, roles, and password
+  accounts.php             Administrator account/role/profile management
+  admin.php                OpenAI/Claude keys, models, checks, and AI settings
+  calendar.php             Private events and class sessions
+  classes.php              Reusable classes and scheduled sessions
+  appointments.php         Bookings, professional services, and working hours
+  productions.php          Projects, shots, assignments, review, and editing
+  my-work.php              Model/professional assignments and submissions
+  library.php              Administrator's active and archived interviews
+  profiles.php             Administrator's model profiles/interview history
+  questionnaires.php       Administrator's reusable question-set builder
+  interview.php?id=...      Administrator recording room and phone connections
+  editor.php?id=...         Administrator editor for an owned interview
+  videos.php               Saved versions, covers, and public-post controls
+  phone.php?invite=...      Phone page; open the full QR invitation/link
+  logout.php               Sign out
+
+Private API routes: api.php for administrator production tools,
+accounts-api.php for account management, schedule-api.php for scheduling,
+and media.php for authorized private media. The public content-api.php and
+public-media.php expose only currently published finished posts and their
+video/cover files. Original footage and private records stay in the studio.
+
+ACCOUNTS AND ROLES
+
+Each person has one account with one or more roles: fan, customer, model,
+professional, administrator. A model can also be a professional or customer.
+Signup requires an 18-or-older confirmation. Fan/customer access starts
+immediately; an administrator approves model/professional requests in Accounts.
+A person requesting only team roles receives customer access while waiting.
+Members can request additional model/professional roles from My account.
+
+Administrators can approve/decline role requests, adjust roles, suspend or
+reactivate accounts, and link model accounts to production profiles. A linked
+model can update permitted profile fields from My account. Private casting
+notes, interview originals, and production tools remain administrator-only.
+Suspension blocks sign-in and new activity while retaining the person's history.
+
+PRIVATE EVENTS, CLASSES, AND APPOINTMENTS
+
+All scheduling pages require sign-in. One studio calendar serves the community;
+published events are filtered by eligible roles. Administrators create events
+and reusable classes. Class sessions have separate attendance and enrollment.
+Changing a class template does not change sessions already created from it.
+
+Minimum capacity is an enrollment target; a shortfall does not auto-cancel.
+Maximum capacity is enforced, and further registrations join a FIFO waitlist.
+When a seat opens, the earliest active, eligible, conflict-free person is
+promoted. Members see their own registrations. Only administrators and assigned
+professionals see rosters or mark Unmarked/Present/Absent/Excused attendance.
+
+Models can book professional appointments. Any active member can book; a
+separate customer role is not required for an approved model. Professionals
+manage their own service types, durations, buffers, booking notice, advance
+window, weekly hours, and blocked time. Administrators can manage all providers.
+Slots are checked against current hours, blocks, bookings, events/classes, and
+the member's own commitments. Members can reschedule/cancel upcoming bookings;
+professionals can mark completed sessions or no-shows after the start time.
+
+Use America/Phoenix studio time throughout the calendar and appointment forms.
+The server stores UTC and returns the corresponding Phoenix local times. Other
+customers' appointment details and notes are not shown in the member calendar.
+
+INTERVIEWS AND REVIEW
+
+Create an interview, choose questions, record or import answers, and wait for
+the recordings to finish uploading. Save interview information and edit
+settings before leaving. Reopen saved interviews to continue them later.
+
+Optionally create a model profile and questionnaire first. Profiles hold a
+photo, public-bio draft, handles, interests, availability, and private notes.
+The public-bio field is not automatically published. Questionnaires support
+multiple-choice/open questions, ordering, private flags, and imports from the
+80-question starter bank. New interviews keep copies of their selected sets;
+later edits or deletion of a reusable set do not change those copies.
+
+Mark answer start while recording to set the default trim after a spoken
+question. Adjust the exact trim in the editor. Takes marked private are
+excluded from the automatically assembled edit by default; review the selected
+takes before exporting.
+
+Favorite good takes and use Review & notes to attach a comment to the current
+playback time. Click a saved timestamp to return to that moment. Review labels
+include Unreviewed, Shortlisted, Needs another take, and Private only.
+
+Archive retains the interview and recordings. Restore returns it to the active
+list. Delete removes the interview, its originals, finished-video files, review
+data, unfinished uploads, and phone connections. Downloaded copies and backups
+remain separate. Archiving an interview also closes its phone access and
+unpublishes all its finished videos. Restoring does not republish them.
+
+Interrupted uploads may remain in the original browser's local storage. Return
+in that same browser to retry, and keep its site data until upload succeeds.
+
+5. CONNECT PHONES AND CAMERAS
+
+From an open host recording room, choose Interview QR code. On the phone, scan
+it, enter a model/device name, and choose Request to join. Approve that named
+phone on the host. Phones do not need an administrator login.
+
+  Invitation: 15 minutes. Pending approval request: 15 minutes.
+  Approved connection: up to 8 hours unless disconnected sooner.
+  Phone connections: up to 16 pending or approved per interview.
+  Recording rotation: up to 8 total sources, including local cameras.
+
+An approved phone can record through its native camera or select an existing
+video, preview it, add a title, and upload it. The host's selected question and
+private flag are attached when upload starts. Resume upload checks committed
+server progress. A browser recovery copy and local download remain available
+while unfinished, when browser storage is available.
+
+Optional Share live camera sends video only to the open host recording room.
+The host retains its chosen microphone. Keep both pages open. Live sharing
+stops when the phone leaves its page or approval is revoked. Failed live
+networking does not prevent normal recorded-video uploads.
+
+Disconnect revokes one phone; Disconnect all revokes phones and closes the
+invitation. Refreshing the QR code keeps approved phones connected.
+
+For camera switching, enable the host camera/microphone and open Camera & audio
+settings. Choose the cameras in rotation. Compatible USB/HDMI capture cameras
+and approved live phone feeds use the same selector.
+
+  Manual: choose a camera or use Switch camera now.
+  Fixed: switch every 30 seconds by default.
+  Random: at a 30-second base interval, delays vary from about 15–45 seconds
+          and another selected camera is chosen randomly.
+
+The UI allows a 10–120 second base interval. Automatic switching needs at least
+two available selected cameras. The continuous program is 1280 x 720 and keeps
+the host microphone steady across picture changes. A 1080 editor export
+upscales that recording; it does not add native 1080 detail. Unsupported
+browsers fall back to single-camera takes.
+
+Optional relay: the default live-camera ICE configuration uses a public STUN
+endpoint. Some networks may need a TURN relay. No relay or credentials are
+provisioned by this installer. README.md has a phone_ice_servers example with
+placeholders for your provider's settings. Clip uploads do not need TURN.
+
+6. EXPORT AND SAVE FINISHED VIDEOS
+
+The editor renders the finished video in real time in your browser. Keep the
+tab visible and the device awake. MP4 or WebM is selected according to browser
+support. Save the resulting download to your device.
+
+For an imported editor clip, enter the question on its title card before
+choosing the video file.
+
+After rendering, Download finished video saves it to your device. To keep the
+movie on the server, enter its title/description/status and explicitly choose
+Save finished video. Wait for the saved-version confirmation. Save edit keeps
+the editing decisions; exporting/downloading alone does not upload the movie.
+
+Each new saved cut gets a version linked to its interview. Retrying a completed
+upload recovers its existing receipt. Finished videos supports playback/download,
+metadata/status edits, an external published URL, covers, Watch publication,
+archive/restore, and deletion. Published remains a production tracking status;
+the separate Publish to fan feed action creates the public post.
+
+COVERS
+
+Open a saved finished version. Upload cover image accepts JPG, PNG, or WebP up
+to 5 MiB, no more than 12,000 pixels on either side, and 40 megapixels total.
+Or pause the video and select Capture current frame. Frame capture produces a
+JPEG with a maximum long edge of 1,920 pixels and preserves its proportions.
+Remove cover restores default artwork. Each saved finished version has its
+own cover; the library and video player use it, and cards show a 16:9 crop.
+Save pending video-detail changes before changing the cover.
+
+Cover upload/capture/removal saves immediately. If the video is published,
+the existing public post's cover updates immediately without republishing.
+
+PUBLIC WATCH POSTS
+
+Save the title/description, review the credit/cover, then choose Publish to fan
+feed. Watch is public: viewers do not need to sign in. Only the chosen finished
+video and its public fields are exposed. This does not post to external social
+platforms or expose the original interview.
+
+The public title, description, and model credit are a publication snapshot.
+After editing those details, use Update fan post to refresh the public fields.
+Cover changes are different: they affect an existing public post immediately.
+
+Unpublish removes the post while retaining the video. Archiving the video or
+its interview also unpublishes it. Restore does not republish; restore both
+records when necessary, then choose Publish to fan feed again. Deleting a
+finished version removes its video and cover files. Deleting the source
+interview removes its saved finished versions too.
+
+Open interview editor opens the current edit. Source-edit metadata is retained,
+but this release has no historical-edit restore control.
+
+7. PROTECT AND BACK UP STORAGE
+
+Apache: the included .htaccess files must be active. Verify that direct requests
+to storage/config.php and storage/interviews.sqlite are denied.
+
+Nginx: .htaccess is ignored. Configure access denial for the installation's
+storage/ and includes/ directories. See README.md for example rules.
+
+Back up storage/config.php, a consistent SQLite backup or MySQL export, and
+the matching storage/media files, including saved covers. The database also
+contains accounts, schedules, attendance, appointments, and publication records.
+SQLite uses WAL mode: use SQLite's backup
+facility, or pause writes and preserve the database plus any WAL/SHM files.
+Preserve the entire existing storage directory when updating. Keep
+storage/uploads as well if preserving unfinished server uploads. Browser-local
+recovery clips remain separate from these backups.
+
+8. PRODUCTION WORK AND THE OPTIONAL ASSISTANT
+
+Open Productions, create a project with a brief, and use Add models to this
+production. Select approved model/professional accounts and save the roster.
+Add shots with orientation, duration, requested takes, references, contributor
+places, and Phoenix deadlines. Use Assigned for specific included members or
+Open for eligible roster members to claim. Direct assignments can be prepared
+while Draft; activate the project before claims or filming. Members see active
+included projects in My work > My productions and available work in Open shots.
+They accept, record/upload, submit, and respond to review feedback.
+
+Adding a member does not reserve a shot or assign every task. Removing one stops
+new open work while retaining their existing assignments, footage and review
+history. Cancel assignments separately if needed. Rosters allow up to 200
+included accounts and can be changed while Draft or In progress. Standalone
+casting profiles need an approved account before they can receive work.
+
+Accepted footage connects to the production editor. Mixed projects can import
+shortlisted nonprivate interview footage. Studio and approved phone captures can
+also target the shot list. The finished-video save, cover, and explicit Watch
+publication flow is retained. These tools require no AI key.
+
+Open Admin → AI settings to save OpenAI and/or Claude API keys. While setting
+up a new connection, leave AI disabled, save the key, choose Check key & load
+models, then select a model. Choose the shot-list and editing providers
+independently, set the shared daily generation allowance, enable, and save.
+Claude keys without a workspace scope require the optional workspace ID field.
+Model-list checks test access without generating content. Actual generation
+compatibility and billing are checked when you request a proposal.
+
+These credentials belong to the current administrator and are encrypted using
+storage/config.php's app_secret. Blank key fields keep a saved key; explicit
+Remove clears it. Keys never come back in browser responses. Proposals require
+review before creating unassigned shots or saving a new cut. Assign a model or
+open a shot for eligible contributors afterward. The assistant receives the
+specified production/editorial text, with no media or account records. OpenSSL
+and outbound HTTPS streams are required only for these optional connections.
+See README.md and docs/AI_SETTINGS_API.txt for details.
+
+SAVED PRODUCTION PLANS AND QUESTIONS
+
+Production plan brings the script and casting choices together. Save direction,
+add scenes with actions/lines/props, then choose each shot's framing, requested
+output and open/direct/unassigned distribution. Review recipients and create the
+pending work as one batch. The full plan is producer-only; models see the
+relevant original scene beside their assignment's current filming instructions.
+Applied scenes stay linked to work/history. Add a new scene or edit the created
+shot for further changes. The quick shot-list assistant remains available.
+
+Optional script drafting reuses the Shot-list assistant's saved provider/model.
+It shares the existing request allowance with quick-shot and editing requests.
+Review a proposal, add its scenes to the plan, edit/cast locally, save and create
+assignments explicitly. No roster identities or conversation messages go to AI.
+
+Questions & replies is private to the production owner and exact assignee.
+Messages support send retries, earlier history and incoming unread counts.
+Read-only history remains when a production closes or an assignment is cancelled.
+No automatic email, SMS, public post or other external message is sent.
+
+9. TESTED SCOPE AND FIRST PROJECT
+
+See docs/RELEASE_REVIEW.txt for exact automated totals and remaining checks.
+A prior browser walkthrough was blocked by automatic URL security review;
+visual browser behavior has not been marked as passed. Server workflow, access,
+concurrency, and controller checks are recorded separately.
+
+After updating, run one small project with an actual model account: add to its
+roster, confirm My productions and open-shot visibility, assign,
+accept, upload, submit, request one retake, accept the replacement, edit, save,
+choose a cover, and inspect the finished version. Test phone upload and optional
+live sharing separately on the actual devices/network. No public post is needed
+to verify private playback; publish explicitly when the selected cut is ready.
+
+Live MySQL, HostGator or another actual host, physical camera/audio devices,
+Safari/iOS, and a paid provider request remain deployment checks. Earlier direct
+synthetic recording passed, but real phone WebRTC connectivity was not verified.
+Browser export runs in real time and needs an active compatible browser tab.
+
+README.md contains the full workflows; UPGRADE.txt explains an existing install.
+No installation, license, or security key is required.
+
+
+=== AZHottie Studio 1.8.0 ===
+The shared header is used throughout the app. Admins receive six editable AZHottie questionnaire templates on first visit to Studio > Questionnaires. All previous custom sets and interview snapshots remain untouched.
+
+
+v1.10.0 ADDITION — PERSONAL MEDIA
+After install, sign in using a model or professional account to open My media & editor from the sidebar (top-left header hamburger on mobile). The private gallery stores video files under storage/media; the account-scoped media route serves them securely. Fresh installations create schema 18; upgrades from v1.9 do so automatically. Full file permissions are 644 and directories 755 in the deployment ZIP. Keep storage protected by the included .htaccess.
+
+
+v1.11.0 ADDITION — PRIVATE TIMELINE & PHONE CAMERAS
+After signing in with model, professional or admin role, open My media gallery
+or Video editor in the sidebar. On desktop the sidebar is always visible; the
+hamburger is available only on mobile/tablet. Select clips from your private
+gallery in my-editor.php and choose Save project. Export & save private video
+returns a rendered clip to the same media gallery. The original remains safe.
+On a phone signed in as the model, open my-camera.php to record/upload directly.
+For a second phone, scan the QR in Connect another phone from my-editor.php;
+the editor owner must approve that phone. HTTPS is required.
+For an existing site, DO NOT rerun install.php; save storage/config.php and the
+entire storage directory before uploading the new application files.
+
+
+v1.12.0: NEW MULTITRACK PERSONAL VIDEO STUDIO
+Open my-editor.php after signing in as a model, professional, or administrator. See docs/RELEASE_1_12.txt for supported sources and functions.

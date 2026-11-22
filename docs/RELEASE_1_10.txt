@@ -1,0 +1,18 @@
+AZHottie Studio v1.10.0 — Shared signed-in navigation and personal media editor
+
+Implemented:
+- All links removed from the logged-in universal header; hamburger placed left of logo. One sidebar navigation for members, creators, and admins, including a mobile opening mode and signed-in public-page drawer.
+- Sign out moved into sidebar. Logged-out public header retains public navigation.
+- Model/professional My media & editor route. Administrators keep their current interview editor.
+- Own-account-only gallery with controlled upload chunks, disk quota, verified video formats, media playback with seek support, saved trim markers, and video cover upload/frame capture.
+- Existing browser compositor renders an edited copy into a new private gallery item when browser media features are supported.
+- Separate private media streaming endpoint never serves someone else's footage. No public publication from the personal gallery.
+- Schema 18 migration for both SQLite and MySQL; existing databases and storage retained.
+
+Testing:
+- Node test suite including pure trimming, format checks, PHP-rendered role-specific headers, and access guard static checks.
+- Full PHP syntax audit.
+- Local static-asset delivery check. Local PHP runtime has PDO but no PDO database drivers: database integration and HostGator/physical camera acceptance must be verified on the installed site.
+
+Deployment:
+- Extract application files into the site root, preserving the entire existing storage directory. Do not rerun install.php when admin account exists. File permissions 644, directory permissions 755.

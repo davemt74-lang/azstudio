@@ -1,0 +1,48 @@
+<?php
+declare(strict_types=1);
+require_once __DIR__.'/../includes/bootstrap.php';
+function must(bool $ok,string $name):void {if(!$ok)throw new RuntimeException($name);}
+$director=['camera_on_program'=>1,'camera_healthy'=>0,'camera_count'=>1,'viewer_count'=>2,'stalled_outbound'=>1,'page_hidden'=>0,'program_mode'=>'single','direct_relays'=>0];
+$viewer=['video_state'=>'stalled'];
+$issues=az_live_agent_assess($director,[$viewer])['issues'];
+must(isset($issues['camera_missing'],$issues['outbound_stall'],$issues['viewer_freeze']),'Combined stream problem diagnosis');
+must(count($issues)===3,'No invented fourth issue');
+$director['camera_healthy']=1;
+$director['stalled_outbound']=0;
+$viewer['video_state']='playing';
+must(az_live_agent_assess($director,[$viewer])['issues']===[],'Healthy director and fan');
+$director['viewer_count']=0;$director['stalled_outbound']=1;
+must(!isset(az_live_agent_assess($director,[])['issues']['outbound_stall']),'Do not infer outbound stall without viewers');
+$director['page_hidden']=1;$director['program_mode']='composition';
+must(count(az_live_agent_assess($director,[])['notes'])===1,'Backgrounded composition warning');
+$director['program_mode']='single';
+must(az_live_agent_assess($director,[])['notes']===[],'Do not confuse single direct relay with composition throttling');
+$director['direct_relays']=1;
+must(count(az_live_agent_assess($director,[])['notes'])===1,'Relayed camera overlay limitation');
+$director['camera_on_program']=0;$director['camera_healthy']=0;
+must(!isset(az_live_agent_assess($director,[])['issues']['camera_missing']),'Intentional slate is not a missing selected camera');
+$director['camera_fault']=1;must(isset(az_live_agent_assess($director,[])['issues']['camera_missing']),'Dropped camera still alerts after fallback slate');
+$director['camera_fault']=0;
+$viewer['video_state']='blocked';
+must(isset(az_live_agent_assess($director,[$viewer])['issues']['viewer_blocked']),'Play gesture blocked');
+foreach(['unknown','connecting','playing'] as $state){$viewer['video_state']=$state;must(az_live_agent_assess($director,[$viewer])['issues']===[],'No false alarm for '.$state);}
+must(az_live_agent_fps(null)===null,'Unknown fps stays unknown');
+must(az_live_agent_fps(-3)===0.0,'Negative fps clamped');
+must(az_live_agent_fps(200)===120.0,'Extreme fps clamped');
+must(az_live_agent_int(999,6)===6,'Huge counts clamped');
+must(az_live_agent_int('4',6)===0,'Reject string counts');
+$first=az_live_agent_incident_step(null,1000);
+must(!$first['notify'] && $first['observations']===1,'First issue observation is not a notification');
+$pending=['opened_epoch'=>1000,'observations'=>1,'resolved_epoch'=>null,'last_alert_epoch'=>null];
+$alert=az_live_agent_incident_step($pending,1012);
+must($alert['notify'] && $alert['alertEpoch']===1012,'Second observation alerts exactly once');
+$active=['opened_epoch'=>1000,'observations'=>2,'resolved_epoch'=>null,'last_alert_epoch'=>1012];
+must(!az_live_agent_incident_step($active,1025)['notify'],'Continuing issue is deduplicated');
+$resolved=['opened_epoch'=>1000,'observations'=>2,'resolved_epoch'=>1050,'last_alert_epoch'=>1012];
+$cooldown=az_live_agent_incident_step($resolved,1100);
+must($cooldown['observations']===1 && $cooldown['alertEpoch']===1012,'Quick recurrence stays on cooldown');
+$cooled=az_live_agent_incident_step($resolved,2000);
+must($cooled['observations']===1 && $cooled['alertEpoch']===null,'Late recurrence starts fresh gate');
+$reopen=['opened_epoch'=>2000,'observations'=>1,'resolved_epoch'=>null,'last_alert_epoch'=>null];
+must(az_live_agent_incident_step($reopen,2012)['notify'],'Late recurrence alerts only after confirmation');
+echo "Live Agent rules and incident cooldown passed (23+ checks).\n";

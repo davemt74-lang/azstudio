@@ -1,0 +1,220 @@
+V1.5 DELIVERY NOTE
+
+Central Admin AI settings now support OpenAI and Claude with independent shot
+planning/editor providers, encrypted per-admin keys, model discovery/access
+checks and shared generation limits. The AI still drafts reviewed shot/edit
+proposals; it does not automatically cast people or generate a full screenplay.
+See AI_SETTINGS_API.txt and RELEASE_1_5.txt. The historical notes below remain
+as the record of the earlier inspection and delivered phases.
+
+V1.4 DELIVERY NOTE
+
+V1.4 adds deterministic project coverage, usable sections, preferred first-cut
+selection, named editable timeline revisions and optional metadata-based AI
+composition. The retained v1.2 Stoneward audit below is historical design input;
+its previously proposed items may now be delivered. See RELEASE_1_4.txt for
+current scope. No Stoneward code or external repository was changed.
+Automatic transcript/frame understanding and server rendering remain later work.
+
+V1.3 DELIVERY NOTE
+
+The following is the retained v1.2 source inspection and design record. V1.3 now
+implements AZHottie projects, assigned/open shots, scoped contributor uploads,
+review/retakes, notifications, accepted-footage editing, and the optional
+brief-to-shot-list proposal assistant. See RELEASE_1_3.txt and RELEASE_REVIEW.txt
+for delivered behavior and verification limits. Automatic AI footage analysis
+and AI editorial composition remain later work. No Stoneward files were changed.
+
+AZHOTTIE: AI PRODUCTION NEXT-BUILD NOTES
+Read-only Stoneward inspection, 18 November 2026
+
+STATUS AND SCOPE
+
+This is a future-build plan, not a feature delivered in AZHottie v1.2. The
+inspection used davemt74-lang/stoneward at the fixed commit
+253d1267c95ffefbcf3a79173429abbbba0c33fc. No Stoneward files were changed, no
+provider requests were made, and its application was not run. Findings below
+come from the referenced PHP source. Proposed AZHottie behavior is labeled
+separately. Source reuse still requires adaptation and integration tests.
+
+OBSERVED COMPONENTS WORTH ADAPTING
+
+1. Capture requests and submissions [1, 2].
+   sf_capture_requests() exposes open requests to matching contributor roles.
+   sf_capture_submit() attaches a contributor-owned submission to a request,
+   records the role snapshot and material metadata, and starts editorial
+   review. The upload endpoint validates the request before ingest. Its intake
+   helper commits the submission and technical evidence together; failure
+   cleanup deletes only a newly created, unreferenced asset. These are useful
+   patterns for shot briefs, a model upload inbox, and reliable upload receipts.
+
+2. Assigned production tasks [3].
+   sf_production_task_assign() checks the assignee's active account and role.
+   sf_production_task_read()/list() limit contributor access to their own
+   assignments. sf_production_task_submit() checks that evidence belongs to the
+   assignee and references the exact source shot request. Statuses include
+   proposed, assigned, in_progress, submitted, approved, and rejected.
+
+   There is an integration seam: proposing a Director gap keeps its capture
+   request in draft; the upload path accepts only requests returned by the
+   role-filtered open-request list. Assignment alone does not make that draft
+   uploadable. AZHottie needs explicit assignment-bound upload permission.
+   The reviewed task functions provide editor assignment, not a member claim
+   operation. An open-opportunities claim flow must be added deliberately.
+
+3. Progress, history, and deadlines [4, 5].
+   sf_production_task_event() writes ordered lifecycle records inside the same
+   transaction as the status change. Progress, reassignment, resubmission after
+   rejection, and in-app notifications are concrete reusable patterns.
+   Scheduling stores UTC deadlines and priority, compares the due date with
+   self-reported available/limited/unavailable date ranges, and flags overdue
+   or conflicting tasks. Deadline-extension requests use expected dates and
+   assignment checks to reject stale decisions. This is advisory production
+   coordination; it is not a capacity or appointment-reservation engine.
+
+4. Director coverage [6].
+   sf_director_coverage() counts approved capture types against a small fixed
+   catalog and identifies missing coverage. sf_director_create_draft() reserves
+   a recommendation code to avoid duplicate requests. These functions are
+   deterministic rules, not an AI watching every uploaded video. AZHottie can
+   use campaign-specific requirements such as opening shot, product detail,
+   demonstration, interview answer, and closing shot. The source's global
+   recommendation keys need a production-project scope to support repeated
+   campaigns without collisions.
+
+5. Optional AI composition [7].
+   sf_composer_queue()/run_once() create and process an idempotent proposal for
+   one assembly revision. The provider receives selected metadata and source
+   summaries. Output validation limits ordering to existing items plus a small
+   verified candidate pool. It proposes editorial beats, transitions, subtle
+   trims, and missing shots; it does not generate replacement footage.
+   sf_composer_apply() rechecks the revision and sources before applying the
+   approved ordering. The apply function does not automatically implement all
+   proposed transition or trim ideas. This distinction matters for an editor
+   handoff: suggested edits and rendered edits are separate states.
+
+   The related scene-understanding adapter reads reviewed scene/transcript
+   annotations, story links, and optional reviewed observations of three sampled
+   frames [8]. It is not continuous video analysis or an identity recognizer.
+
+6. Source-bound editing and rendering [9, 10].
+   sf_assembly_replace() validates source ranges, checks an optimistic revision,
+   saves the ordered sequence atomically, and archives history. The render
+   source manifest binds clip ranges to actual local assets and fingerprints.
+   The FFmpeg worker creates private draft output and checks sources again
+   before committing success. Its inspected pilot has explicit short-output
+   limits: 1-12 clips, 1-60 seconds, and at most 20 seconds per clip. It is not a
+   general replacement for AZHottie's interview editor without further work.
+
+PROPOSED AZHOTTIE ADAPTERS
+
+Identity and scope: use existing AZHottie users, multi-role membership, active
+status, and linked model profiles. Start production management with the existing
+admin role; add a narrower production permission only if delegated management
+is needed. A professional account alone should not expose all production files.
+Keep each production's media ownership explicit because existing interviews,
+takes, and finished videos belong to an administrator.
+
+Model workspace: add My assignments, Open shots, My submissions, and progress
+notifications. Open shots should expose only the brief and eligibility details
+needed to participate. Other models' submissions and private editorial notes
+remain scoped to their contributors and production managers. Support accepting
+or declining an assignment, and a separate claim action for open shots, with
+one transactional capacity check. Recheck current roles, status, and assignment
+when uploading or submitting, not only when the page opens.
+
+Upload adapter: reuse includes/recordings.php's chunk/resume/finalize machinery
+and the target-binding pattern in phone-api.php. Introduce an authenticated
+model upload scope tied to a production, shot, and assignment. The server chooses
+the destination and privacy fields. A model must not acquire the administrator's
+interview API access. Save the contributor, source take, technical metadata,
+upload receipt, and revision. Interrupted retries must not create duplicate
+submissions. Preserve previous takes when a retake is requested.
+
+Calendar adapter: link a production or shot to an existing schedule event,
+class session, or appointment where useful. Use AZHottie's America/Phoenix
+conversion and existing reservation conflict checks for actual sessions.
+Keep a delivery deadline distinct from reserving a studio/professional time
+slot. Stoneward's date-level availability flags should not replace v1.2 bookings.
+
+Editor adapter: accepted footage should appear in a production media bin with
+shot labels, favorite takes, timestamped notes, and source provenance. A handoff
+creates a draft edit from chosen takes and preserves existing question cards,
+fades, and interview workflow. Save the finished export to the current video
+library; use the explicit fan-publication action for distribution. Completing a
+shot or generating an edit should not silently publish a video.
+
+AI adapter: implement the useful manual workflow first. Later, an optional
+provider configuration and worker can suggest briefs, missing coverage, and
+edit ordering. Use current configurable provider models, bounded budgets,
+idempotent jobs, structured output validation, and stale-source checks. Do not
+copy Stoneward's band roles, music catalog authorization, hardcoded daily
+budgets, or entire artist/story graph as AZHottie requirements. Its separate
+review screens and minimum-length explanations are implementation choices;
+AZHottie can combine ordinary editorial review into one Accept / Request retake
+decision with a note. Publication remains an explicit action.
+
+PROPOSED ENTITY MAP
+
+production_projects: title, brief, owner, state, optional scheduled-session link.
+production_shots: project, brief, shot type, eligible roles, open/assigned mode,
+                  required quantity, due time, revision, state.
+shot_assignments: shot, model/user, acceptance state, assignment revision.
+shot_submissions: assignment, contributor, take/upload reference, attempt,
+                  review state, reviewer note, timestamps.
+production_events: ordered assignment/progress/review history and recipients.
+production_edits: project, source selections/ranges, revision, finished-video link.
+ai_proposals/jobs: optional project/edit revision, input digest, state, result,
+                  provider metadata, error and usage information.
+
+NEXT-BUILD WORKFLOW
+
+1. Admin creates a production brief and shot list, optionally linked to a shoot
+   event. Admin assigns models or opens selected shots to eligible members.
+2. Model opens their assignment or claims an available shot, accepts the work,
+   records/uploads footage, and submits one or more takes with a note.
+3. Admin reviews the footage, selects takes or requests a retake. The model sees
+   progress and review feedback in the same assignment. Accepted selections
+   enter the editor's media bin without an extra duplicate task-approval form.
+4. Editor creates an edit, optionally requests an AI proposal, reviews changes,
+   exports to the finished-video library, and publishes when ready.
+
+Before delivery, test simultaneous claims, role loss/suspension, assignment
+changes during upload, duplicate finalize retries, cross-model media access,
+retake history, calendar conflicts, stale edit proposals, and fan visibility.
+These are next-phase tests, not claims about tests run against Stoneward.
+
+PINNED SOURCE REFERENCES
+
+[1] Capture requests/submissions:
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-capture-core.php
+
+[2] Upload acceptance and transactional intake:
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-capture-upload.php
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-capture-intake-core.php
+
+[3] Assignment, evidence linkage, review:
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-production-tasks-core.php
+
+[4] Lifecycle and notifications:
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-production-task-lifecycle-core.php
+
+[5] Advisory scheduling and deadline requests:
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-production-scheduling-core.php
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-production-deadline-core.php
+
+[6] Deterministic Director coverage:
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-director-core.php
+
+[7] Metadata-only AI composition:
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-composer-core.php
+
+[8] Reviewed scene evidence:
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-director-understanding-core.php
+
+[9] Revisioned editorial assembly:
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-assembly-core.php
+
+[10] Verified source manifest and private FFmpeg worker:
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-render-source-core.php
+https://github.com/davemt74-lang/stoneward/blob/253d1267c95ffefbcf3a79173429abbbba0c33fc/api/story-render-worker-core.php

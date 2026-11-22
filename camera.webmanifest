@@ -1,0 +1,13 @@
+{
+  "name": "AZHottie Camera Studio",
+  "short_name": "AZ Camera",
+  "description": "Private model camera and QR-approved guest recording workspace.",
+  "start_url": "./my-camera.php",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d111b",
+  "theme_color": "#0d111b",
+  "icons": [
+    {"src":"./assets/favicon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}
+  ]
+}

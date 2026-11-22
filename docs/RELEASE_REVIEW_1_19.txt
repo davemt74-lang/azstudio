@@ -1,0 +1,62 @@
+AZHOTTIE STUDIO 1.19.0 — VERIFICATION AND REMAINING ACCEPTANCE
+=============================================================
+
+Implementation delivered, subject to on-host acceptance. Verified release
+readiness: 9/10. Do not report 10/10 without evidence of actual phone/USB
+camera streams, member viewer playback, sound mixing, and recorded export on
+azhottie.com. No real-device validation is claimed.
+
+Automated gates:
+- npm test: 310 / 310 JavaScript tests passed, 0 skipped/failed.
+- php tests/live-v119-rundown.php: 33 focused PHP checks passed.
+- php tests/live_contract.php: 11 focused PHP checks passed.
+- php tests/live-director-scenes-v118.php: 6 focused PHP checks passed.
+- All production PHP source: php -l passed (see QA report below).
+- Node syntax: node --check on new/modified ES module files passed.
+- ZIP inspection: full production tree, 644 regular files, 755 directories;
+  excludes tests, installed configuration, private uploads and all media data.
+
+Review repairs:
+- A newly attached camera remains off Program until an explicit Director Take.
+- Scene Preview does not change on-air overlays or camera selections.
+- Cueing a replacement prerecorded video does not interrupt the on-air movie.
+- Video Takes now decode on a separate playback element; a failed/cancelled
+  Take does not stop the existing Program or its soundtrack.
+- A Stop action cancels a pending video Take so it cannot unexpectedly appear.
+- Unavailable cameras draw inactive/slate frames and cannot be newly taken.
+- Rundown saves validate media ownership and use revision conflict detection.
+- Engagement requires login/CSRF where applicable, rate-limits messages and
+  reactions, and permits moderator removal without exposing member identities.
+
+Section assessment (code/test gates vs actual hardware gates):
+- Live camera health and thumbnails: 9/10 — hardware/browser acceptance pending.
+- 2-way/PiP/4-way Program: 9/10 — geometry and guarded Take tested, visual
+  playback of multiple real phones pending.
+- Show Rundown: 9/10 — storage, permissions and JS flow pass, live UI pending.
+- Prerecorded media in Program: 9/10 — private ownership and safe cue/take
+  logic tested, real audio/video decode/export pending.
+- Fan reactions / opt-in chat: 9/10 — storage, moderation and permissions pass,
+  live two-device interaction pending.
+- Program recording/replay: 9/10 — unchanged capture architecture, actual
+  long video file and replay on HostGator pending.
+
+Required end-to-end test on production installation:
+1) Connect two or more QR-approved guest phones on HTTPS and enable Share live.
+2) Confirm every phone shows independent moving, healthy decoded frames.
+3) Preview then Take a split-screen and PiP and verify a separate member sees
+   only the chosen composite Program. Disconnect one phone; inactive slate
+   appears without exposing a frozen frame or private preview.
+4) Save a 3-step rundown with a camera, private prerecorded clip and slate.
+   Reopen it, preview, then Take each step; confirm fan receives exact sequence.
+5) Verify prerecorded video audio in a fan browser, with host mic enabled and
+   consent-dependent phone mic. Stop and return to a live camera cleanly.
+6) Enable member chat for the show, send a reaction and message from another
+   member, moderate it, then disable chat. Confirm room chat doesn't persist
+   after ending the broadcast.
+7) Record complete Program, check saved file size, replay, cover, publication
+   audience controls and permission denial for unpublished recordings.
+8) Repeat on iPhone Safari, Android Chrome and intended desktop browsers, with
+   actual HostGator storage and database. Different NATs may require TURN.
+
+This environment does not provide a production HostGator session, physical
+camera pair, or authorized browser route for end-to-end streaming tests.

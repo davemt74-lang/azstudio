@@ -1,0 +1,12 @@
+.editable-versions-panel{margin:0 0 24px;overflow:visible}
+.editable-versions-panel>.field-help,.editable-versions-panel>.two-columns,.editable-versions-panel>.action-group,.editable-versions-panel>details,.editable-versions-panel>#editable-cut-renders{margin:0 24px 20px}
+.editable-versions-panel .panel-heading{gap:18px;flex-wrap:wrap}
+.editable-versions-panel .field{font-size:1rem;min-width:0}
+.editable-versions-panel input,.editable-versions-panel select{font-size:1rem;width:100%;min-width:0}
+.editable-versions-panel .field-help{font-size:.9375rem;line-height:1.6}
+.editable-versions-panel summary{cursor:pointer;font-weight:600;min-height:44px;padding:10px 0}
+.editable-versions-panel .finished-version{padding:16px 0;align-items:flex-start}
+.editable-versions-panel .finished-version p{overflow-wrap:anywhere}
+.editable-versions-panel .action-group{flex-wrap:wrap}
+.editable-versions-panel[aria-busy="true"]{opacity:.8}
+@media(max-width:620px){.editable-versions-panel>.field-help,.editable-versions-panel>.two-columns,.editable-versions-panel>.action-group,.editable-versions-panel>details,.editable-versions-panel>#editable-cut-renders{margin-left:18px;margin-right:18px}.editable-versions-panel>.two-columns{grid-template-columns:1fr}.editable-versions-panel .panel-heading{align-items:flex-start}.editable-versions-panel>.action-group .button{flex:1 1 45%}}

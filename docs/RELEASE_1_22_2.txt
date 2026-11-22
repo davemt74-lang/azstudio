@@ -1,0 +1,53 @@
+AZHOTTIE STUDIO v1.22.2 — LIVE VIDEO DELIVERY REPAIR
+Date: 2026-11-21
+
+Symptoms reported on v1.22.1
+- Phone is approved, actively sharing and displaying live preview FPS.
+- Admin selects Broadcast now, but a viewer sees a frozen first Program frame.
+- Director may show 'The on-air camera stopped delivering video.' when its own
+  decoder is throttled by a hidden or background tab.
+
+Defects addressed
+1. Director rendered the outgoing canvas exclusively on requestAnimationFrame.
+   Browser hidden-tab throttling can stop captured Program frames even though
+   the incoming phone WebRTC connection remains active.
+2. The fan player tried to autoplay a WebRTC stream containing an audio track
+   without muting it. Autoplay may be denied after asynchronous ontrack.
+3. Each audio/video ontrack event reset video.srcObject, risking playback interruption.
+4. Incoming phone preview FPS was the only visible frame activity indicator;
+   there was no measurement of actual outgoing Program frames to fans.
+
+Changes
+- Hidden Director tab: limited background Program render timer; fan video is
+  relayed directly from the explicitly chosen single phone track, without a
+  new peer/room. Selected camera cannot be inferred from a mere phone connection.
+- Per-viewer RTCRtpSender.getStats() samples outbound video frame counts; stalled
+  video can fail over to the selected phone on a per-viewer basis.
+- Fan starts video muted for autoplay compatibility; explicit Unmute sound
+  button allows audio on viewer gesture. Audio track arrival does not replace
+  or restart the video MediaStream.
+- Fan decoded frame monitor shows when a connected transport has no new frames.
+- Do not take the on-air camera off Program simply because its HTMLVideoElement
+  paused decoding while the Director was hidden. Actual mute/end still stops it.
+- Local video track routing is serialized across hide/show/Take transitions.
+
+Known limits / safety
+- A direct camera video relay omits Program canvas overlays and transitions for
+  that viewer. Normal canvas Program resumes when the Director returns visible;
+  a measured sending stall may keep a viewer on direct relay until reconnect.
+- Browser background throttling is not solved for multi-camera compositions,
+  prerecorded Program media or complete overlay-preserving browser recordings.
+  Keep the Director tab visible and phone screens awake during these workflows.
+- User access remains the same: only authorized members can join and only
+  an explicitly taken approved phone is eligible for a direct video relay.
+- No SFU: the existing peer-to-peer member capacity and network limitations remain.
+- No storage or database schema changes.
+
+Release checks
+- npm test: 355/355 JavaScript assertions passed.
+- Deployment PHP syntax: 113/113 files passed.
+- Chromium fixture: delayed audio track did not replace the video stream;
+  muted playback produced >50 decoded frames in local test.
+- Production validation remains necessary: separate device/network viewer,
+  visibility hide/show, audio unmute, composed overlay and recording, camera
+  disconnection, TURN relay, and actual MySQL/signaling.

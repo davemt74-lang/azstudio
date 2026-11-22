@@ -1,0 +1,31 @@
+AZHOTTIE STUDIO v1.13.1 — Standalone Social Profile Layout Hotfix
+Date: 2026-11-20
+
+CHANGE
+- The public/member social profile at user.php and /user/<handle> renders
+  directly beneath the universal AZHottie header, without the logged-in
+  workspace sidebar or the breadcrumb/member-area row.
+- The cover image starts at the top of the profile content (no upper canvas
+  padding), and the standalone profile has its own light background.
+- Profile cover, avatar, bio, badges, published videos, edit buttons, account
+  dropdown and visibility access controls remain unchanged.
+- The sidebar hamburger is omitted from the header of social profile pages,
+  including on mobile: there is no sidebar to open on those pages.
+- Other member/admin pages continue using the left sidebar and their existing
+  responsive navigation. No data schema or permissions were changed.
+
+INSTALL
+- This is a full deployment package. Back up your current application and
+  database, then replace application files. Preserve the ENTIRE storage/
+  directory (configuration, database, recordings, media and uploads).
+- Do not run install.php again for an existing installation.
+- Hard-refresh user.php and a friendly /user/<handle> URL after updating.
+- HostGator file modes in the ZIP: 644 files / 755 directories.
+
+VERIFICATION
+- 236/236 Node JS tests passed, including the new standalone-profile tests.
+- 88 PHP source files passed php -l syntax checks.
+- Included header runtime check confirms profile pages have no mobile sidebar
+  button while dashboard pages retain that button.
+- Isolated visual Chromium preview timed out. Installed HostGator profile
+  rendering has not been directly verified by this release.

@@ -1,0 +1,27 @@
+<!doctype html><meta charset="utf-8"><title>AZHottie live playback regression</title>
+<video id="player" playsinline autoplay muted></video>
+<script type="module">
+import {appendLiveTrack} from '../assets/live-viewer-core.js';
+window.fixture={done:false};
+const video=document.getElementById('player');
+const canvas=document.createElement('canvas');canvas.width=320;canvas.height=180;
+const ctx=canvas.getContext('2d');let count=0;
+function draw(){ctx.fillStyle=`hsl(${count++ * 14%360} 70% 35%)`;ctx.fillRect(0,0,320,180);requestAnimationFrame(draw);}
+requestAnimationFrame(draw);
+const camera=canvas.captureStream(24),audio=new AudioContext(),audioOut=audio.createMediaStreamDestination();
+const oscillator=audio.createOscillator();oscillator.connect(audioOut);oscillator.start();
+let stream=appendLiveTrack(video,{track:camera.getVideoTracks()[0],streams:[]},null,()=>new MediaStream());
+const firstStream=video.srcObject;
+// Arrival of audio is delayed, as in a real WebRTC connection.
+setTimeout(async()=>{
+  stream=appendLiveTrack(video,{track:audioOut.stream.getAudioTracks()[0],streams:[]},stream);
+  const sameStream=stream===firstStream&&video.srcObject===firstStream;
+  video.muted=true;
+  let mutedPlayback='error';try{await video.play();mutedPlayback='playing';}catch(e){mutedPlayback=e.name||String(e);}
+  setTimeout(()=>{
+    const frames=video.getVideoPlaybackQuality?.().totalVideoFrames||0;
+    window.fixture={done:true,sameStream,tracks:stream.getTracks().length,mutedPlayback,frames};
+    audio.close();oscillator.stop();camera.getTracks().forEach(track=>track.stop());
+  },1800);
+},450);
+</script>

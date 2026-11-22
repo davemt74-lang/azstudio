@@ -1,0 +1,34 @@
+AZHottie Studio v1.12.0 — Lucky-style Personal Video Studio
+Date: 2026-11-19
+
+USER GOAL
+Replace the simple personal multi-clip form with a real dark editing workspace similar to Lucky Game Hub's Video Studio. Retain model-owned footage and the existing secure phone camera connection.
+
+IMPLEMENTED
+- Dark full-window editing UI with Back to My Media, private-project selector, save, Inspector toggle, tool browser, large preview monitor and timeline transport.
+- Lucky-style independent T1 timed text, V1 video segments, A1 source audio representation and B1 background soundtrack lane.
+- Media bin scoped to the signed-in model's personal video library; +Add, search, refresh, resumable upload, signed-in camera link, QR-paired second phone with approval and live preview.
+- Drag/reorder video segments, source playback, mark In/Out, split clip, clip inspector, per-clip sound level, video filters (Original / Vivid / Warm / Mono / Cinematic / Vintage), hard-cut/fade transition, per-clip overlays and black title cards.
+- Timed text overlays render at their specified timeline offsets. Soundtrack may use AUDIO FROM a private video source (B1); independent MP3/WAV-only uploads are NOT added in this release.
+- Local edit assistant offers duration-based highlights and explicitly does not claim to analyze content or call a model. Administrator AI settings are not exposed to models.
+- Undo/Redo in browser and keyboard; reversible, original file never modified.
+- Real-time browser movie preview, browser MediaRecorder export, save rendered video into the user's private gallery; source project saved via personal_edit_projects.
+- PHP server validation of all new fields, filters, T1 title IDs, B1 media ownership. Existing project JSON remains backwards compatible. No database migration is needed; schema stays v20.
+
+PERMISSIONS
+- Model/professional/admin only; personal media and project API always filter by authenticated owner.
+- No public Watch publishing, no production submission or cross-user access from personal editor.
+- Second phone token is temporary and only uploads under its approved owner.
+
+NOT BUILT IN v1.12.0
+- Native photo clips; standalone MP3/WAV personal media; separate voice-over recording; per-track mixing automation; hosted FFmpeg worker; actual LLM-based scene analysis.
+- Actual phone live-preview handshake and physical camera/browser export are not validated in this environment.
+
+UPGRADE
+- Back up site and complete storage directory. Replace application files, KEEP storage/config.php, existing database, recordings and uploads. No installer rerun.
+- Files in release ZIP are 644, directories 755 (review and reset on hosting).
+- Visit my-editor.php under a model account. Open Media bin and connect or upload as needed. Verify phone, audio and export on installed site.
+
+TESTS
+- JavaScript suite includes existing editor/media/security regressions plus dedicated Lucky-style workspace, split, filters, T1/B1 and proposal tests.
+- PHP syntax check all production PHP files; static asset HTTP 200; archive permissions and code content verified.

@@ -1,0 +1,104 @@
+AZHOTTIE STUDIO v1.25.0 — LIVE DIRECTOR SPECIALIST
+21 November 2026
+
+Purpose
+-------
+This release extends the existing model/admin Agent Workspace with a read-only
+Live Director Specialist for stream reliability. The issue it addresses is a
+phone that appears connected with incoming FPS while the fan's actual playback
+is frozen. An active WebRTC phone connection alone does NOT certify moving fan
+video; Director outbound delivery and the fan's decoded frames are distinct.
+
+What was built
+--------------
+1. Admin Brain includes a Live Director Specialist panel, scoped to admin roles.
+   The panel shows whether the show is on air, Director report age, connected
+   and healthy camera counts, reported viewer sessions, outbound frames/second,
+   stalled outgoing senders, direct relays, and contextual recommendations.
+   When telemetry is absent or old, status says unverified, not healthy.
+2. The Director and signed-in fan viewer send bounded numeric observations
+   approximately every 12 seconds through POST live-api.php?action=healthReport.
+   Only the current owning Director and an authenticated, connected fan-viewer
+   session can submit their respective measurements. Viewer reports cannot
+   overwrite Director camera/transport health.
+3. Agent incidents distinguish:
+   - On-air phone camera with no healthy frames.
+   - Program sender not advancing outbound video frames.
+   - Fan browser reporting video decode stalled/frozen.
+   - Fan playback blocked by browser media policy.
+   Helpful notes warn when Director is backgrounded with complex composition,
+   or when direct phone relay bypasses canvas overlays.
+4. Two observations are required before an incident creates an unread alert.
+   Repeated checks are deduplicated, and new episodes observe a cooldown.
+   Admin Agent Notifications and History record the finding. Recovery updates
+   are logged only after suitable fresh, healthy measurements, not merely
+   because a fan tab closed or a browser stopped reporting.
+5. A light operator panel in Live Director shows delivery status. "Recheck"
+   refreshes measurements; "Direct camera relay" and "Restore Program" require
+   explicit confirmation and only act on eligible existing selected tracks.
+   The agent itself never changes the on-air camera, starts/ends a broadcast,
+   publishes video, or remotely operates a phone.
+6. Accounts see only authorized information. Models are NOT granted admin
+   Brain live diagnostics. No frames, recordings, raw audio, SDP, IP addresses,
+   phone IDs/labels, fan names, or chat bodies are stored in the diagnostic
+   tables. Limited numeric samples and incident metadata are retained up to
+   30 days; cleanup runs best-effort via the existing private assignment cron.
+
+Installation / upgrade
+----------------------
+1. End any active recording or broadcast. Back up all website files, database,
+   private config, and the complete storage/ directory, including media.
+2. Merge the v1.25.0 FULL_DEPLOY files into the existing AZHottie web root.
+   DO NOT overwrite storage/config.php, the private database, or user media;
+   DO NOT rerun install.php. Keep all included .htaccess files.
+3. On first configured DB access, the schema advances from 30 to 31, adding
+   two diagnostic tables and indexes. MySQL requires create/index privileges.
+4. Hard-refresh live-director.php, live.php, and any admin page with Agent Brain.
+   Ensure the current Director and fan viewers load the SAME release.
+5. Keep the previously configured hourly private cron for assignment checks:
+   includes/agent-followthrough-cron.php. It also performs best-effort numeric
+   health telemetry pruning. The specialist's 12-second measurements are sent
+   by active browser sessions and do NOT require a separate streaming server,
+   additional scheduler, or new third-party integration.
+
+Acceptance tests on azhottie.com (still required)
+-------------------------------------------------
+- One phone actively sharing live video, Director visible. Verify moving
+  camera thumbnail, fan playback, and Program sent FPS separately.
+- Temporarily stop phone Share live. Confirm Director reports camera loss and
+  admin Brain surfaces a validated incident; restore and verify cleared state.
+- Using a separate signed-in fan device, simulate/decode a true frozen frame;
+  verify viewer-side freeze report and recipient-scoped incident History.
+- Test backgrounding Director in a single-camera show, then a multicamera
+  composition: direct relay should maintain continuity where possible, while
+  composite overlays/recording may need the Director foregrounded.
+- Verify recovery controls require operator consent, cannot switch to an
+  unselected camera, and the original Program is restored on approval.
+- Verify distinct admin and model accounts have correct permissions and that
+  a disconnected viewer does not keep raising frozen-player notifications.
+- Confirm PHP/MySQL migration, first request upgrades, and 30-day cron prune.
+
+Local verification
+------------------
+- 372/372 Node.js JavaScript regression tests passed.
+- All 118 deployment PHP files passed PHP 8+ syntax checks.
+- Focused PHP diagnostics/incident rules and SQLite DDL isolation fixtures pass.
+- Chromium Brain roles and responsive widths 1440/768/390/320 pass, with no
+  horizontal overflow or uncaught JavaScript exceptions.
+- Live Director operator-panel layout checked in a browser at five widths.
+- ZIP manifests, integrity and source/deploy consistency rechecked at package.
+
+Limitations / score
+-------------------
+All listed local gates are green (10/10 local implementation). This is a
+monitoring and operator-assist layer, NOT a replacement for the WebRTC/browser
+transport. A diagnostic warning cannot guarantee recovery of every network
+failure, hidden tab, or camera codec/browser issue. The hosted PHP/MySQL schema,
+real phone/fan playback, and actual cron cleanup have NOT been certified in
+this build, so the overall production release remains 9/10 pending acceptance.
+
+Git delivery
+------------
+The connected GitHub account has no identifiable AZHottie repository. Changes
+are delivered as full deployment/source ZIPs and a portable local git-format
+patch. No hosted pull request, CI gate, merge or production deploy was performed.

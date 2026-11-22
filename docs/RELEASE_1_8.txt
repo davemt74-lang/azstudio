@@ -1,0 +1,38 @@
+AZHottie Studio 1.8.0 — Unified site header and editable prebuilt questionnaires
+
+NEW
+- One universal PHP header shared by landing, public Watch, studio, productions,
+  Director, member/community pages, admin, login, signup, and phone onboarding.
+- One universal stylesheet and mobile navigation controller. Studio navigation
+  appears only for administrators; team links appear only for eligible roles.
+- Six fully editable historical questionnaires are installed into each admin's
+  questionnaire library on first use. The master copy contains the exact 68
+  prompts from the AZHottie Model Interview Questionnaire (36 choice, 32 open).
+- The existing 80-question client starter bank remains available; the later
+  12 extra Hot Seat questions are in the After Hours preset.
+- Saved interview question snapshots stay unchanged when a preset is edited.
+- Presets are seeded once per admin. Manual edits, archives, and deletions are
+  never overwritten or silently restored by another application launch.
+
+HOW TO FIND THE QUESTIONNAIRES
+- Sign in as administrator; open Studio -> Questionnaires.
+- Select one of six AZHottie sets to edit its name, sections, question wording,
+  multiple-choice options, order, and private status. Save normally.
+- Choose that questionnaire when creating an interview.
+
+UPGRADE
+- Backup application and entire storage directory before updating.
+- Merge application files from the new full ZIP into the same document root.
+- Preserve storage/config.php, your database, and media. Do not rerun installer.
+- Hard-refresh the browser after deploying to load the shared header CSS/JS.
+- No destructive database migration. A small preset installation ledger is
+  created when an admin first loads questionnaires.
+- PHP, CSS and JS files are packaged with read permissions (0644); folders 0755
+  to avoid HostGator shared-hosting 403 errors from the previous ZIP.
+
+QA SCOPE
+- PHP syntax for all production files; JS syntax for all browser scripts.
+- Questionnaire count/choice/private and comparison against original DOCX.
+- Shared header role visibility and all route integrations.
+- ZIP metadata permissions/content verification.
+- Real HostGator deployment and physical device UI remain to be verified.

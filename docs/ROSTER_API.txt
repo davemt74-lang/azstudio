@@ -1,0 +1,100 @@
+AZHOTTIE STUDIO 1.6 — PRODUCTION ROSTER API
+Schema 14; extension to WORK_API.txt
+
+READ
+
+GET work-api.php?action=roster&projectId=PROJECT_ID
+Owner administrator only. Nonadmins receive 403; other admins receive 404.
+The owner's project and shot detail responses also contain this roster.
+
+Roster = {
+  id: projectId, projectId, revision,
+  members: [{userId,name,roles,accountStatus,eligible,
+             assignmentCount,activeAssignmentCount}],
+  candidates: [{id,name,roles}], canManage:true, canEdit, maxMembers:200
+}
+
+members contains active membership rows, including unavailable/suspended accounts
+so the producer can inspect/remove them. eligible requires an active account with
+an approved model or professional role. candidates excludes existing members and
+the production owner. No email, casting profile, private bio, key or credential
+is returned. Counts summarize that member's work only for the owner. canEdit is
+true in draft/active; completed/archived is read-only. The account directory may
+also contain admins with contributor roles, but a member's other roles do not
+grant management of another admin's production.
+
+WRITE
+
+POST work-api.php?action=addMembers
+  {projectId,revision,userIds:[positiveInteger,...],requestId?}
+
+POST work-api.php?action=removeMember
+  {projectId,revision,userId:positiveInteger,requestId?}
+
+Both require authentication, owner admin, CSRF, draft/active project, and current
+roster revision. They return the latest Roster. addMembers accepts 1..200 IDs and
+validates the entire batch before mutation. Duplicates are normalized. An active
+approved model/professional account is required; the owner is not added because
+studio access already exists. Total membership cannot exceed 200 on additions.
+A duplicate add or removal of a nonmember succeeds without advancing revision.
+
+All mutations run under community.lock and the existing database transaction.
+A real change advances roster.revision once per request, records activity and
+updates production.updated_at. It does not advance production.revision.
+
+requestId uses the existing work_requests receipt mechanism (resource_type
+roster, resource_id projectId). A matching retry returns the current authorized
+roster without repeating the old write, even if a later remove/re-add occurred.
+A different payload for the same token fails request_conflict. A stale new write
+fails revision_conflict. A missing member role fails contributor_unavailable;
+an oversized roster fails roster_limit. Closed project fails work_closed.
+
+VISIBILITY AND ASSIGNMENT RULES
+
+- Active included contributors discover the production in My work.projects and
+  the projects endpoint. Draft roster-only members cannot see the project yet.
+- They see active, eligible open shots and their own direct assignments, plus
+  authorized project/shot references. They cannot list another member's private
+  direct shot, submission, review note, or appointment by guessing an ID.
+- My work.open requires current membership even when a cancelled assignment
+  exists. Claims recheck membership, current roles, project/shot state and slots.
+- New direct assignments and reassignment of declined/cancelled work require
+  membership. The owner producer contribution is exempt. Existing current
+  assignments/receipts remain recoverable after roster removal.
+- Removal marks the membership removed, without deleting explicit assignments,
+  uploads, takes or review history. Existing assignments may continue under their
+  own account/role/project/assignment rules. Cancel separately to stop that work.
+- Nonmanager project.shotCount counts authorized shots only. Private assigned
+  and removed-member historical shot capacity counts are redacted to null.
+- The roster endpoint and complete membership/candidate lists remain owner-only.
+
+NOTIFICATIONS
+
+An active-production addition generates one production_member_added update.
+Activating an existing draft notifies current eligible members and assignees.
+Creating or reopening an active open shot notifies eligible included members
+without an existing current assignment. Retry receipts do not duplicate notices.
+
+New open_shot notices bind work_notifications.shot_id. Reading updates rechecks
+current roster membership, role, active/open shot status and project visibility,
+so a later private/closed/ineligible shot does not expose its old title/message.
+Membership notices also disappear after removal. Existing assignment notices
+retain their ordinary explicit-assignment checks. These are in-app updates only.
+
+MIGRATION
+
+az_upgrade_work_roster_schema(PDO) follows schema 13. It creates:
+  production_rosters(project_id PK/FK, revision, updated_at)
+  production_members(project_id FK,user_id FK,status,created_at,updated_at,
+                     PK(project_id,user_id))
+and adds nullable work_notifications.shot_id plus the membership lookup index.
+
+DDL is idempotent for SQLite/MySQL. Backfill and schema-version update share a
+transaction under schema-migration.lock. Each existing production gets a roster;
+its noncancelled/nondeclined assignees are included, excluding the owner. Replay
+checks for ANY existing membership row, so a removed row is never reactivated.
+Historical rosters above 200 are preserved; only new additions enforce the cap.
+
+Unclaimed open work must receive an explicit intended roster after updating.
+Migration does not enroll every eligible account. Existing sources, AI settings,
+assignment IDs, cut revisions and publication provenance remain unchanged.

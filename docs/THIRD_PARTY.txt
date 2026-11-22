@@ -1,0 +1,38 @@
+AZHottie Interview Studio — third-party notices
+
+Local QR code generator (assets/qr.js)
+
+QRCode for JavaScript, Copyright (c) 2009 Kazuhiko Arase.
+Bundled from the QRCode library included with qrcode-terminal, and retained
+unchanged from the user's Lucky project. The QR code is generated locally;
+invitation addresses are not submitted to an external QR service.
+
+MIT License
+
+Copyright (c) 2009 Kazuhiko Arase
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+Phone connection architecture
+
+The interview-scoped approval/capability and WebRTC offer/answer flow in this
+release adapts the user's Lucky phone-pairing and recording-camera reference
+code. AZHottie uses its own authenticated host endpoints, approved phone
+capabilities, upload store, and interview records. Lucky credentials,
+configuration, databases, and user data are not included in this package.

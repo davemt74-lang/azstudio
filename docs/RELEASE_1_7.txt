@@ -1,0 +1,106 @@
+AZHOTTIE STUDIO 1.7.0
+19 November 2026, America/Phoenix
+
+PRODUCTION PLANS, SCRIPTS AND CASTING
+
+Production plan now connects a saved creative brief, ordered script scenes,
+linked shots and the existing model roster. It lives inside a saved production.
+Write the plan manually or draft scenes through the existing OpenAI/Claude
+connection for shot planning. The quick shot-list assistant remains available
+as a separate collapsed section.
+
+START A PRODUCTION PLAN
+
+1. Open Productions and choose a saved production. Add its intended models to
+   the roster. Open Production plan beneath the roster.
+2. Enter the objective, product/service focus, format, finished length, creative
+   direction and deliverables. Add scenes with action, lines/talking points,
+   props/reference notes and performer roles.
+3. Add camera shots to each scene. Set framing, filming instructions, output
+   orientation, duration, requested takes, contributor places and an optional
+   Phoenix deadline. Choose Leave unassigned, Open to included models, or direct
+   assignment to eligible roster members. Studio work retains producer credit.
+4. Save production plan. Review shots and assignments to see the exact pending
+   work, distribution and recipients, then Create shots and assignments.
+5. Set the production to In progress for claims and uploads. Models use My work
+   to accept or claim, read the current shot brief and relevant scene context,
+   record or upload, and submit.
+
+A plan allows 20 scenes and 60 shots, with up to 12 shots per scene. Saving a plan
+creates no production shots or assignments. Choosing Create shots and assignments
+adds the plan's uncreated shots, links and direct invitations in one transaction.
+Stale rosters, unavailable recipients or capacity problems leave the batch unapplied.
+Request receipts prevent duplicate work on retry.
+
+Created scenes are read-only in the planner and retain their original script
+snapshot. Append new scenes for additional work, or open the created shot to
+change its current instructions. Existing assignments, footage and history are
+preserved. Current linked progress appears in the plan. If a created shot changes,
+its original scene is retained with a notice to follow the current shot brief.
+Models see only their relevant authorized scene and shot context;
+the complete production plan remains private to the producer.
+
+OPTIONAL SCRIPT DRAFTING
+
+Save direction before using Draft production plan. The assistant returns a
+script proposal with generic performer-role labels. Review it, add its scenes
+to the plan, edit the script and choose models locally, save, and explicitly
+create work.
+
+Plan generation uses the provider and model already selected for shot planning
+in Admin; no extra key fields are added. Production planning, quick shot lists
+and edit proposals share each administrator's configured allowance and limit on
+pending requests. Provider identity is retained with each proposal. Interrupted
+requests can recover their original saved result. Generation capacity is checked before quota reservation,
+including the plan's remaining scene/shot space and the production's 200-shot
+limit after reserving space for already-planned, uncreated work.
+
+Selected production and creative fields, existing scene/shot titles, and the
+requested scene/shot limits are sent.
+Account IDs, roster identities, private profiles, assignment conversations,
+reference-file bytes and recordings are excluded. Details deliberately entered
+in the creative text are part of the request. Responses must satisfy the
+structured scene/shot contract and original capacity budget. A stale saved plan,
+project or shot list prevents adoption over newer work. AI proposals do not
+publish footage, replace existing scripts or assign people automatically.
+
+QUESTIONS AND REPLIES
+
+Each assignment now has a private conversation for its producer and assignee.
+Ask about script lines, wardrobe, framing or a deadline. Incoming unread counts
+and in-app updates link the conversation to the same work.
+
+Messages are plain text, up to 4,000 characters. The latest 30 messages load
+initially in conversation order; load earlier replies for more history.
+Refresh replies checks for new messages. Stable send identities preserve an
+uncertain send for retry and avoid duplicate messages/notifications. New typing
+is retained separately from a pending reply.
+Read acknowledgements advance through the highest rendered message sequence,
+so a newer incoming reply remains unread.
+
+Roster removal preserves an existing assignment's conversation. Completed or
+archived productions and cancelled/declined assignments retain read-only history.
+Conversations with unavailable assignees and producer self-contributions are
+also read-only. No automatic email or SMS is sent.
+
+UPGRADE
+
+Back up the existing application/database/storage. Merge this full deployment
+package into the same directory and keep all configuration, database, media and
+uploads. Do not rerun the installer. Schema 15 adds plans, shot snapshots, AI
+proposals and receipts; schema 16 adds assignment messages and read cursors.
+Existing rosters, AI settings, accounts, appointments, recordings, edits and
+finished videos remain intact. Sign in and hard-refresh the installed pages afterward.
+
+PHP 8.1+ remains supported. No Node, Composer, FFmpeg or background worker is
+required on the host. No installation/license/security key is needed.
+
+VERIFICATION
+
+The final regression totals and review corrections are in RELEASE_REVIEW.txt.
+New tests cover batch rollback, concurrent application, private scene access,
+script snapshots, casting, provider/receipt recovery, question pagination/read
+races, and a connected HTTP flow through real synthetic media uploads, retake,
+approval and a saved finished-video receipt. Provider responses use fixtures.
+Live hosting/MySQL, visual browser behavior, actual providers and physical
+camera/audio/network acceptance remain installation checks.

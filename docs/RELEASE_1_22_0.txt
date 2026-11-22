@@ -1,0 +1,77 @@
+AZHOTTIE STUDIO v1.22.0 — MEMBER ENGAGEMENT, DEADLINES & ACTION FEED
+Release date: 2026-11-21
+
+SCOPE
+- Member/model dashboard now displays a 14-day daily chart of actual public
+  profile page visits and Watch video play starts, plus 30-day play sessions,
+  browser-reported completions and estimated active watching minutes.
+- Public Watch player reports playback events to a new POST-only endpoint.
+  The endpoint requires the page session's CSRF token, checks published-video
+  eligibility and explicit model publication consent, excludes owner/credited
+  model and administrator plays, and caps progress using server wall time.
+  Repeat play starts and completions are counted once per 30-minute browser
+  session per video. No IP address, user agent, per-viewer ID, or raw viewing
+  history is saved to the engagement aggregates.
+- Only published videos belonging to the signed-in model OR published
+  interviews crediting a linked, active model account appear in that model's
+  engagement totals. No invented live-appearance counts are displayed.
+- The signed-in work dashboard now includes assignment deadline reminders,
+  overdue and next-seven-days counts, and direct links to exact assignments.
+  Submitted work awaiting producer review does not appear as overdue work.
+- An Action required feed prioritizes producer change requests, overdue work,
+  assignments awaiting acceptance, tasks due within 48 hours, independently
+  submitted videos requesting changes, and admin submissions awaiting review.
+  The My Videos link can focus the specific reviewed video via videoId.
+- The UI uses readable light surfaces, responds to phones down to 320 px and
+  keeps the one-document scrolling behavior.
+
+DATA / MIGRATION
+- Automatically upgrades existing schema 27 to 28 at the next database request:
+  published_video_engagement_daily(video_kind,video_id,view_day,
+  play_starts,player_completions,watched_seconds).
+- No viewer identities are written; data is daily aggregate only.
+- No historical watch activity is backfilled. Profile visits began in v1.21.0,
+  public Watch playback tracking begins in v1.22.0. These counts do not
+  represent unique people or verified total reach.
+- The daily video counts for an owner reflect only *currently published*
+  content. When a video is withdrawn, its past aggregate data is not exposed
+  on the dashboard unless the owner re-publishes that clip.
+
+AUTOMATED LOCAL VERIFICATION
+- 341 of 341 JavaScript tests passed.
+- All 113 deployment PHP source files passed PHP syntax checks.
+- PHP handler logic stubs verified deduplication, rate capping, completion once,
+  unpublished refusal, self/admin/bot exclusion and expiry.
+- PHP pure-logic tests covered date boundary handling, deadlines,
+  action ordering, review moderation and deep links.
+- Python SQLite schema/query fixture verified privacy boundaries,
+  publication and rights gates, withdrawn content and atomic counters.
+- Chromium rendered the actual dashboard PHP with synthetic user/account
+  fixtures in 15 role/viewport combinations (model/admin/member at 1440,
+  1024, 768, 390 and 320 px) with no horizontal overflow.
+
+IMPORTANT LIMITATIONS
+- Local PHP lacks SQLite/MySQL extensions. SQLite query validation was run
+  through Python, not through PHP PDO. Actual hosted MySQL migrations,
+  logged-in playback event collection and external devices remain unverified.
+- Automated testing cannot certify a live phone-camera feed, live fan views,
+  on-site recording or media playback on azhottie.com.
+- Do not report this release as production-certified 10/10 before those tests.
+
+IN-PLACE UPGRADE
+1. Stop active broadcasts/uploads. Back up website, database and protected
+   storage/ including all media and credentials.
+2. Merge the contents of azhottie-studio/ from the FULL_DEPLOY.zip into the
+   existing site application directory. Never delete or replace private
+   storage; the only packaged storage item is storage/.htaccess.
+3. Do NOT rerun install.php. A permitted database user must be able to create
+   the v28 aggregate table automatically on the next request.
+4. Hard-refresh dashboard.php, my-videos.php and watch.php across browsers.
+5. As a viewer, play a published video for at least 15 seconds; verify a model
+   can see the new play/session and watch minutes in their own dashboard.
+6. Test as a second model: neither stats nor assignment titles leak from the
+   first model. Test owner/admin plays, privacy, video withdrawal and resubmission.
+7. Verify overdue/due-soon assignment links, changes-requested video links,
+   review queue, and mobile/desktop layouts. Confirm no invented activity.
+8. Complete production camera/fan playback/recorded-show acceptance before
+   marking the overall hosted Studio release fully verified.

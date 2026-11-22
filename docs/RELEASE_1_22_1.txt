@@ -1,0 +1,22 @@
+AZHOTTIE STUDIO v1.22.1 — ADMIN HEADING AND LIVE DIRECTOR TITLE
+Release: 2026-11-21
+
+- Admin overview: remove the duplicate AZHOTTIE / CONTROL ROOM breadcrumb.
+  Keep the shared AZHOTTIE / ADMIN STUDIO breadcrumb and the Admin Studio h1.
+- Live Director: remove the Search phone cameras toolbar field and its handler.
+  All approved/pending camera tiles remain visible; no stream/filter side effects.
+- Move the existing editable show / saved-recording title to the left of the
+  toolbar in the former search position, preserving Go live and record naming.
+- Compact layout is responsive and keyboard / screen-reader accessible.
+- No database schema change (remains 28), new permission, or recording migration.
+
+DEPLOYMENT
+Back up site, database, and private storage/ first; stop active broadcasts and
+uploads. Merge FULL_DEPLOY application files into the existing installation.
+Preserve all private storage, credentials and uploads. Do not rerun install.php.
+Hard-refresh admin-studio.php and live-director.php.
+
+VERIFICATION
+Static title/save bindings and admin-nav checks, full Node suite, PHP syntax,
+plus responsive browser smoke checks. Real hosted live-phone/fan/recording tests
+are still required for production certification.

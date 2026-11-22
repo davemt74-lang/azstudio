@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFile} from 'node:fs/promises';
+import {webcrypto} from 'node:crypto';
+const source=(await readFile(new URL('../assets/work-api.js',import.meta.url),'utf8')).replace(/^export /gm,'');
+function setup(fetch){const context={URL,FormData,Map,crypto:webcrypto,location:{href:'https://studio.example.test/productions.php'},fetch};vm.runInNewContext(source+'\nglobalThis.adapter={workApi,setWorkCsrf};',context);return context.adapter;}
+const response=(data,status=200)=>({ok:status<400,status,json:async()=>status<400?{ok:true,data}:{ok:false,error:data}});
+test('retry after a lost mutation receipt reuses its idempotency request id',async()=>{const requests=[];let calls=0;const api=setup(async(url,options)=>{requests.push(JSON.parse(options.body));if(++calls===1)throw new Error('Connection stopped');return response({id:'note-one'});});const payload={submissionId:'take-one',atMs:1200,text:'Keep this beat'};await assert.rejects(api.workApi('addSubmissionNote',payload),/Connection stopped/);await api.workApi('addSubmissionNote',payload);assert.equal(requests[0].requestId,requests[1].requestId);assert.ok(requests[0].requestId);await api.workApi('addSubmissionNote',payload);assert.notEqual(requests[2].requestId,requests[1].requestId);assert.equal(payload.requestId,undefined);});
+test('CSRF refresh preserves one mutation intent and retries only once',async()=>{const calls=[];const api=setup(async(url,options)=>{calls.push({url:String(url),body:options.body&&JSON.parse(options.body),token:options.headers['X-CSRF-Token']});if(calls.length===1)return response({code:'csrf_invalid',message:'Refresh'},403);if(calls.length===2)return response({csrf:'fresh-token'});return response({id:'project-one'});});api.setWorkCsrf('old-token');await api.workApi('saveProject',{title:'New production',status:'draft'});assert.equal(calls.length,3);assert.match(calls[1].url,/action=bootstrap/);assert.equal(calls[2].token,'fresh-token');assert.equal(calls[0].body.requestId,calls[2].body.requestId);});

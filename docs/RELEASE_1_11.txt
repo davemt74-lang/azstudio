@@ -1,0 +1,39 @@
+AZHottie Studio v1.11.0 — Private creator video editor and phone camera update
+
+SCOPE
+* Reusable private multi-clip timeline editor with source-bin imports, clip
+  reordering, individual trims, overlays, card selection, per-clip volume,
+  fades and format/resolution selection. Live sequence preview and browser
+  render/export, with a private saved movie uploaded to the member gallery.
+* Editable timeline projects tied to one authenticated user. A project's
+  original source footage stays unchanged. Individual account data is isolated.
+* Signed-in phone opens my-camera.php and uploads directly—no QR pairing.
+* Optional temporary second-phone QR, approval, private direct uploads,
+  revocation and WebRTC preview/host recording (network dependent).
+* Mobile-only hamburger at widths <=850px; the desktop sidebar remains visible.
+* Unified light input/select/textarea backgrounds and dark form text on all
+  normal pages using the shared CSS import.
+
+INSTALL / UPGRADE
+Full deployment: extract the azhottie-studio directory contents into the site
+document root. On a new site use install.php; on a previous install do NOT
+run the installer. Keep the entire storage directory, configuration and media.
+Migration adds schema 19 personal_edit_projects and schema 20 phone pairing,
+permission and signaling tables. PHP files 644; folders 755. HTTPS required.
+
+OPERATING LIMITS
+No remote cloud render farm, multi-track audio mixer, automatic publishing,
+or automatic camera pairing without approval. Each project contains up to 48
+sequential clips. Browser canvas/MediaRecorder output depends on platform.
+Phone live WebRTC may require a separately provisioned TURN relay. Existing
+member galleries are private; media can be viewed only by its owner.
+
+ACCEPTANCE TO PERFORM ON HOSTING
+1) Load form-heavy pages: appointments, accounts, and editor. Controls white.
+2) On desktop confirm no hamburger, sidebar visible; on mobile confirm toggle.
+3) Sign in as a model, upload two videos, create and save a three-clip edit.
+4) Reload, open edit, verify order/trim/overlays, export a movie, replay it.
+5) From an account-signed-in phone, record and upload without pairing.
+6) From a second phone, scan QR, approve, upload and revoke.
+7) Test live preview from a second phone only where WebRTC connectivity allows.
+8) Verify no other user can access the video or the saved edit project.

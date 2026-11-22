@@ -1,0 +1,84 @@
+AZHOTTIE STUDIO v1.15.0 — ADMIN STUDIO + LIVE DIRECTOR
+===================================================
+Release basis: v1.14.0 full deployment (preserves all previous functionality).
+
+WHAT'S INCLUDED
+- One Admin Studio hub (admin-studio.php) and a separate admin navigation
+  section. Normal signed-in member sidebar has only one Admin Studio link,
+  not the eight individual administration destinations.
+- Optional "editor" staff account role. Administrators can grant it under
+  Manage accounts. It permits Live Director and the owner's private media/
+  camera tools, NOT AI settings, casting, account management, studio production
+  administration, or unpublished material belonging to other accounts.
+- Live Director (live-director.php), available to administrators and authorized
+  live editors. Connect local built-in/USB/webcam sources and approved guest
+  phones using the existing QR/phone camera connection. Choose one Program
+  camera. Manual switch or fixed every 30 seconds or random 15-45 seconds.
+- Optional host microphone for the Program feed. Video output is one 1280x720
+  canvas stream; only that Program is shared with viewers.
+- Members-only Fan Live (live.php). Signed-in fans/customers can join the live
+  Program via WebRTC; no access to underlying camera feeds or private footage.
+- Director can record Program as a single composite video with camera switches,
+  save to their own private media gallery via resumable uploads, review stored
+  recordings, and download a backup if saving fails.
+- On-air/offline status and viewer connection count. End program removes room
+  from fan discovery. Room ceases being visible if its Director heartbeat stops.
+- Server-controlled room ownership, CSRF on writes, per-user viewer permission,
+  expiring viewer SDP, 6-viewer cap, and independent phone approval/revocation.
+
+HOW TO USE
+1. Sign in as Admin. Admin Studio -> Live Director.
+2. Select Find USB / webcams and grant camera permission; or choose + QR
+   invitation, have a second phone scan my-camera.php without logging in,
+   approve the pending device, and choose Share live on the phone.
+3. In Camera sources, click Take to Program on the chosen camera.
+4. Optionally enable a program microphone. Click Go live.
+5. Sign in to a separate fan/customer account and open Live AZHottie -> Join live.
+6. Switch cameras manually or choose timed/random rotation. Fans stay on
+   a single Program stream, not the individual camera feeds.
+7. Click Record program, make a few camera switches, Stop recording. The video
+   uploads to the Director's private gallery and appears in Saved recordings.
+8. End broadcast. The live session disappears from fan discovery.
+
+PRODUCTION CONSTRAINTS AND LIMITATIONS
+- This is a PHP-signaled, browser-hosted peer-to-peer WebRTC pilot, not a
+  mass-viewer streaming server, SFU, RTMP pipeline, CDN, or HLS live broadcast.
+  Deliberate maximum: 6 simultaneous fan viewers. A full streaming relay / SFU
+  is required to scale to larger events and to guarantee greater reliability.
+- The Director tab must remain open and active. Avoid placing it in the
+  background: browsers may throttle rendering, recording, and signaling.
+- Both camera and audience WebRTC depend on compatible browsers and networks.
+  STUN is configured by default; some networks require a TURN relay. This
+  release does not provision or pay for TURN infrastructure. If you provide
+  your TURN server, optionally add config 'live' => ['iceServers' => [...]]
+  to storage/config.php, with your own trusted ephemeral server credentials.
+- Viewer audio is the selected host microphone. Approved phone camera previews
+  provide video only. Audio from connected phones is not mixed into Program.
+- Recordings are temporarily buffered by the host browser until stopped, then
+  uploaded to private storage. Keep recordings short during initial tests;
+  save the backup before leaving on upload failure. Editing/republishing is a
+  separate, intentional action. Recording is not auto-published to Watch.
+- A signed-in fan/customer membership is required. There is no anonymous
+  public broadcast in this first release.
+- Camera streams approved to a different user's account are NOT exposed to
+  Admin Director. Invite a camera to the Director's own account for each live
+  presentation. No cross-account camera surveillance.
+- Only one live room can be on air per installation. A second editor cannot
+  interrupt an active broadcast by starting another.
+
+INSTALL / UPDATE
+- Back up the current application, private storage, and database.
+- Merge contents of azhottie-studio/ into the current domain document root.
+- Preserve storage/config.php, storage/media, uploads, and existing records.
+- Do not rerun install.php if the site is already installed.
+- Sign in; migration updates the schema to version 23 automatically.
+- Hard-refresh cached styles and scripts. Verify 644 file / 755 directory
+  permissions; use HTTPS for phone/camera/WebRTC functions.
+
+VERIFICATION
+- JavaScript regression suite: see tests under source ZIP.
+- PHP lint: see release review log.
+- Pure PHP contract checks: tests/live_contract.php.
+- Actual hosting/MySQL, cross-device WebRTC (phone <-> director and director
+  <-> fan), sustained multi-viewer load, native webcam enumeration and saved
+  program recording require live verification. Do not claim these passed.

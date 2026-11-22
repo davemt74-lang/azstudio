@@ -1,0 +1,163 @@
+AZHOTTIE STUDIO 1.6.0 — RELEASE REVIEW
+18 November 2026, America/Phoenix
+
+VERIFIED SCORE: 9 / 10
+TARGET: 10 / 10 AFTER INSTALLED-BROWSER/HOST/DEVICE ACCEPTANCE
+
+This release passed the nine locally verifiable acceptance areas below. The
+remaining installed-host/browser/device gate has not been verified. A prior
+local-browser preview was rejected by automatic URL security review, including
+a prohibition on alternate browser workarounds. This release respected that
+rejection; no new live-browser visual pass is claimed.
+
+ACCEPTANCE AREAS (ONE POINT EACH)
+
+1. Install, upgrade and retained data — PASS
+   Fresh isolated installations and repeatable migration through schema 14.
+   Existing noncancelled/nondeclined contributors are backfilled. Explicit
+   removed rows survive replay; assignment/source/history data are preserved.
+   Source storage remains untouched and uninstalled. MySQL execution is gate 10.
+
+2. Roles and production ownership — PASS
+   Current owner administrator only can read the full roster or change it.
+   Active approved model/professional candidates are required. CSRF, account
+   suspension, role loss and other-admin isolation pass. No member gets access
+   to the full casting directory, private account fields or administrator APIs.
+
+3. Included-production discovery and private work — PASS
+   My productions exposes included active projects before individual assignment.
+   Eligible open shots are shared with roster members; direct shots/submissions
+   remain scoped to the specific assignee. Project/shot references follow the
+   same access checks. Private and historical capacity counts are redacted.
+
+4. Direct assignment and contributor capacity — PASS
+   New direct assignments and reassignment require eligible membership. Draft
+   assignments are supported; claims/uploads require an active production.
+   Roster addition creates no assignments or slot reservations. Producer work
+   retains its studio exemption. Concurrent claims preserve the final slot.
+
+5. Removal and retained work — PASS
+   Removing a member blocks new open discovery/claims and new direct assignment.
+   Existing explicit assignments, uploads, submissions, review history and
+   accepted edit sources remain available under their ordinary permissions.
+   Cancelled-history rows cannot bypass removal and reclaim a shot.
+
+6. Concurrent writes, receipts and in-app updates — PASS
+   Atomic member batches, separate roster revisions, duplicate operations,
+   stale edits and request-ID replay pass. Old add/remove receipts do not undo
+   later membership changes. Removal and claim serialize. Notifications do not
+   duplicate on retry; open-shot notices recheck current membership, eligible
+   roles, visibility and active status before returning their title/message.
+
+7. Controller integration and draft recovery — PASS WITH TEST DOM/MEDIA
+   Search/hidden selections, pagination, roster-only assignment choices, draft
+   assignment, read-only states, member empty states, removal and conflict reload
+   are covered. Membership writes leave the planner and other forms mounted.
+   Typing during an in-place save is preserved. Existing recording/upload/form
+   guards and stale response protections pass. Responsive CSS is implemented;
+   visual acceptance remains gate 10.
+
+8. Recording, scheduling, editing and publication — PASS WITH TEST FIXTURES
+   Accounts, events/classes/appointments, capacity/attendance, interviews, phone
+   authorization/uploads, media provenance, Director coverage, usable ranges,
+   named cuts/history, edit proposals, exports/covers and explicit publication
+   regressions pass. Physical camera/audio/network compatibility remains gate 10.
+
+9. AI settings, proposal routing and stable plans — PASS WITH PROVIDER FIXTURES
+   Central OpenAI/Claude settings, encryption/migration, independent task routes,
+   model discovery, shared quota, current-role checks, provider/model identity,
+   validation and retry recovery pass. Roster changes preserve project revision
+   and do not invalidate otherwise current planner/editor fingerprints. AI
+   proposals continue to create unassigned shots only after review. No actual
+   external AI request was made.
+
+10. Installed browser, hosting and physical devices — UNVERIFIED (0 POINTS)
+    Actual HostGator/other host, live MySQL, browser appearance, USB/HDMI/phone
+    cameras, external audio, Safari/iOS, real codecs, phone-network WebRTC, and
+    configured-provider requests remain installation checks. No credentials or
+    host/device access were assumed.
+
+FINAL VERIFICATION
+
+156 server integration tests passed across 16 isolated suites:
+  backend                   12 passed
+  production                10 passed
+  accounts                   8 passed
+  scheduling                 8 passed
+  publication               10 passed
+  phone                      8 passed
+  phone_edge                 2 passed
+  work                      17 passed
+  work_roster               14 passed
+  work_media                 7 passed
+  work_planner               9 passed
+  director                  12 passed
+  edit_versions              9 passed
+  edit_composer             10 passed
+  ai_settings               11 passed
+  ai_routing                 9 passed
+
+The matrix completed in 53.977 seconds, with at most three suite
+processes concurrently. Contention suites used four PHP workers. All PHP source
+hashes stayed unchanged throughout the run. Real source storage remained
+unchanged and uninstalled.
+
+153 JavaScript tests passed, 0 failed, 0 skipped, 0 cancelled.
+This includes 12 dedicated roster controller tests alongside the prior suites.
+All JavaScript source hashes stayed unchanged during the final run. Tests use
+actual controllers with DOM/media fixtures, not a live browser.
+
+Syntax checks passed for 62 production PHP files and 24 production JS files.
+Across the application, QA adapters and fixtures, 89 PHP and 30 JS files parse.
+Development runtimes: PHP 8.4.27 and Node v24.22.3.
+Deployment remains PHP 8.1+ without a Node dependency.
+
+V1.6 REVIEW CORRECTIONS
+
+- My work open discovery now joins current roster membership directly. A
+  cancelled assignment cannot accidentally restore open work after removal.
+- Member shot counts use current visibility. Private direct shots and removed
+  member history do not disclose other contributors' capacity/review totals.
+- Open-work notifications bind a shot ID and revalidate its current visibility,
+  so changing a shot to private/closed/ineligible cannot leak an old notice.
+- Reload roster remains available at capacity and on closed productions, so a
+  stale removal view can recover without an add picker being present.
+- An in-place roster save leaves other mounted form values untouched, including
+  new typing while the request is pending; replaced views still restore drafts.
+- Draft productions can prepare direct invitations. Member productions with no
+  visible shots show waiting-for-producer guidance instead of creation controls.
+- Migration preserves removed membership rows and historical contributors above
+  the new cap. Adding a new roster is an explicit producer action for previously
+  unclaimed open work.
+
+SHORT INSTALLED ACCEPTANCE SEQUENCE
+
+1. Back up the existing application and its complete storage/database. Merge
+   this release into the same directory; do not reinstall. Sign in/hard-refresh.
+2. Open a production and inspect Add models to this production. Select two
+   approved accounts; leave a third eligible account outside the roster.
+3. Create one open shot and one direct shot assigned to just one included model.
+   Activate the production. Included accounts should see My productions and
+   eligible open work; only the assignee sees the private direct shot. The outside
+   account should not discover or claim either shot.
+4. Accept/claim one assignment, record/upload and submit a take. Remove that
+   member from the roster: their existing assignment/history remains, but new
+   open work disappears. Cancel separately only when work should stop.
+5. Review a take, request a retake, accept replacement footage, mark usable
+   sections, prepare/save a named cut, export and Save finished video. Add a
+   cover and check the exact saved-revision return link.
+6. Check current phone upload separately from optional live phone switching,
+   USB/HDMI inputs and the selected microphone on actual devices/network.
+7. If public release is intended, explicitly publish a finished cut to Watch and
+   inspect it as a fan/signed-out visitor. Original footage and notes stay private.
+8. If enabling AI, confirm saved provider/model choices in Admin and run one
+   bounded real proposal with each configured provider. Inspect the proposal
+   before creating shots/cuts; check access and billing in the provider accounts.
+
+PACKAGING
+
+Deployment excludes tests/QA/package.json/development files and installed data.
+Source includes complete application code, tests, synthetic fixtures and the
+final verification logs/hashes. Both archives are byte-checked against verified
+source before saving. Historical reviews remain in RELEASE_REVIEW_1_3.txt,
+RELEASE_REVIEW_1_4.txt (where present), and RELEASE_REVIEW_1_5.txt.

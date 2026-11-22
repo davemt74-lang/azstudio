@@ -1,0 +1,102 @@
+AZHOTTIE STUDIO v1.26.0 — CASTING & ONBOARDING SPECIALIST
+21 November 2026
+
+Scope: integrate existing Casting CRM, private invitations, model profiles,
+production eligibility, Agent Brain, Agent Chat, History, and the v1.24 private
+hourly follow-through cron. No new standalone AI assistant.
+
+Implemented sections and independent local quality gates
+-------------------------------------------------------
+1. Applications and pipeline: Admin Casting CRM displays required-answer
+   completeness, applicant-provided experience and availability, age of the
+   current stage, and source-backed follow-up rules. Personal answers are
+   available ONLY in the authorized CRM. New applications generate admin
+   history/notifications. Revision-checked admin actions can advance just
+   new -> contacted -> screening -> interview; all approval, rejection and
+   invitation issuance still require the original CRM workflow.
+2. Onboarding: Converted active model accounts have four factual checkboxes:
+   active model profile bio, general availability, admin-confirmed studio
+   orientation, and admin-confirmed production readiness. Models see only
+   their own progress. Admins can confirm/reopen attested steps with CSRF and
+   role checking. Completion is not a substitute for production-specific
+   permissions or affirmative participant consent.
+3. Production matching: Suggestions are drawn only from the existing
+   eligible production roster and models with ALL onboarding steps complete.
+   The agent does NOT automatically assign models, infer availability from
+   historic records, or make aptitude/appearance judgments. Admins check
+   current availability and suitability in the existing production workflow.
+4. Proactive follow-through: The private existing hourly cron examines
+   new applications older than 24 hours, contacted/screening/interview
+   stages unchanged for seven days, approved applications lacking active
+   invitations, invitations expiring within 24 hours, and converted accounts
+   still incomplete after three days. Durable unique delivery fingerprints,
+   per-recipient notifications, locks, bounded scans and private receipts
+   prevent routine duplicate alerts. Models also receive their own
+   incomplete-onboarding reminder, not applicant data.
+5. Brain and Chat: The shared Brain displays verified casting counts,
+   follow-up cards, onboarding checklists and safe stage controls. The
+   existing Agent Chat displays a live read-only casting companion and a
+   ready-to-send question. Both use the same structured report:
+   Key findings / Actions & follow-ups / Open questions / Next step /
+   Questions for you. Only aggregate, anonymized casting summaries enter
+   external AI provider context, without applicants' names, contact
+   information, answers, notes, private invitation tokens or media.
+   The existing Chat has no LLM action tools. Human-confirmed HTTP actions
+   are separate authenticated requests with CSRF and authorization.
+6. Privacy, roles and audit: Model scope is exclusively the current account;
+   CRM and early stage actions require admin. One recipient cannot read or
+   acknowledge another's activity. Real stage/confirmation mutations are
+   written into the existing History ledger; reminders carry an Agent
+   attribution, not a fabricated model action. No external outreach is sent.
+
+Upgrade / hosting configuration
+-------------------------------
+- Finish active live broadcasts and back up the entire site, MySQL database,
+  protected storage/ and private settings.
+- Extract FULL_DEPLOY into the existing installation directory, merging
+  application files but preserving ALL private storage, uploads, database
+  and media. Never rerun install.php as part of this update.
+- First configured DB access migrates schema 31 -> 32. MySQL permissions must
+  allow CREATE TABLE, indexes and UPDATE; migrator uses the existing lock.
+- Hard-refresh signed-in Admin Studio, Casting CRM, model Account Settings,
+  Agent Chat and Agent Brain. Confirm CSS/JS versions on client devices.
+- Keep or configure the existing PRIVATE hourly cron entry (one per hour):
+    /path/to/php /absolute/path/to/azhottie/includes/agent-followthrough-cron.php
+  Use cPanel's real PHP binary/path and redirect logs to private storage.
+  The CLI-only script now scans assignments, casting, then prunes old live
+  health metrics. A manual Admin Brain "Check casting now" does NOT
+  substitute for or prove scheduled cron was configured.
+- External AI replies require the existing approved AI provider credentials;
+  the static verified Chat companion can display even if AI is unavailable.
+
+Local checks (exact packaged source)
+------------------------------------
+- npm test: all Node.js suites including dedicated casting/Chat regression.
+- php tests/agent_casting_rules.php: stage follow-up and reminder behavior.
+- python tests/agent_casting_sql_fixture.py: additive DDL, reentrant schema,
+  cross-account isolation, unique deduplication, FK and grouping constraints.
+- python tests/agent_casting_browser.py: simulated admin/model Agent Brain
+  and Chat interactions at 1440, 768, 390, and 320 pixels; test network and
+  media content are fixtures; check no horizontal overflow/JS errors.
+- PHP syntax lint on all production PHP source and ZIP source parity checks.
+
+Production acceptance (NOT completed by local packaging)
+--------------------------------------------------------
+[ ] Automatic schema 31 -> 32 migration on the actual azhottie.com MySQL host.
+[ ] Admin reviews private answers; model cannot open/alter CRM.
+[ ] Admin confirms early-stage transition; stale revision yields HTTP 409.
+[ ] Explicit admin onboarding checkpoints persist and display to correct model.
+[ ] Roster-eligible, fully onboarded model appears for assignment review;
+    incomplete model remains in onboarding queue, not an assignment suggestion.
+[ ] Admin sees new application alert; separate model sees ONLY own progress.
+[ ] Agent Chat summarizes real casting counts without sending PII to AI.
+[ ] Run the real cron twice; no duplicate notices. Change stages to clear
+    stale unread reminders; observe history receipt and last cron timestamp.
+[ ] Restore a testing database and confirm recovery/rollback strategy.
+[ ] Previously outstanding phone -> Director -> fan moving video still works.
+
+Overall score: 10/10 for locally verified implementation sections only;
+production release remains 9/10 until hosted MySQL, cron, permissions, AI
+provider and real account/device acceptance pass. No hosted AZHottie GitHub
+repository is available to the connected account: no PR/CI merge or live
+deployment has been performed; local Git commit patches are provided.

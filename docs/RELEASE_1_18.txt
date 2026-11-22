@@ -1,0 +1,60 @@
+AZHOTTIE STUDIO 1.18.0 — LIVE DIRECTOR RELIABILITY
+====================================================
+
+BUILD SCOPE
+- Persistent, moving per-camera thumbnail video elements. Preview/Take never
+  replaces the thumbnail HTMLVideoElement or resets its WebRTC stream.
+- Health states use decoded frames via requestVideoFrameCallback, with
+  advancing-media-time fallback where not supported. Report startup, live,
+  muted, blocked autoplay, no new frames, and disconnected states.
+- Do not allow Take or auto-switch into a black/stalled/unready feed. Stop
+  broadcasting a failed source; show holding slate in manual switching mode.
+  When automatic switching is enabled, choose another healthy source.
+- Local camera diagnostics identify browser permissions, HTTPS, camera device
+  count, unsupported APIs, and common device-use errors. Camera device changes
+  refresh device discovery. All cameras are explicitly opened by the Director.
+- Program audio: continuous host mic channel with level/mute and meter, plus
+  an independent selected-camera channel with level/meter and explicit enable.
+  Camera audio follows the Program source, not Preview. On a guest phone the
+  extra microphone must be explicitly opted in; permission audio=false by
+  default. Phone audio never plays out from the thumbnail speakers.
+- Private saved Director scenes: camera Preview reference, mode, transition,
+  titles, overlays. Recall does NOT take a camera to Program; operator presses
+  Take. Scenes are per Director account (12 max).
+- Uploaded image overlays: PNG/JPEG/WebP under owner-scoped protected storage;
+  up to 4 MiB and 4096x4096 pixels. Image opacity is baked into media via
+  canvas drawing. Overlay media endpoint requires a signed-in editor/admin.
+- Recording: Program canvas and audio mix are captured as one stream. Verify
+  server-reported file byte count before attaching to a saved live show or
+  discarding the local download backup. Retry preserves upload token/media ID.
+
+PRIVACY AND OPERATIONS
+- No original private camera stream is sent directly to a fan. Only Program
+  canvas + destination audio is sent. A new phone feed enters Preview only.
+- No new database migration. User-private scene/image assets use separate
+  storage/live-director/<owner-id>/ files with 0700 folders and 0600 files.
+- No third-party cloud storage or AI service needed for this update.
+- HostGator supports only low-fan-out WebRTC until a streaming relay/SFU exists;
+  the six-viewer cap is intentionally unchanged.
+
+TESTS AND NOT-YET-VERIFIED
+- New JS camera-health/role/audio/scene/record tests plus baseline suite.
+- New PHP scene storage tests plus PHP syntax checks and existing live contract.
+- Local Chromium returned ERR_BLOCKED_BY_ADMINISTRATOR for the preview fixture,
+  so physical moving frames, actual iPhone-to-Director media, stored media,
+  visible camera layout, and audio/video output were NOT browser-certified.
+  These are final HostGator acceptance gates before a verified 10/10.
+
+SMOKE TEST (on actual HTTPS installation)
+1. Click Find cameras; open a laptop camera and USB camera. Confirm both tiles
+   show moving pictures and LIVE VIDEO, not just a connection label.
+2. Preview camera B privately, Take camera A, then switch while fan watches.
+3. Scan QR with unlogged-in phone. Approve, tap Share live, and confirm a third
+   moving thumbnail; switch to it only after operator presses Take.
+4. With no camera selected confirm holding slate; simulate USB disconnect and
+   confirm Program no longer shows a stuck last frame.
+5. Set host microphone, inspect level, mute, and adjust volume. Opt in phone
+   microphone and enable camera audio; verify fan hears only desired mix.
+6. Upload transparent PNG, enable overlay, save scene, recall it, Take preview.
+7. Record 20 seconds while switching and talking, stop, verify saved recording
+   and preview it in Admin -> Saved Live Productions before publishing.

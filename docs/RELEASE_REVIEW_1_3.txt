@@ -1,0 +1,149 @@
+AZHOTTIE STUDIO 1.3.0 — RELEASE REVIEW
+18 November 2026
+
+VERIFIED SCORE: 9 / 10
+TARGET: 10 / 10 AFTER INSTALLED-BROWSER AND DEVICE ACCEPTANCE
+
+Nine implementation acceptance areas pass the available checks. The tenth
+area is unverified because the browser's automatic URL security review rejected
+access to the local preview. No browser workaround was attempted. This score
+does not equate source review or mocked browser objects with a visual browser
+walkthrough, a physical camera test, or a live-host deployment.
+
+ACCEPTANCE AREAS (ONE POINT EACH)
+
+1. Installation and upgrades — PASS
+   Clean installer, existing-account preservation, schema replay, and retained
+   interview/media/history data. Final schema 9. No deployed configuration,
+   account, database, recording or credential is included in the release.
+
+2. Account roles and private access — PASS
+   Active-role/ownership checks, model/professional work scope, cross-account
+   denial, suspension and current password-version checks where required.
+   Original production footage is served through authenticated routes.
+
+3. Project and scheduling connection — PASS
+   Owned briefs, product lines, project kinds/status, shots, references and
+   permitted schedule links. Links do not create appointments or registrations.
+   Existing calendar/class/booking behavior passes regression tests.
+
+4. Assignments, claims and capacity — PASS
+   Invitation responses, open claims, cancellation/reassignment, concurrent
+   last-slot protection, and separate producer contribution provenance.
+
+5. Recording, uploads and recovery — PASS
+   User/assignment-scoped drafts, camera framing, chunk checkpoints, lost
+   begin/finish receipts, rejected stale destinations, safe restart and retained
+   local recordings on failure. Approved phones bind to the selected shot.
+   Physical devices and real codecs still belong to gate 10.
+
+6. Review and actionable retakes — PASS
+   Multi-take batches, favorites, timestamp notes, notifications and review
+   rounds. Accepting one take does not prevent a requested retake on another.
+   Replacement attempts can complete while older feedback remains in history.
+
+7. Editor handoff and source integrity — PASS
+   Accepted-only production footage, shortlisted mixed imports with provenance,
+   optional/per-clip question cards, trims/order/fades, and safe source withdrawal
+   during preview/export. Production editor autosave works.
+
+8. Finished versions, covers and publication — PASS
+   Explicit saved versions, source-production links, public contributor credit,
+   cover upload/frame capture controls, public allowlists and source revalidation.
+   Withdrawals unpublish affected cuts; restore does not republish automatically.
+   Existing cover/Watch browser behavior has historical v1.2 checks; the v1.3
+   live browser rendering is part of the unverified gate below.
+
+9. Optional AI proposals — PASS WITH PROVIDER FIXTURES
+   Administrator credential scope, encrypted secret storage, current documented
+   Responses API structure, refusal/incomplete/error handling, request identity,
+   interrupted-request expiry, editable proposals, stale guards and atomic apply.
+   No real paid provider request was made. The assistant stays optional/off
+   until the administrator configures it. Core work needs no AI key.
+
+10. Installed browser, host and devices — UNVERIFIED (0 POINTS)
+    The preview URL was rejected by automatic browser security review. Actual
+    HostGator/other hosting, live MySQL, physical USB/HDMI/phone cameras, external
+    microphones, Safari/iOS, device codecs and real phone-network WebRTC remain
+    installation checks. A configured AI account also needs a real provider
+    request if the optional assistant is enabled.
+
+FINAL SERVER GATE
+
+91 server integration tests passed across 10 isolated suites:
+  Backend                         12
+  Existing production             10
+  Accounts                         8
+  Scheduling                       8
+  Publication and covers          10
+  Phone                            8
+  Phone edge cases                 2
+  Production work                 17
+  Work media                       7
+  Work planner                     9
+
+The matrix completed in 36.779 seconds with at most three suite processes in
+parallel. Contention suites used four PHP server workers and real HTTP requests.
+Provider responses in planner tests were fixtures. All PHP source hashes stayed
+unchanged during the matrix. Application storage stayed unchanged/uninstalled.
+
+FINAL JAVASCRIPT GATE
+
+85 tests passed; 0 failed, skipped, cancelled or pending. These include capture
+state, microphone continuity, manual/automatic source selection, card timelines,
+phone/model upload recovery, controller response races, draft preservation,
+request identity, and withdrawn-source handling before Preview or Export.
+
+Syntax checks passed for 51 production PHP files and 20 production JavaScript
+files. Including isolated QA helpers, 77 PHP and 26 JavaScript files parsed.
+Runtime used: PHP 8.4.27; Node.js v24.22.3. No deployed-site tests are implied.
+
+CORRECTIONS MADE DURING REVIEW
+
+The build/review/test cycle found and resolved concrete failures:
+
+  - Production autosave rejected the unchanged modelId:null field.
+  - Source import used a generic table helper that rejected the takes table.
+  - Withdrawn sources could otherwise be used to republish an old finished cut.
+  - Archiving/deleting original interviews did not initially withdraw mixed cuts.
+  - An accepted take could incorrectly close an assignment needing another take.
+  - Old detail responses could overwrite a newly opened form.
+  - A local helper shadowed the browser history object.
+  - Missing selected sources could break the editor's final UI redraw.
+  - Changed shot briefs left a local upload with no safe restart action.
+  - Production return/restore links used the wrong route or workflow.
+  - Member recording framing ignored portrait and square shot instructions.
+  - Inputs remained editable during pending assistant saves.
+  - Interrupted assistant requests could remain pending without an expiry path.
+
+Relevant regression cases were added and passed. Independent backend and
+frontend/media reviews found no remaining actionable critical issue within
+the checked boundaries. This is not a guarantee that no defect exists.
+
+INSTALLATION ACCEPTANCE TO COMPLETE GATE 10
+
+Use an existing backup and UPGRADE.txt. Then run one small project with the
+actual browser and accounts that will be used in production:
+
+  1. Create a project and one assigned/open shot. Accept or claim as a model.
+  2. Record/upload two short takes. Pause and resume an upload after reloading.
+  3. Submit, accept one take, request a retake on the other, upload a replacement,
+     and accept it. Confirm the earlier feedback remains visible.
+  4. Open the editor, trim, preview and export. Save the finished video, choose
+     a cover from a frame or file, and reopen the saved version for playback.
+  5. Scan the QR invitation, approve a phone and upload a shot. Test live camera
+     sharing and USB switching separately on the real network and hardware.
+  6. When a cut is ready for viewers, publish it explicitly and inspect Watch.
+     A model/fan account should not gain access to private source footage.
+  7. If enabling AI, configure the administrator's provider account, generate
+     one proposal, edit it and add it. Check that no assignments/public posts
+     are created by proposal generation alone.
+
+The separate source archive includes complete regression suites, synthetic
+fixtures, and the final machine-readable test evidence. The deployment ZIP
+contains only the application, installation/upgrade guides and release docs.
+
+API REFERENCE USED FOR THE OPTIONAL ASSISTANT
+https://developers.openai.com/api/docs/guides/structured-outputs
+Checked 18 November 2026. The adapter validates completed output and handles
+refusals, incomplete responses and API errors before storing any ready proposal.

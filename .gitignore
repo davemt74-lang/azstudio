@@ -1,0 +1,39 @@
+# Never commit host-specific credentials, configuration, or private member media.
+.env
+.env.*
+!.env.example
+**/config.local.php
+**/secrets.php
+**/credentials.json
+**/*.pem
+**/*.p12
+**/*.key
+**/*.sqlite
+**/*.sqlite3
+**/*.db
+**/*.db-*
+**/*.sql.gz
+**/*.bak
+**/*.backup
+**/*.log
+**/*.tmp
+
+# Protected runtime storage. Only the access-denial rule belongs in Git.
+/storage/*
+!/storage/.htaccess
+/uploads/
+/media/uploads/
+/cache/
+/tmp/
+
+# Dependencies and generated outputs.
+/node_modules/
+/vendor/
+/.pytest_cache/
+**/__pycache__/
+*.pyc
+*.zip
+*.mbox
+*.tar.gz
+.DS_Store
+Thumbs.db

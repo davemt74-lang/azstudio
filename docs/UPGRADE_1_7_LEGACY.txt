@@ -1,0 +1,347 @@
+AZHOTTIE INTERVIEW STUDIO — UPGRADE TO 1.7.0
+
+This package supports a fresh installation or an update to the existing
+1.0.x, 1.1.x, 1.2.x, 1.3.x, 1.4.x, 1.5.x, or 1.6.x studio. An update retains accounts, interviews, responses,
+original recordings, edit settings, profiles, questionnaires, review notes,
+and saved finished versions while adding saved scripts and production plans,
+reviewed batch casting, relevant model scene instructions, and private
+assignment questions. Production rosters and central OpenAI/Claude settings
+are retained. Do not reinstall. No installation/license/
+security key is required.
+
+1. FINISH CURRENT WORK
+
+Finish recordings, exports, and uploads. Save interview information and edits.
+Download any browser recovery clip not yet confirmed on the server, and keep
+the original browsers' site data. Close phone access before updating an active
+installation.
+
+2. BACK UP THE MATCHING APPLICATION, DATABASE, AND STORAGE
+
+Keep the old application files and entire storage directory.
+
+SQLite: use SQLite's backup facility, or pause writes while copying
+interviews.sqlite and any matching interviews.sqlite-wal and
+interviews.sqlite-shm files.
+
+MySQL: export the database and keep it with the matching storage files.
+Preserve storage/config.php, storage/media, and storage/uploads. Browser-local
+pending footage is separate from this server backup.
+
+3. REPLACE APPLICATION FILES, KEEP STORAGE
+
+Upload and extract release 1.7.0 into the SAME application directory. Merge
+and overwrite the PHP pages, includes, assets, and other distribution files.
+Keep all included .htaccess protection files active.
+
+DO NOT DELETE OR REPLACE THE EXISTING STORAGE DIRECTORY WITH AN EMPTY ONE.
+Retain storage/config.php and its database, plus all media and pending uploads.
+The clean ZIP contains no live configuration, administrator, database, or media.
+
+Do not run install.php for an update and do not create another administrator.
+The installer remains locked for an existing installation.
+
+4. OPEN THE STUDIO AND LET THE SCHEMA UPGRADE RUN
+
+Sign in using the existing account. Database additions run automatically on
+the first database access. Existing tables and columns are checked, migration
+changes are serialized, and an interrupted update can retry safely. The final
+database schema version for this release is 16.
+
+The schema 4 accounts migration gives all accounts that existed before it the
+administrator role once. This preserves their previous production access.
+Subsequent sign-ups do not inherit administrator rights. Schema 5 adds private
+scheduling; schema 6 adds explicit public publication; schema 7 adds video
+covers; schema 8 adds production projects, assignments, uploads and review;
+schema 9 adds optional administrator assistant settings and proposals; schema
+10 adds Director coverage and usable sections; schema 11 adds named editable
+cuts and history; schema 12 adds metadata-based edit proposals; schema 13 moves
+existing OpenAI settings into central per-admin AI/provider tables and adds
+Claude support. The encrypted key, model, enabled state, revision and daily limit
+are retained. The legacy key copy is cleared in the same data transaction, so
+removing a key later cannot leave a duplicate behind. The application
+applies the required steps in order. Schema 14 adds production roster revisions,
+member records, and shot-bound open-work notifications. Existing contributors
+with noncancelled/nondeclined assignments are included automatically; the
+owner's producer contribution needs no membership. Older contributors exceeding
+the new 200-member cap are retained, but no new additions above the cap are
+allowed. Removed-member records survive migration replay.
+
+IMPORTANT FOR PREVIOUSLY OPEN PRODUCTIONS: Add the intended models to the
+production roster. Unclaimed open shots are now shared only with included,
+eligible members. The upgrade does not enroll every model account. Existing
+explicit assignments and their footage remain accessible under current role,
+account, assignment and project permissions.
+
+The database account needs table/index creation and ALTER privileges. The
+storage directory must remain writable by PHP. If a request fails, check the
+PHP error log and permissions, correct the cause, and reload. Do not switch
+to an empty database or overwrite configuration to work around the error.
+
+Refresh browser pages after replacing files. Use a hard refresh if an older
+JavaScript/CSS version is still cached.
+
+5. CONFIRM EXISTING WORK AND USE THE NEW TOOLS
+
+Open a previous interview and check its responses, original videos, notes,
+sequence, and saved finished versions. Review Accounts after the upgrade and
+adjust the migrated administrator roles if some people should now be members.
+
+NEW PRODUCTION WORKFLOW
+
+Open productions.php from the studio navigation. Add a project and brief, then
+use Add models to this production to save its included accounts. Create shots
+with direction, orientation, target length, requested takes, references,
+deadlines, and contributor places. Assign specific roster members while planning
+or open eligible shots for roster members to claim after activation.
+
+Models/professionals sign in to my-work.php. My productions lists active projects
+that include them, even before direct assignment. They accept/decline assignments,
+claim available work, record or upload multiple takes, and submit for review.
+Retakes are new attempts; older footage and notes stay in history. Notifications
+point back to the relevant assignment. Each request rechecks current account,
+shot, project, and upload permissions. Concurrent claims enforce capacity.
+
+Review accepted footage from Productions, then prepare/open its editor. Pure
+production cuts can omit question cards; mixed cuts choose per-clip cards and
+can import shortlisted nonprivate footage from owned interviews. Studio and
+approved phones can record into the same shot list. These source records remain
+private until a finished version is explicitly published.
+
+Export, choose Save finished video, then open Finished videos for cover images,
+public contributor credit, and publication. Withdrawing an accepted source or
+its original interview unpublishes affected project cuts; publication rechecks
+source eligibility. Restoring a source does not republish an existing cut.
+
+The optional OpenAI/Claude connections draft editable shot lists and edit
+proposals. Configure them in Admin → AI settings. Existing OpenAI configuration
+is retained; new connections stay off until configured. Core work requires no
+AI key. Only the specified production/editorial text is sent to an assistant.
+Preserve storage/config.php and its app_secret: it protects saved API keys.
+Proposals never automatically assign contributors or publish content.
+
+MEMBERSHIP AND PRIVATE SCHEDULING
+
+Signup is at signup.php; members use account.php for their details and roles.
+Fan/customer access begins immediately. Model and professional requests need
+administrator approval in accounts.php. One account can hold several roles.
+Link an approved model account to its existing production profile when useful.
+Model access does not grant general interview, original-media, or casting-note
+access. Suspension blocks new activity while retaining the person's records.
+
+calendar.php, classes.php, and appointments.php require sign-in. Administrators
+create events and reusable classes, then schedule sessions. Each session keeps
+its own registration and attendance. Eligible roles determine who can see and
+join published events. Administrators and assigned professionals manage rosters
+and attendance; other members see only their own registration.
+
+Minimum capacity is an enrollment target, with no automatic cancellation if
+it is missed. Maximum capacity is enforced; overflow joins the FIFO waitlist,
+and cancellations promote an active, eligible person who has no conflict.
+
+Models can book professional appointments, as can any active member. Configure
+professional service types, durations, buffers, weekly hours, blocked time,
+booking notice, and the advance window before expecting available slots.
+Professionals manage their own services; administrators can manage all.
+Use America/Phoenix studio time. The server stores UTC and checks booking
+conflicts again when saving. Other customers' private appointments are not
+included in the member calendar.
+
+EXPLICIT PUBLICATION AND COVERS
+
+Existing saved videos stay unpublished. The upgrade does not publish original
+interviews or automatically expose an existing video whose tracking status
+was Published. To create a post, open its saved version in Finished videos,
+save the details, and select Publish to fan feed.
+
+watch.php and watch.php?id=... are public. content-api.php returns published
+post data; public-media.php serves published finished videos and covers.
+Private media.php and the administrator production APIs keep their access rules.
+
+Public title/description/model credit are snapshots. Use Update fan post after
+private metadata edits to change them publicly. Cover changes take effect on
+an existing public post immediately. Unpublish removes the post while retaining
+the video. Archiving a finished video or its interview also unpublishes it.
+Restoring either record does not republish; restore required records and publish
+again explicitly.
+
+Each saved finished version can have its own cover. Upload JPG, PNG, or WebP
+up to 5 MiB, with no side above 12,000 pixels and no more than 40 megapixels
+total. Capture current frame saves a JPEG with a maximum 1,920-pixel long edge;
+Remove cover restores default artwork. Cover files belong in storage/media
+with the matching database backup. Set PHP upload_max_filesize to at least 5M
+and post_max_size higher, such as 8M, to allow full-size image requests.
+
+EXISTING PRODUCTION WORKFLOWS
+
+For an upgrade from 1.0.x, participant names are not automatically converted
+to profiles.
+Create a profile and link it from an interview's Session details when useful.
+Saved questionnaires are selected for new interviews. Those interviews retain
+snapshots that do not change when the reusable questionnaire is edited/deleted.
+
+Favorite takes and timestamped review notes are saved with the original take.
+Finished movies are uploaded only when Save finished video is selected after
+rendering. Existing downloads from 1.0.x are not located or imported by the
+upgrade; a fresh render can be saved into the new finished-video library.
+
+QR invitations allow host-approved phones to upload footage. Optional live
+phone views and compatible local cameras can join the recording rotation.
+The host microphone remains the audio source while camera views switch.
+
+6. CHECK YOUR ACTUAL DEVICES
+
+Record/play a short take, save a review note, render a small edit, download it,
+and explicitly save a finished version. Reopen it from Finished videos.
+
+Generate a QR invitation, request and approve a phone, and upload a short clip.
+Test optional live sharing separately on your actual devices/network. Some
+networks may need provider-backed TURN; README.md includes a placeholder
+configuration. No relay service is provisioned by the installer.
+
+See docs/RELEASE_REVIEW.txt for the final automated checks and review findings.
+A prior visual browser walkthrough was rejected by automatic URL security
+review. V1.7 does not retry that blocked preview and does not claim a visual pass. The separate source archive contains regression suites
+and labeled disposable QA previews for local use.
+
+Development checks do not verify live MySQL, HostGator/another actual host,
+physical camera/audio hardware, Safari/iOS, phone-network live media, or a paid
+AI request. Run one short assignment-to-finished-video cycle on your installation.
+Test phone upload separately from optional live sharing.
+
+7. ROLLBACK
+
+There is no automatic downgrade or schema-removal control. For a full rollback,
+stop writes and restore the matching pre-upgrade application, configuration,
+database, and media backup together. A full restore removes work added after
+that backup; preserve any newer media needed before restoring.
+
+Do not mix a database export with unrelated media or a partial configuration.
+
+RETAINED FROM 1.2.0
+
+  - One member account with multiple fan/customer/model/professional/admin roles.
+  - Signup, role approval, profile links, account details, and suspension.
+  - Private events, minimum targets, maximum capacity, and FIFO waitlists.
+  - Reusable classes, sessions, registration, and attendance.
+  - Professional services, hours, blocks, bookings, rescheduling, and cancellation.
+  - Model appointments and America/Phoenix studio scheduling.
+  - Explicit public Watch posts for selected finished versions.
+  - Per-version cover uploads, current-frame capture, and cover removal.
+
+RETAINED FROM 1.1.0
+
+  - Model profiles, uploaded photos, and linked interview history.
+  - Questionnaire builder with fixed per-interview question snapshots.
+  - Favorite-take labels and timestamped review notes.
+  - Explicit finished-video saves, versions, private playback, and downloads.
+  - QR invitations, host approval, and resumable phone uploads.
+  - Optional approved phone live feeds and local-camera switching.
+  - Manual, fixed, or random view selection during continuous 1280 x 720
+    program capture, with the host microphone retained.
+
+RELEASE 1.3.0 ADDS
+
+  - Owned production projects with briefs, product lines and schedule links.
+  - Assigned and open shots, multiple contributors and atomic capacity checks.
+  - My work invitations, claims, recording, uploads and submission history.
+  - Exact assignment/contributor binding and resumable member footage.
+  - Producer review, actionable retakes, favorites and timestamped notes.
+  - In-app assignment, submission and review notifications.
+  - Studio/approved-phone shot targeting and accepted-footage editor handoff.
+  - Interview, production and mixed edits with optional/per-clip question cards.
+  - Original-source provenance and withdrawal checks through publication.
+  - Finished-library production links and editable public contributor credit.
+  - Optional, editable brief-to-shot-list AI proposals with atomic apply.
+
+RELEASE 1.4.0 ADDS
+
+  - Production Director requirements linked to the existing shot workflow.
+  - Distinct accepted coverage counts and usable-duration targets.
+  - Explicit usable sections, preferred selections and in-range first cuts.
+  - Manual 30/60/full/custom cut proposals with question-card timing.
+  - Named editable cuts, independent settings and immutable revision history.
+  - Exact finished-export return links and saved-source validation.
+  - Optional metadata-based AI edit proposals, recovery and shared limits.
+
+Open Productions, choose a project and open Production Director. Add coverage
+requirements, link accepted shots or mark usable sections, prepare a first cut,
+and save it as a named draft. Open that cut in the editor, adjust and export,
+then Save finished video, choose its cover and publish explicitly when ready.
+Check one historical revision and its finished-video return link during the
+installed acceptance test. A completed project permits editorial work; an
+archived project must be restored before creating/editing cuts.
+
+LATER EXTENSIONS
+
+Automatic footage analysis, transcription, and server-side rendering remain
+later work. Metadata-based editorial proposals are included in v1.4. docs/AI_PRODUCTION_NEXT.txt retains the prior read-only Stoneward
+inspection as a design record. The core application and installer do not require
+an AI provider key; the optional assistant uses your configured provider account.
+
+RELEASE 1.5.0 ADDS
+
+- Admin → AI settings (admin.php) with two saved server credentials: OpenAI
+  and Claude (Anthropic), plus optional Claude workspace ID.
+- Provider model dropdowns loaded using saved keys and access-check status.
+  Checks do not generate content or prove billing/structured-output readiness.
+- Independent provider selection for the shot-list and editing assistants.
+- One per-admin generation allowance across assistants/providers.
+- Provider/model identity saved with proposals; old receipts remain recoverable.
+- Encrypted legacy key migration, explicit removal, optimistic save conflicts,
+  current-role checks, and refreshed-CSRF recovery.
+
+After the upgrade, open Admin, confirm the migrated OpenAI settings, and add a
+Claude key if wanted. Save new keys with AI disabled first, load models, choose
+models/providers, then enable and save. Existing productions and edits require
+no provider setup. No additional installation/security key is needed.
+
+
+RELEASE 1.6.0 ADDS
+
+- Add models to this production: searchable selection of multiple approved
+  model/professional accounts, saved roster, current work counts, and removal.
+- My productions for included active projects, even before direct assignment.
+- Open shots shared only with eligible included accounts, with existing capacity
+  rules enforced when they claim. Direct assignments select from the roster.
+- Membership updates in the in-app Updates area; no automatic email or SMS.
+- Separate roster revisions, serialized writes and retry receipts. Roster-only
+  changes do not stale shot-planner proposals or saved editorial fingerprints.
+- Removal blocks new open work while preserving existing assignment/history
+  access. Assignment cancellation remains its own action.
+- Schema 14 backfill of existing noncancelled/nondeclined contributors; no mass
+  enrollment of unassigned accounts, and no automatic return of removed members.
+
+After upgrading, open each active production, review its included members, and
+add the intended recipients of any open shots. Use Accounts to approve missing
+model/professional roles. Test with one included account and one outside account.
+See docs/RELEASE_1_6.txt and docs/ROSTER_API.txt for the complete new behavior.
+
+
+RELEASE 1.7.0 ADDS
+
+- Production plan inside each saved production: direction, deliverables,
+  ordered scenes, action, spoken lines, props, performer roles and linked shots.
+- Manual writing and optional OpenAI/Claude script drafting through the existing
+  Shot-list assistant settings. Review generated scenes before adding them.
+- Open, direct or unassigned distribution chosen while planning, with roster
+  selection, eligible roles, contributor places and Phoenix deadlines.
+- Save/resume and one reviewed atomic creation of pending shots/assignments.
+  Applied scenes keep immutable snapshots; append new scenes or edit the actual
+  created shot. Existing footage and history are preserved.
+- Relevant scene instructions in a model's shot/assignment workspace, without
+  exposing the complete producer plan or other private assignments.
+- Private Questions & replies for the owner and assignee, stable send retries,
+  earlier-message pagination, unread counts and in-app updates.
+- Schema 15 adds plan/snapshot/proposal/receipt storage. Schema 16 adds messages
+  and read cursors. Existing data and schema14 roster memberships are retained.
+
+There is no new installation key, AI credential field or worker requirement.
+After updating, hard-refresh and open Production plan in an existing project.
+Save a small scene, select a roster member, review and create its assignment.
+Check the model's original scene, ask/reply to a question, and complete a take.
+See docs/RELEASE_1_7.txt and docs/PRODUCTION_PLAN_API.txt for the new contracts.
+
+
+=== AZHottie Studio 1.8.0 ===
+BACK UP your installed application and complete storage directory. Replace application files only, preserve existing storage/config.php, database and media, and hard-refresh. The unified header and six editable questionnaire presets appear automatically. Do NOT rerun the installer.

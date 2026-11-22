@@ -1,0 +1,60 @@
+AZHOTTIE STUDIO v1.21.0 — MODEL DASHBOARD + COMPACT LIVE DIRECTOR HEADER
+Release: 2026-11-21
+
+WHAT CHANGED
+- dashboard.php: replaced the photograph-based welcome hero and generic tile list
+  with an owner-scoped stats overview and model production workspace.
+- Statistics: profile page views (total/last 30 days), count of distinct published
+  interviews, published independent videos, and truthful live-appearance status.
+  Live participant appearances are intentionally shown as "not yet tracked"
+  until a verified participation-credit link exists; no number is inferred.
+- Profile views: aggregate daily page views counted from v1.21.0 onward. A
+  browser session counts at most once per profile per 30 minutes. Owners,
+  admins, bot UAs and invisible/private profiles are excluded. IP addresses,
+  user agents and per-visitor IDs are NOT stored in the analytics table.
+- Activity: active video productions, assignments with status and due date,
+  available open shots, independent My Videos draft/review counts, and upcoming
+  confirmed appointments, event registrations and taught classes.
+- Live Director header: removed redundant screen branding and links to Member
+  Live and Saved Shows; removed visible Program title label while retaining the
+  editable title field for broadcast and recording metadata. Compact phone-camera
+  Search is placed at the left and filters cards without disconnecting feeds,
+  clearing the program, or removing active WebRTC streams.
+- Responsive behavior: light statistics cards; clear white activity panels;
+  single document scroll on the dashboard and compact Director toolbar.
+
+INSTALL / UPGRADE
+1. Stop any active broadcasts or uploads, and back up the full website,
+   database and complete protected storage/ tree before the update.
+2. Extract the FULL_DEPLOY.zip archive. Merge the files inside the included
+   azhottie-studio/ directory into your existing site root. Preserve ALL
+   existing storage/, storage/config.php, recordings, uploads and credentials.
+   The only storage asset in the package is storage/.htaccess.
+3. Do not rerun install.php. The existing schema migrates automatically from
+   version 26 to 27, adding member_profile_views_daily. PHP's database user
+   needs permission to create the new table and update studio_schema.
+4. Hard-refresh dashboard.php, user.php, and live-director.php on mobile and
+   desktop (including on connected phones where relevant).
+5. Verify as a model: own profile views/productions/assignments/registrations
+   are visible, no other model's private data is present, and no invented live
+   appearance tally is shown. A first-time model may have zero historical views.
+6. Verify in Director: Search filters tiles by phone name, does not stop live
+   streams or change Program, and Go live / End use the entered show title.
+   Saved live shows are still reachable from the Admin Studio navigation.
+7. Conduct hosted browser, PHP/MySQL, model-permission, live-phone, live fan
+   playback and recorded-show tests before awarding production certification.
+
+AUTOMATED CHECKS PERFORMED
+- 335/335 Node tests passed (including v1.21 dashboard and Director header).
+- 117 PHP files passed php -l syntax checks.
+- Python SQLite fixture checked distinct interviews, per-user aggregate views,
+  member-scoped projects & assignments, bookings, and registered events.
+- Chromium layout tests checked the Director header at 1440, 1024, 720, 390
+  and 320 pixels and dashboard views at 1440, 1024, 390 and 320 pixels.
+  No horizontal overflow; statistic reading cards retained white backgrounds.
+- These tests use local fixtures and do NOT establish live azhottie.com camera,
+  database or viewer performance. Real-production acceptance remains outstanding.
+
+DEPLOYMENT SECURITY
+No private user data, videos, credentials, tests, local screenshots or databases
+are included in FULL_DEPLOY.zip. Originals remain in protected storage.

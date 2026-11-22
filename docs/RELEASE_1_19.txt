@@ -1,0 +1,61 @@
+AZHOTTIE STUDIO 1.19.0 — LIVE SHOW PRODUCTION
+=========================================
+
+This is a FULL deployment: copy the contents of azhottie-studio/ into the
+existing website document root, preserving every existing storage/ file.
+Stop broadcasts and uploads before upgrading. DO NOT rerun install.php.
+No database schema migration is needed for this release. The existing live
+browser-to-browser viewer capacity limit remains six simultaneous viewers.
+
+LIVE DIRECTOR: live-director.php
+- The existing full-viewport Director still has connected phone camera tiles
+  on the left and one Program canvas on the right. Phone previews remain
+  private and moving, subject to real decoding and network health.
+- NEW Compositions tab: Full-screen, split-screen (2 phones), picture-in-
+  picture (2 phones), or four-up grid (4 phones). Assign each live phone to a
+  slot, PREVIEW privately, then explicitly TAKE to Program. Every slot needs
+  a distinct healthy live phone. Lost inputs show inactive slates rather than
+  exposing a stale last image. Camera selections never publish automatically.
+- Scene presets now store composition type and camera source names. Recalling a
+  scene stages its camera layout AND overlays privately; no overlay settings
+  change in Program until the Director explicitly takes the composition.
+- NEW Show Rundown tab: save named, ordered segments (camera composition,
+  prerecorded video, or slate). Up to 12 saved rundowns of 30 segments per
+  Director account. Reorder with arrow controls. Preview a segment privately,
+  then Take next segment into Program. Save operations use revision checks so
+  independent browser edits do not silently overwrite each other.
+- NEW Media Playback tab: select a video from the logged-in Director's private
+  media library, Cue for private preview, and Take video to Program. Its audio
+  goes through the existing Program mixer. Film plays inside the SAME Program
+  canvas received by fans and saved by Record Program. Press Stop playback to
+  return to the prior selected camera/slate. The previous Program remains on
+  air if the next prerecorded clip cannot load or decode.
+- NEW Audience tab: the Director can turn member live chat on or off and
+  moderate messages. Reactions are available to logged-in members, with rate
+  limits. Chat is disabled by default for each broadcast. Display names are
+  anonymous per broadcast; no private casting data or individual source feeds
+  are made public.
+
+FAN LIVE VIEW: live.php
+- Live video remains the first element, with existing published replay library
+  underneath. A signed-in member can open the optional reactions/chat panel
+  while a broadcast is online. Messages render as inert text, not HTML.
+- Both the member live view and Program recording receive the chosen canvas
+  with all actual compositions and overlay changes.
+- Fan connection remains peer-to-peer WebRTC; not a CDN/mass-audience service.
+
+PRIVATE STORAGE
+- Rundowns live under storage/live-director/<owner>/rundowns.json.
+- Member live interactions live temporarily under storage/live-engagement/.
+  Both are denied direct public access by the existing storage/.htaccess.
+- Prerecorded media is checked against the Director's own personal media
+  records. Publishing a private video is never automatic.
+
+NOT INCLUDED YET
+- A dedicated production scheduling/rehearsal notification system, a large-
+  scale video relay/CDN, server-side FFmpeg broadcast mixing, and physical-
+  device/network acceptance certification.
+- Actual phone-camera playback, Program audio, and real recording must still
+  be tested on the installed HTTPS website.
+
+SEE ALSO: docs/RELEASE_REVIEW_1_19.txt and UPGRADE.txt

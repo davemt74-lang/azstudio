@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AZHottie Agent Follow-through Smoke</title><link rel="stylesheet" href="../../assets/universal-header.css"><style>body{background:#f7f5f6!important;color:#302433!important;margin:0;font:14px Arial,sans-serif}.fake-dashboard{margin:30px auto;padding:20px;max-width:960px}.fake-dashboard>div{border:1px solid #eadde4;background:#fff;border-radius:14px;padding:28px}</style></head><body><header id="azh-global-header" class="azh-global-header" data-authenticated="true">
+  <div class="azh-global-header__inner">
+                  <button id="azh-member-menu-button" class="azh-global-header__menu-toggle azh-global-header__menu-toggle--member" type="button" aria-label="Open sidebar navigation" aria-controls="azh-side-navigation" aria-expanded="true" aria-haspopup="false"><span aria-hidden="true">☰</span></button>
+              <a class="azh-global-header__brand" href="dashboard.php" aria-label="AZHottie workspace">AZHOTTIE<span aria-hidden="true">.</span></a>
+                <button type="button" id="azh-aw-bell" class="azh-aw-bell" aria-label="Open agent notifications" aria-controls="azh-aw-drawer" aria-expanded="false" title="Agent notifications">
+        <svg viewBox="0 0 24 24" aria-hidden="true" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+        <span id="azh-aw-badge" class="azh-aw-badge" hidden></span>
+      </button>
+                  <details class="azh-account-menu" id="azh-account-menu">
+        <summary aria-label="Open account menu"><span class="azh-account-avatar">M</span><span class="azh-account-menu__name">Model A</span><span aria-hidden="true" class="azh-account-menu__chevron">⌄</span></summary>
+        <div class="azh-account-menu__panel" role="group" aria-label="Account actions">
+          <strong>Model A</strong><small>AZHottie member</small>
+          <a href="/user.php">My profile</a>
+          <a href="/account-settings.php">Account settings</a>
+                    <a href="/my-media.php">My media gallery</a>          <a href="/my-videos.php">My Videos</a>          <form method="post" action="/logout.php"><input type="hidden" name="csrf" value="743334924ce61261822556364c78562bf34707e46fb209683276511005240a41"><button type="submit">Sign out</button></form>
+        </div>
+      </details>
+      </div>
+</header>
+<div id="azh-aw-shade" class="azh-aw-shade" hidden></div>
+<aside id="azh-aw-drawer" class="azh-aw-drawer" role="dialog" aria-modal="true" aria-labelledby="azh-aw-title" aria-hidden="true" tabindex="-1" hidden data-csrf="743334924ce61261822556364c78562bf34707e46fb209683276511005240a41">
+  <div class="azh-aw-header">
+    <div class="azh-aw-heading"><span class="azh-aw-star" aria-hidden="true">✳</span><div><p>YOUR WORKSPACE AGENT</p><h2 id="azh-aw-title">Agent activity<span>.</span></h2></div></div>
+    <button type="button" class="azh-aw-close" id="azh-aw-close" aria-label="Close agent sidebar">×</button>
+  </div>
+  <nav class="azh-aw-tabs" aria-label="Agent views" role="tablist">
+    <button type="button" class="is-active" id="azh-aw-tab-notifications" role="tab" data-aw-tab="notifications" aria-controls="azh-aw-content" aria-selected="true">Notifications</button>
+    <button type="button" id="azh-aw-tab-history" role="tab" data-aw-tab="history" aria-controls="azh-aw-content" aria-selected="false">History</button>
+    <button type="button" id="azh-aw-tab-brain" role="tab" data-aw-tab="brain" aria-controls="azh-aw-content" aria-selected="false">Brain</button>
+  </nav>
+  <div class="azh-aw-actions"><span id="azh-aw-updated" role="status">Checking for updates…</span><div><button type="button" id="azh-aw-refresh">Refresh</button><button type="button" id="azh-aw-read-all" hidden>Mark all read</button></div></div>
+  <div id="azh-aw-content" class="azh-aw-content" role="tabpanel" aria-labelledby="azh-aw-tab-notifications" tabindex="0"><p class="azh-aw-loading">Loading verified activity…</p></div>
+  <div class="azh-aw-footer"><a href="agent-chat.php">Ask AZHottie Agent <span aria-hidden="true">↗</span></a><small>Assignments and approvals change only when you confirm an action.</small></div>
+</aside>
+<script type="module" src="../../assets/agent-workspace.js?v=1.24.0"></script>
+<script defer src="../../assets/universal-header.js"></script>
+
+<main class="fake-dashboard"><div><h1>Member workspace</h1><p>Agent follow-through testing using synthetic production records</p></div></main></body></html>

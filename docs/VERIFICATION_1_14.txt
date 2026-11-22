@@ -1,0 +1,20 @@
+AZHOTTIE STUDIO v1.14 — VERIFICATION RECORD
+
+Automated JavaScript: 246 tests passed; 0 failed / 0 skipped.
+PHP syntax checks: 92 production PHP files; all passed.
+New focused tests cover phone camera controls and trim rendering contracts,
+calendar light-theme coverage and WCAG AA text contrast, private agent chat
+routes, gallery navigation and viewport-contained video editor layout.
+HTTP smoke: PHP local server returned 200 for the landing page, installer,
+stylesheet/JavaScript resources and favicon, including cache-busted v1.14 URLs.
+Archive checks: complete application zip includes installer, .htaccess and
+all assets; application files match verified tree; 644 files, 755 folders;
+private installed config/database/recordings are not included.
+
+UNVERIFIED: no PHP PDO SQLite/MySQL driver in the local test environment;
+therefore application database migrations (schema 21 to 22), actual login,
+end-to-end chat provider calls, deployed mobile Safari recording, WebRTC
+phone share/connection and video trim export, real calendar rendering and
+HostGator production permissions must be checked on azhottie.com.
+
+DEPLOY: preserve existing storage/ and database; do not rerun install.php.

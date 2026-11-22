@@ -1,0 +1,19 @@
+AZHOTTIE 1.16.0 — RELEASE REVIEW
+
+Scope: dedicated full-screen Live Director; member live player first; saved
+broadcasts with owner/admin archive management, uploaded covers, member replay.
+
+Privacy gates checked:
+- authenticated fan replay list reads only published recordings of active owners
+- member playback route validates saved-recording ownership or publication
+- editor private recordings cannot be published by an editor role
+- live-recording files are streamed by an authenticated PHP endpoint, not public
+  storage URLs; byte-range requests are constrained to the file size
+- uploads accept actual JPG/PNG/WebP and cap bytes and image dimensions
+- covers and metadata edits use revision equality, write atomically by version
+- old recordings migrate to private (published_at NULL)
+
+Local checks: npm test (266/266); php -l every PHP file (100); php tests/live_contract.php
+(9 checks). Schema upgrade and WebRTC are unverified in the local environment
+because the PHP build lacks SQLite/MySQL PDO drivers and headless browser
+preview timed out. Do NOT score the hosted release 10/10 until hosted acceptance.

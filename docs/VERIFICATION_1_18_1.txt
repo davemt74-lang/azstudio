@@ -1,0 +1,15 @@
+AZHOTTIE STUDIO v1.18.1 — RELEASE CHECKS
+
+Full JS test suite: 300 passed, 0 failed, 0 skipped
+PHP production syntax: 102 checked, 0 failed
+JavaScript assets syntax: all checked, 0 failed
+Focused Live Director layout and camera tests: 8 passed
+
+Checks include private previews, health gating, explicit Broadcast now,
+Program-only fan output, audio sharing opt-in, tabbed control interface,
+full-viewport CSS and wider shared header. No changes to schema or API.
+
+NOT YET VERIFIED: live rendering on azhottie.com, physical connected phone
+or USB camera, WebRTC traversing the production network, HostGator database,
+fan playback, and actual recorded media/audio. Local browser UI preview is
+restricted by its environment. Static HTTP asset reachability is verified.

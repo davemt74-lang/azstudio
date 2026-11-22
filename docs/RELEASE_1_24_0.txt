@@ -1,0 +1,83 @@
+AZHOTTIE STUDIO v1.24.0 — AGENT ASSIGNMENT FOLLOW-THROUGH
+21 November 2026
+
+Shipped functionality
+---------------------
+- Account-scoped automated in-app reminders for real, active roster assignments:
+  * A model's assignment remains unanswered 24 hours: model reminder.
+  * The same assignment remains unanswered 48 hours: production-owner escalation.
+  * Accepted/changes-requested assignment due within 72 hours: model reminder.
+  * Accepted/changes-requested assignment past due: model and production-owner notices.
+  * Submitted assignment still awaiting review 48 hours later: production-owner notice.
+- Admin Brain recommends specific unanswered/overdue items and links to the
+  verified assignment. Admin can explicitly confirm sending a model reminder.
+- Admin Brain has "Check assignments now", restricted to productions the admin
+  actually owns. The status shows the last observed scheduled cron scan,
+  or explicitly says that scheduled checks have not run yet.
+- Notifications are stored in the existing recipient-scoped Agent activity ledger.
+  The actor displays as AZHottie Agent, not as the model or administrator.
+  Identical checks do not produce duplicate alerts; the assigned status,
+  revision, due date, and submission cycle determine reminder uniqueness.
+  Manually sent reminders are additionally throttled to one per assignment
+  per twelve hours, and require CSRF, admin role, ownership and current revision.
+- Assignment actions remain exclusively in the original Work API, with its
+  roster, permissions, status and revision rules. Agent follow-through does not
+  change assignment statuses, publish videos or contact external channels.
+- When canonical assignment status transitions occur, stale unread automated
+  reminders are marked read but remain in History for audit.
+
+How to enable truly scheduled checks on shared hosting
+-------------------------------------------------------
+The application cannot silently install a server cron job. On the hosting
+account, enable one private cPanel Cron Job (once per hour):
+  Minute: 7    Hour: *    Day: *    Month: *    Weekday: *
+  Command:
+    /path/to/php /absolute/path/to/azhottie/includes/agent-followthrough-cron.php
+Use the actual PHP CLI binary and application path shown by your host.
+The script is CLI-only, located under the includes/ directory protected by
+includes/.htaccess, and requires the existing private storage/config.php.
+It prints a small JSON summary (counts only) to cron output. Configure host
+mail/logging or redirect the output to a private log outside public_html.
+
+Scheduled scans cover eligible assignments across production owners. Admin
+"Check assignments now" only checks the signed-in admin's own productions.
+Each scan uses a private process lock, transaction, unique delivery keys and
+bounded pagination. The maximum per run is 10,000 current assignments; if that
+bound is reached the CLI exits 2 and reports truncated=true. Review workload
+and increase scheduling frequency or batch bounds when that happens. An empty
+cron status means no scheduled run has been verified, not that it is active.
+
+Upgrade
+-------
+1. Back up site files, database and entire protected storage/ directory.
+2. Finish active uploads/recordings; extract FULL_DEPLOY into the existing
+   AZHottie installation. Preserve private storage, config and uploaded media.
+3. Do NOT rerun install.php. Existing schema 29 migrates to 30 automatically
+   on first application/cron DB connection, adding agent_followthrough_deliveries
+   and agent_followthrough_runs. The DB user needs CREATE TABLE and UPDATE rights.
+4. Hard-refresh any signed-in model/admin page to load the new Brain controls.
+5. Verify "Check assignments now" with an admin who owns an active production,
+   then configure the private hourly cron and verify a real last-run timestamp.
+6. Test model receive/acknowledge notification, status transitions, revision
+   changes, admin/manual reminder throttling and a second owner account.
+
+Tested in isolated build
+------------------------
+- Node full JavaScript regression suite and dedicated v1.24 UI/API tests.
+- PHP pure reminder rule scenarios, CLI entry-point and PHP syntax lint.
+- SQLite SQL isolation fixture for active roster, owner boundaries, foreign
+  keys and UNIQUE reminder constraints; existing v1.23 event ledger fixture.
+- Chromium desktop/tablet/mobile (1440, 768, 390 and 320px) for admin/model
+  roles, with mocked API responses, confirmed CSRF POST payloads, confirmation
+  button behavior, no console errors and no horizontal overflow.
+- ZIP integrity, source-to-deployment parity and complete file retention check.
+
+Outstanding before production certification
+-------------------------------------------
+- No real azhottie.com MySQL migration, cron invocation, connected user account,
+  production notification delivery or host concurrency was exercised here.
+- The user-reported phone-to-fan Live Director video freeze still requires a
+  full separate-device broadcast acceptance test on the deployed site.
+- GitHub: The connected account does not expose an identifiable AZHottie source
+  repository, so this release includes a local Git commit and portable patch
+  instead of claiming a hosted PR or merge that did not occur.
