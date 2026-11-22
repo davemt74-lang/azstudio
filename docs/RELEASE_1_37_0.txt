@@ -1,0 +1,35 @@
+AZHottie Studio v1.37.0 — Guarded Provider Refunds, Return Labels, Stripe Connect Transfers
+
+The system adds three separately gated and STAFF-APPROVED provider actions:
+1. Stripe Refund API for an authorized, inspected return marked refund_approved. Only an exact merchandise refund amount from a paid Stripe order is allowed. Private per-refund maximum applies. A POST refund request is logged as pending before provider contact, to prevent duplicate charges. After an uncertain result, only GET reconciliation is allowed.
+2. EasyPost return label rates and purchases for an authorized return associated with a delivered domestic Stripe shipment. The staff must verify parcel dimensions and separately authorize a specific carrier rate, with separate private return-label purchase switch and purchase maximum. Label is available to staff for secure delivery to verified customer; no automatic email.
+3. Stripe Connect platform transfer to an EXISTING creator acct_ account, linked by admin only after live Stripe GET verifies details_submitted, payouts_enabled and active transfers capability. The approved commission batch is checked for returns/refunds and exact amount before funds move. A platform transfer is NOT a confirmed bank payout; ledger state transferred differs from older manual-paid confirmation.
+
+Security and operational contracts
+- Never store provider secrets, complete creator banking details, customer shipping address or recipient PII in public replies, creator dashboards, Agent Chat, Brain or notification text.
+- Three irreversible actions each have a unique database operation and a durable pending record before the network POST. Duplicate submissions/unknown timeouts do not cause a second charge. Provider reconciliation is GET-only and can verify a specific returned provider ID and metadata.
+- Refund reconciliation requires a signed charge.refunded event with the initiated exact refund ID, amount and private return metadata. A generic unrelated refund event cannot mark this case reconciled. No money moves simply by submitting a return request or by approving a refund.
+- Existing shared Commerce Agent notifications, History, Chat, Brain and hourly followthrough show non-PII actions requiring review; Agent never initiates a charge on its own.
+- The prior settlement system accounts for Stripe Connect transfers as already allocated creator commissions so it cannot disburse another payment for the same sale. Refunds after transfer create visible settlement overpayment holds.
+
+Private configuration defaults OFF
+Stripe existing TEST key, webhook secret and base URL are required.
+AZH_STRIPE_ALLOW_REFUND_ACTIONS=0 default. Set 1 only for authorized staff-refund workflows.
+AZH_STRIPE_REFUND_MAX_CENTS=50000 default max per refund, integer cents.
+AZH_STRIPE_ALLOW_CONNECT_TRANSFERS=0 default. Set 1 only after verified creator account onboarding.
+AZH_STRIPE_CONNECT_MAX_TRANSFER_CENTS=50000 default max platform transfer.
+EasyPost existing test API key and configured USPS/UPS/FedEx accounts required.
+AZH_EASYPOST_ALLOW_LABEL_PURCHASES=0 default. NEW AZH_EASYPOST_ALLOW_RETURN_LABEL_PURCHASES=0 default. Both must be explicitly 1 for staff return-label purchase.
+Production Stripe/EasyPost keys require the existing explicit allow-live flags as well.
+The platform cannot guarantee provider funds, valid carrier rates, postage availability, or bank settlement.
+
+Scope limitations
+No automated return label email, Stripe Connect onboarding, automatic creator bank payouts, tax filings, international returns, partial cash refunds, automatic refund shipping/tax, item variants or automatic physical inventory inspection. The merchant must issue cash/external refunds manually and staff must verify actual physical goods.
+
+Deployment and verification
+1. Back up entire production database, protected storage/config.php, site code, uploaded media and images. Preserve private files; do not rerun install.php.
+2. Deploy application ZIP; first installed boot upgrades schema 42 to 43. Confirm hosted MySQL migration and prior Commerce compatibility.
+3. In Stripe TEST, approve and initiate refund, test duplicate and timeout, GET reconcile and signed matching charge.refunded event, then finalize staff return case.
+4. In EasyPost TEST, approve a delivered domestic return, compare real carrier rates, buy ONE test return label, test timeout/GET reconcile, and confirm secure staff-only label URL.
+5. Link an existing Stripe Connect TEST account with active transfer capability. Draft/approve commission batch, authorize test transfer, verify transfer_group and recipient, prevent duplicate, and separately verify connected-account bank payouts via Stripe.
+6. Run PHP/SQLite, role privacy, Chrome mobile/desktop and complete release ZIP gates on the final commit. Production approval requires live-host test-account evidence and explicit financial operator confirmation.

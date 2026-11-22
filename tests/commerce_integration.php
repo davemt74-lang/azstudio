@@ -41,7 +41,8 @@ az_upgrade_commerce_fulfillment_schema($db);$check(az_schema_version($db)===39,'
 az_upgrade_commerce_carrier_schema($db);$check(az_schema_version($db)===40,'carrier migration v40');
 az_upgrade_commerce_customer_shipping_schema($db);$check(az_schema_version($db)===41,'customer carrier quote schema v41');
 az_upgrade_commerce_settlement_schema($db);$check(az_schema_version($db)===42,'return and settlement schema v42');
-az_upgrade_commerce_fulfillment_schema($db);$check(az_schema_version($db)===42,'old migration replay preserves v42');
+az_upgrade_commerce_provider_schema($db);$check(az_schema_version($db)===43,'provider financial operation schema v43');
+az_upgrade_commerce_fulfillment_schema($db);$check(az_schema_version($db)===43,'old migration replay preserves v43');
 $expect(static fn()=>az_commerce_product_save($model,['title'=>'Unauthorized','priceCents'=>50]),'role_required');
 $expect(static fn()=>az_commerce_url('http://example.com/checkout'),'invalid_checkout_url');
 $created=az_commerce_product_save($admin,['title'=>'Featured sample','description'=>'A model-approved product',

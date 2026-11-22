@@ -43,8 +43,9 @@ $assert(az_schema_version($db)===39,'v1.33 migration');
 az_upgrade_commerce_carrier_schema($db);$assert(az_schema_version($db)===40,'carrier schema v40');
 az_upgrade_commerce_customer_shipping_schema($db);$assert(az_schema_version($db)===41,'customer carrier quote schema v41');
 az_upgrade_commerce_settlement_schema($db);$assert(az_schema_version($db)===42,'return and settlement schema v42');
+az_upgrade_commerce_provider_schema($db);$assert(az_schema_version($db)===43,'provider financial operation schema v43');
 az_upgrade_commerce_fulfillment_schema($db);
-$assert(az_schema_version($db)===42,'older schema migration replay preserves v42');
+$assert(az_schema_version($db)===43,'older schema migration replay preserves v43');
 $settings=[
     'sku'=>'CLOTH-001','stockMode'=>'tracked','stockOnHand'=>2,'stockRevision'=>0,
     'stockAdjustmentReason'=>'','lowStockThreshold'=>1,'shippingEnabled'=>true,

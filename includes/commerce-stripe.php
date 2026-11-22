@@ -443,6 +443,7 @@ function az_stripe_apply_refund(PDO $db,array $charge): void
         $order['title'].' · Signed provider refund changed recognized revenue and commission liability.',true);
     if(!empty($order['model_id']))az_commerce_queue('creator-refund:'.$order['id'].':'.$refunded,(int)$order['owner_id'],(int)$order['model_id'],
         'stripe_refund','Affiliate commission adjusted','Stripe confirmed a refund. Your estimated commission was recalculated from the remaining paid amount.','commerce.php',true);
+    az_provider_refund_signed_order($db,$paymentId,$charge);
 }
 function az_stripe_apply_dispute(PDO $db,array $dispute): void
 {

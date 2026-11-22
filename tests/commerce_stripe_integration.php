@@ -40,6 +40,7 @@ az_upgrade_commerce_fulfillment_schema($db);$ok(az_schema_version($db)===39,'inv
 az_upgrade_commerce_carrier_schema($db);$ok(az_schema_version($db)===40,'carrier schema v40');
 az_upgrade_commerce_customer_shipping_schema($db);$ok(az_schema_version($db)===41,'customer carrier quote schema v41');
 az_upgrade_commerce_settlement_schema($db);$ok(az_schema_version($db)===42,'return and settlement schema v42');
+az_upgrade_commerce_provider_schema($db);$ok(az_schema_version($db)===43,'provider financial operation schema v43');
 $ok(az_stripe_config()['ready']&&az_stripe_config()['mode']==='test','Stripe test configuration');
 $bad='{"id":"evt_bad","object":"event"}';
 $ok(!az_stripe_verify_signature($bad,'t=1700000000,v1='.str_repeat('0',64),'whsec_fixture_signing_secret'), 'bad signature rejected');

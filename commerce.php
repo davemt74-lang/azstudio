@@ -14,7 +14,8 @@ $admin=az_has_role($user,'admin');
 <link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css">
 <link rel="stylesheet" href="assets/commerce.css?v=1.36.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0">
-<link rel="stylesheet" href="assets/commerce-returns.css?v=1.36.0"></head>
+<link rel="stylesheet" href="assets/commerce-returns.css?v=1.36.0">
+<link rel="stylesheet" href="assets/commerce-providers.css?v=1.37.0"></head>
 <body data-page="commerce"><?php az_render_universal_header('commerce',$user);az_render_member_layout_open('commerce',$user); ?>
 <main class="azh-commerce" id="azh-commerce" data-role="<?= $admin?'admin':'model' ?>" data-csrf="<?= az_h(az_csrf_token()) ?>">
   <header class="azh-commerce-hero"><div><p class="azh-eyebrow">AZHOTTIE · COMMERCE AGENT</p><h1>Commerce<span>.</span></h1>
@@ -252,6 +253,7 @@ $admin=az_has_role($user,'admin');
 </main>
 <?php az_render_member_layout_close(); ?><script type="module" src="assets/commerce.js?v=1.36.0"></script><?php if($admin): ?><script type="module" src="assets/commerce-local-admin.js?v=1.32.0"></script><script type="module" src="assets/commerce-fulfillment-admin.js?v=1.33.0"></script>
 <script type="module" src="assets/commerce-carrier-admin.js?v=1.34.0"></script><?php endif; ?>
-<?php if($admin): ?><script type="module" src="assets/commerce-returns-admin.js?v=1.36.0"></script><?php endif; ?>
-<script type="module" src="assets/commerce-settlements.js?v=1.36.0"></script>
+<?php if($admin): ?><script type="module" src="assets/commerce-returns-admin.js?v=1.37.0"></script><?php endif; ?>
+<script type="module" src="assets/commerce-settlements.js?v=1.37.0"></script>
+<script type="module" src="assets/commerce-provider-actions.js?v=1.37.0"></script>
 </body></html>
