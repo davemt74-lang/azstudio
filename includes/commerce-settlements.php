@@ -125,7 +125,7 @@ function az_payout_batch_row(string $id): array
 }
 function az_payout_batches(array $user): array
 {
-    az_commerce_model($user);
+    az_agent_workspace_assert($user);
     $admin=az_has_role($user,'admin');$db=az_db();
     $sql="SELECT b.*,u.name AS model_name FROM commerce_payout_batches b
        JOIN users u ON u.id=b.model_id ".($admin?'':'WHERE b.model_id=? ').
@@ -259,7 +259,7 @@ function az_payout_change(array $user,array $body): array
 }
 function az_payout_role_state(array $user): array
 {
-    az_commerce_model($user);
+    az_agent_workspace_assert($user);
     if(az_has_role($user,'admin')){
         return ['role'=>'admin','models'=>az_payout_models($user),'batches'=>az_payout_batches($user),
             'holdDays'=>az_payout_hold_days(),'notice'=>'Payouts are external manual records. AZHottie never transfers funds.'];

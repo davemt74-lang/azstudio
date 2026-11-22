@@ -420,10 +420,14 @@ function az_commerce_order_review(array $user,array $body): array
            ||($decision==='cancelled'&&$row['state']!=='recorded')
            ||($decision==='refunded'&&$row['state']!=='paid'))
             throw new AzHttpError(409,'Order already reconciled or changed.','revision_conflict');
-        $commission=$decision==='paid'?intdiv((int)$row['amount_cents']*(int)$row['commission_bps'],10000):(int)$row['commission_cents'];
+        $commission=$decision==='paid'?intdiv((int)$row['amount_cents']*(int)$row['commission_bps'],10000):
+            ($decision==='refunded'?0:(int)$row['commission_cents']);
         $paidAt=$decision==='paid'?az_now():$row['paid_at'];
-        $q=$db->prepare('UPDATE commerce_orders SET state=?,evidence_reference=?,commission_cents=?,paid_at=?,reviewed_by=?,updated_at=? WHERE id=? AND state=?');
-        $q->execute([$decision,$evidence,$commission,$paidAt,$actor,az_now(),$id,$row['state']]);
+        $q=$db->prepare('UPDATE commerce_orders SET state=?,evidence_reference=?,commission_cents=?,
+            refunded_cents=?,paid_at=?,reviewed_by=?,updated_at=? WHERE id=? AND state=?');
+        $q->execute([$decision,$evidence,$commission,
+            $decision==='refunded'?(int)$row['amount_cents']:(int)$row['refunded_cents'],
+            $paidAt,$actor,az_now(),$id,$row['state']]);
         if($q->rowCount()!==1)throw new AzHttpError(409,'Order changed. Reload.','revision_conflict');
         az_commerce_queue_admins('order:'.$id.':'.$decision,$actor,'order_'.$decision,
             'Commerce order '.$decision,$row['title'].' · The administrator recorded the provider reconciliation result.',true);
