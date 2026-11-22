@@ -410,8 +410,11 @@ function az_stripe_apply_refund(PDO $db,array $charge): void
     $q->execute([$paymentId]);$order=$q->fetch();
     if(!$order)throw new AzHttpError(409,'Payment not yet recorded. Stripe should retry.','payment_pending');
     $amount=(int)$order['amount_cents'];
-    if($refunded>$amount)throw new AzHttpError(409,'Refund exceeded original paid amount.','refund_mismatch');
-    $refunded=max((int)$order['refunded_cents'],$refunded);
+    $providerTotal=(int)($order['provider_total_cents']?:$amount);
+    if($refunded>$providerTotal)throw new AzHttpError(409,'Refund exceeded original Stripe payment.','refund_mismatch');
+    // Stripe refunds may include tax/shipping; this ledger tracks merchandise
+    // refund and reduces affiliate earnings conservatively, never below zero.
+    $refunded=max((int)$order['refunded_cents'],min($amount,$refunded));
     if($refunded===(int)$order['refunded_cents'])return;
     $remaining=$amount-$refunded;
     $state=in_array($order['state'],['disputed','reversed'],true)?$order['state']:($remaining===0?'refunded':'partially_refunded');
