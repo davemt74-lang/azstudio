@@ -17,3 +17,20 @@
   .azh-commerce-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:visible}
   .azh-commerce-tabs button{min-width:0;white-space:normal;line-height:1.2;min-height:44px;text-align:center;padding:10px}
 }
+
+.azh-commerce-product-local{background:#faf6f8;border:1px solid #e6d9e2;border-radius:14px;padding:16px}
+.azh-commerce-product-local summary{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;cursor:pointer;list-style:none;font-size:15px}
+.azh-commerce-product-local summary::-webkit-details-marker{display:none}
+.azh-commerce-product-local summary:after{content:'▾';color:#a75770}
+.azh-commerce-product-local[open] summary:after{content:'▴'}
+.azh-commerce-product-local summary span{font-size:12px;color:#806877}
+.azh-commerce-local-fields{display:grid;gap:13px;padding-top:17px}
+.azh-commerce-checkbox{display:flex!important;align-items:center;gap:10px;line-height:1.4}
+.azh-commerce-checkbox input[type=checkbox]{width:20px!important;min-width:20px;height:20px;accent-color:#ab4262}
+.azh-commerce-product-local .azh-commerce-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+.azh-commerce-panel [data-panel=local]{padding:8px}
+.azh-local-admin-tax{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.azh-local-admin-tax input{width:110px;border:1px solid #cec6d0;padding:10px;border-radius:10px}
+#azh-local-private-details{white-space:pre-wrap;overflow-wrap:anywhere}
+#azh-local-admin-status[data-error=true]{color:#b1384e}
+@media(max-width:600px){.azh-commerce-product-local .azh-commerce-row{grid-template-columns:minmax(0,1fr)}}
