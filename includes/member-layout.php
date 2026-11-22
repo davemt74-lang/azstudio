@@ -100,22 +100,20 @@ function az_render_member_layout_close(bool $withAgent = true): void
     ?>
     <?php if ($withAgent): ?>
     <div class="azh-agent-dock" id="azh-agent-dock" data-agent-dock data-csrf="<?= az_h(az_csrf_token()) ?>">
-      <form id="azh-agent-compose" class="azh-agent-compose" aria-label="Ask AZHottie Agent">
-        <label class="azh-agent-input-label" for="azh-agent-input">Ask AZHottie Agent</label>
+      <form id="azh-agent-compose" class="azh-agent-compose" aria-label="AZHottie message composer">
         <div class="azh-agent-compose-row">
           <textarea id="azh-agent-input" rows="1" maxlength="2200" placeholder="Message AZHottie Agent…" aria-label="Message AZHottie Agent"></textarea>
           <button type="submit" id="azh-agent-send" aria-label="Send message" title="Send message"><span aria-hidden="true">↑</span></button>
         </div>
       </form>
-      <div class="azh-agent-dock-meta"><span>Private member chat · AI-generated replies may be inaccurate</span><a href="agent-chat.php">Open chat</a></div>
     </div>
     <?php endif; ?>
   </div>
 </div>
 <script defer src="assets/member-layout.js"></script>
 <?php if ($withAgent): ?>
-<link rel="stylesheet" href="assets/agent-chat.css?v=1.14.0">
-<script type="module" src="assets/agent-chat.js?v=1.14.0"></script>
+<link rel="stylesheet" href="assets/agent-chat.css?v=1.29.2">
+<script type="module" src="assets/agent-chat.js?v=1.29.2"></script>
 <?php endif; ?>
 <?php
 }
