@@ -34,7 +34,8 @@ function az_upgrade_commerce_local_schema(PDO $db): void
         $db->exec("CREATE TABLE IF NOT EXISTS commerce_local_orders (
             order_id CHAR(32) PRIMARY KEY, request_key CHAR(64) NOT NULL UNIQUE,
             cart_hash CHAR(64) NOT NULL, receipt_hash CHAR(64) NOT NULL UNIQUE,
-            method VARCHAR(12) NOT NULL, delivery_zip CHAR(5) NULL,
+            method VARCHAR(12) NOT NULL, channel VARCHAR(12) NOT NULL DEFAULT 'shop',
+            source_ref CHAR(32) NULL, delivery_zip CHAR(5) NULL,
             contact_ciphertext TEXT NOT NULL, pickup_snapshot TEXT NOT NULL,
             delivery_fee_cents BIGINT NOT NULL DEFAULT 0,
             subtotal_cents BIGINT NOT NULL, tax_cents BIGINT NULL,

@@ -95,11 +95,11 @@ function az_local_create_order(array $body): array
         $pickupSnapshot=$method==='pickup'
             ?implode("\n",array_filter([(string)$s['pickupLocation'],(string)$s['pickupAddress'],
                 (string)$s['pickupHours'],(string)$s['pickupInstructions']],static fn($v)=>$v!=='')):'';
-        $db->prepare("INSERT INTO commerce_local_orders(order_id,request_key,cart_hash,receipt_hash,method,delivery_zip,
+        $db->prepare("INSERT INTO commerce_local_orders(order_id,request_key,cart_hash,receipt_hash,method,channel,source_ref,delivery_zip,
             contact_ciphertext,pickup_snapshot,delivery_fee_cents,subtotal_cents,status,payment_status,created_at,updated_at)
-            VALUES(?,?,?,?,?,?,?,?,?,?,'pending','due',?,?)")
-          ->execute([$id,$key,$cart,hash('sha256',$receipt),$method,$method==='delivery'?$contact['zip']:null,
-            az_local_encrypt($contact),$pickupSnapshot,$fee,$subtotal,$now,$now]);
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,'pending','due',?,?)")
+          ->execute([$id,$key,$cart,hash('sha256',$receipt),$method,$channel,$sourceRef,
+            $method==='delivery'?$contact['zip']:null,az_local_encrypt($contact),$pickupSnapshot,$fee,$subtotal,$now,$now]);
         az_commerce_queue_admins('cash-request:'.$id,$actor,'cash_order_request',
             'Cash order request needs review',
             $product['title'].' · '.($method==='pickup'?'Local pickup':'Local delivery').
