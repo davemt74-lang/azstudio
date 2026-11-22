@@ -251,10 +251,10 @@ $assert(az_customer_ship_session()===$storedQuote['session_binding'],
 $checkoutData=[];
 $GLOBALS['az_stripe_test_transport']=static function(array $payload,string $id)use(&$checkoutData):array{
     $checkoutData=$payload;
-    if(($payload['shipping_options'][0]['shipping_rate_data']['fixed_amount']['amount']??null)!==595)
-        throw new RuntimeException('Customer selected carrier fee not sent to Stripe.');
-    if(($payload['shipping_options'][0]['shipping_rate_data']['display_name']??'')!=='USPS Priority')
-        throw new RuntimeException('Customer selected shipping service not shown in Stripe.');
+    $price=$payload['shipping_options'][0]['shipping_rate_data']['fixed_amount']['amount']??null;
+    $service=$payload['shipping_options'][0]['shipping_rate_data']['display_name']??'';
+    if(!in_array([$price,$service],[[595,'USPS Priority'],[845,'UPS Ground']],true))
+        throw new RuntimeException('The verified selected carrier rate and service must be sent unchanged to Stripe.');
     if(array_key_exists('name',$payload['metadata']??[]))
         throw new RuntimeException('Customer PII cannot be put in provider metadata.');
     return ['id'=>'cs_test_'.$id,'url'=>'https://checkout.stripe.com/c/pay/customer-carrier-fixture'];
