@@ -25,7 +25,7 @@ test('director metrics clamp and validate all client measurements',()=>{
 test('authorized agent deep links include live Director but reject redirects',()=>{
   assert.equal(safeAgentHref('live-director.php'),'live-director.php');
   for(const href of ['https://bad.site/live-director.php','live-director.php#out','live-director.php?next=//bad.site'])assert.equal(safeAgentHref(href),null);
-  assert.match(source('includes/agent-workspace.php'),/live-director\|calendar\|appointments\)\\.php/);
+  assert.match(source('includes/agent-workspace.php'),/live-director\|calendar\|appointments\|my-editor/);
 });
 test('live reporter validates session ownership and does not accept viewer camera metrics',()=>{
   const api=source('live-api.php'),php=source('includes/live-agent.php');

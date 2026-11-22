@@ -1,0 +1,11 @@
+.vagent-section{border-top:1px solid #43546b;padding:1rem 0 .5rem;margin-top:1.25rem}
+.vagent-section h3{font-size:1rem;margin:.8rem 0 .55rem;color:#f0f6ff}
+.vagent-section .vs-btn{white-space:normal;max-width:100%;text-decoration:none}
+.vagent-section .vs-action-group{display:flex;flex-wrap:wrap;gap:.45rem;margin:.6rem 0}
+.vagent-section .vs-label textarea{width:100%;resize:vertical;box-sizing:border-box;border:1px solid #7894aa;background:#102034;color:#fff;border-radius:6px;padding:.55rem}
+.vagent-list{display:grid;gap:.4rem;padding:.4rem 0;margin:0;list-style-position:inside;overflow-wrap:anywhere}
+.vagent-card{background:#192e45;color:#eff6fe;border:1px solid #60778e;border-radius:8px;padding:.6rem;line-height:1.45}
+.vagent-card .vs-action-group{margin-bottom:0}.vagent-card strong{display:block}
+.vagent-section #vagent-preview{padding:.7rem;border:1px solid #8cb7ce;border-radius:8px;margin:.7rem 0;background:#1c334a}
+.vagent-section #vagent-status{min-height:2rem;line-height:1.5}
+@media(max-width:640px){.vagent-section{padding:.7rem 0}.vagent-section .vs-action-group>*{flex:1 1 150px}}

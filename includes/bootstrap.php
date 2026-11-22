@@ -4,7 +4,7 @@ declare(strict_types=1);
 const AZ_ROOT = __DIR__ . '/..';
 const AZ_STORAGE = AZ_ROOT . '/storage';
 const AZ_CONFIG_FILE = AZ_STORAGE . '/config.php';
-const AZ_VERSION = '1.27.0';
+const AZ_VERSION = '1.28.0';
 
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/production.php';
@@ -15,6 +15,7 @@ require_once __DIR__ . '/agent-scheduling.php';
 require_once __DIR__ . '/personal-media.php';
 require_once __DIR__ . '/model-videos.php';
 require_once __DIR__ . '/personal-edits.php';
+require_once __DIR__ . '/agent-video.php';
 require_once __DIR__ . '/personal-phone.php';
 require_once __DIR__ . '/social-profiles.php';
 require_once __DIR__ . '/member-dashboard.php';

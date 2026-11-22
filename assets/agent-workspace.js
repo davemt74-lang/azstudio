@@ -5,7 +5,7 @@ export function badgeLabel(count) {
 }
 export function safeAgentHref(href) {
   // Keep all activity and suggestion destinations on known, same-site workspace pages.
-  return typeof href==='string' && /^(?:my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?$/.test(href)?href:null;
+  return typeof href==='string' && /^(?:my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments|my-editor)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?$/.test(href)?href:null;
 }
 export function validWorkAction(action) {
   if(!action || typeof action!=='object')return false;
@@ -130,6 +130,18 @@ function mountAgentWorkspace(root=document) {
         report.append(block);
       }
       content.append(report);
+    }
+    if(brain.video){
+      const video=brain.video,section=make('section','azh-aw-followthrough');
+      section.append(text('p','VIDEO PRODUCTION & EDITING','azh-aw-eyebrow'),text('h3','From source footage to review'));
+      section.append(text('p',video.basis,'azh-aw-meta'));
+      if(state.role==='admin'){
+        section.append(link('Review model video submissions ↗','user-submissions.php'),link('Manage production edits ↗','productions.php'));
+      }else{
+        section.append(link('Review editing proposals ↗','my-editor.php'),link('Manage submissions ↗','my-videos.php'));
+      }
+      section.append(link('Discuss production with Agent Chat ↗','agent-chat.php?topic=video'));
+      content.append(section);
     }
     if(state.role==='admin'){
       const section=make('section','azh-aw-followthrough');

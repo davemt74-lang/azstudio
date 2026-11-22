@@ -27,8 +27,8 @@ if(root){
   const snap=()=>JSON.stringify({clips,settings});
   function resetHistory(){history.entries=[snap()];history.index=0;historyButtons();}
   function historyButtons(){$('vs-undo').disabled=busy||history.index<=0;$('vs-redo').disabled=busy||history.index>=history.entries.length-1;}
-  function markDirty(record=true){dirty=true;saveLabel();if(record){const state=snap();if(history.entries[history.index]!==state){history.entries=history.entries.slice(0,history.index+1);history.entries.push(state);if(history.entries.length>maxHistory)history.entries.shift();history.index=history.entries.length-1;}}historyButtons();}
-  function clean(){dirty=false;saveLabel();}
+  function markDirty(record=true){dirty=true;root.dataset.videoDirty='true';saveLabel();if(record){const state=snap();if(history.entries[history.index]!==state){history.entries=history.entries.slice(0,history.index+1);history.entries.push(state);if(history.entries.length>maxHistory)history.entries.shift();history.index=history.entries.length-1;}}historyButtons();}
+  function clean(){dirty=false;root.dataset.videoDirty='false';saveLabel();}
   function restoreHistory(direction){const index=history.index+direction;if(index<0||index>=history.entries.length)return;const state=JSON.parse(history.entries[index]);history.index=index;clips=state.clips;settings=state.settings;selected=clips.some(c=>c.id===selected)?selected:null;dirty=true;saveLabel();syncControls();renderTimeline();selectClip(selected);historyButtons();message('Restored an earlier timeline state. Save to keep it.');}
   $('vs-undo').addEventListener('click',()=>restoreHistory(-1));$('vs-redo').addEventListener('click',()=>restoreHistory(1));
   window.addEventListener('keydown',event=>{if(!(event.ctrlKey||event.metaKey)||event.altKey||!['z','y'].includes(event.key.toLowerCase()))return;if(event.target.closest('input,textarea,select,[contenteditable=true]'))return;event.preventDefault();restoreHistory(event.key.toLowerCase()==='y'||event.shiftKey?1:-1);});
@@ -41,7 +41,10 @@ if(root){
     $('vs-background-source').value=bg?.mediaId||'';$('vs-background-start').value=bg?bg.startMs/1000:0;$('vs-background-trim').value=bg?bg.trimStartMs/1000:0;
     $('vs-background-volume').value=Math.round((bg?.volume??.18)*100);$('vs-background-output').textContent=$('vs-background-volume').value+'%';
   }
-  function renderProjectList(){const select=$('pt-project-list');select.replaceChildren(new Option('New project',''));for(const p of projects)select.append(new Option(`${p.name} · ${p.clipCount} clips`,p.id));select.value=projects.some(p=>p.id===id)?id:'';}
+  function renderProjectList(){const select=$('pt-project-list');select.replaceChildren(new Option('New project',''));for(const p of projects)select.append(new Option(`${p.name} · ${p.clipCount} clips`,p.id));select.value=projects.some(p=>p.id===id)?id:'';
+    root.dataset.videoProjectId=revision>0?id:'';root.dataset.videoRevision=String(revision);
+    window.dispatchEvent(new CustomEvent('azh:video-editor-project',{detail:{projectId:revision>0?id:null,revision}}));}
+
   function renderLibrary(){
     const needle=$('pt-search').value.trim().toLowerCase(),target=$('pt-media');target.replaceChildren();
     const filtered=library.filter(m=>mediaSummary(m).toLowerCase().includes(needle));$('vs-library-count').textContent=`${filtered.length} of ${library.length}`;
@@ -299,6 +302,11 @@ for(const a of settings.detachedAudio||[])renderAudioClip(detachedTrack,{kind:'d
   $('vs-inspector-toggle').addEventListener('click',()=>showInspector($('pt-properties').hidden));$('vs-inspector-close').addEventListener('click',()=>showInspector(false));
   const inspectorIds=['pt-in','pt-out','pt-overlay','pt-overlay-position','pt-volume','pt-card','vs-transition','vs-clip-filter'];
   function selectClip(clipId){selected=clipId;for(const li of $('pt-timeline').querySelectorAll('[data-clip-id]'))li.classList.toggle('is-selected',li.dataset.clipId===clipId);
+    const activeClip=clips.find(x=>x.id===clipId);
+    root.dataset.videoMediaId=activeClip?.mediaId||'';
+    root.dataset.videoStartMs=String(activeClip?.trimStartMs??0);
+    root.dataset.videoEndMs=String(activeClip?.trimEndMs??0);
+    window.dispatchEvent(new CustomEvent('azh:video-editor-clip',{detail:{mediaId:activeClip?.mediaId||null,trimStartMs:activeClip?.trimStartMs??0,trimEndMs:activeClip?.trimEndMs??0}}));
     const clip=clips.find(x=>x.id===clipId);source.pause();source.removeAttribute('src');source.load();if(!clip){showInspector(false);setPaneTargets();return;}
     showInspector(true);const media=mediaById(clip.mediaId);$('pt-clip-title').textContent=media?media.title:'Missing source video';
     $('pt-detach-audio').disabled=clip.audioDetached;$('pt-detach-audio').textContent=clip.audioDetached?'Audio detached ✓':'Detach audio to A2';$('pt-audio-status').textContent=clip.audioDetached?'Video source audio is muted; edit its independent A2 track below.':'Source audio is linked to this video clip on A1.';
@@ -357,6 +365,9 @@ for(const a of settings.detachedAudio||[])renderAudioClip(detachedTrack,{kind:'d
   });
   $('pt-search').addEventListener('input',renderLibrary);$('pt-name').addEventListener('input',()=>{dirty=true;saveLabel();});
   function newProject(){id=uid();revision=0;selectedAudio=null;$('vs-audio-properties').hidden=true;clips=[];settings=clone(DEFAULT_SETTINGS);selected=null;$('pt-name').value='Untitled edit';clean();renderTimeline();selectClip(null);syncControls();renderProjectList();resetHistory();message('New private video edit. Add footage from Media bin.');}
+  window.addEventListener('azh:video-agent-saved',event=>{
+    if(event.detail?.projectId===id){if(dirty&&!window.confirm('Discard unsaved edits and load the approved or restored cut?'))return;void loadProject(id);}
+  });
   $('pt-new').addEventListener('click',()=>{if(!busy&&needUnsaved())newProject();});
   async function loadProjects(){projects=(await api('projects')).projects||[];renderProjectList();}
   async function loadProject(key){setBusy(true);try{const p=await api('project',null,{id:key});id=p.id;revision=p.revision;selectedAudio=null;$('vs-audio-properties').hidden=true;clips=p.timeline.clips||[];settings={...clone(DEFAULT_SETTINGS),...(p.timeline.settings||{})};selected=null;$('pt-name').value=p.name;clean();renderTimeline();selectClip(null);syncControls();renderProjectList();resetHistory();message(clips.some(c=>!mediaById(c.mediaId))?'Some source videos are no longer available. Remove them before exporting.':'Saved private edit loaded.');}catch(e){message(e.message,true);}finally{setBusy(false);syncControls();}}
@@ -416,7 +427,7 @@ for(const a of settings.detachedAudio||[])renderAudioClip(detachedTrack,{kind:'d
   $('vs-bin-resizer').addEventListener('pointermove',event=>{if(!resizing||window.innerWidth<760)return;const area=document.querySelector('.vs-body').getBoundingClientRect();const px=Math.max(290,Math.min(area.width*.62,event.clientX-area.left));document.querySelector('.vs-body').style.gridTemplateColumns=`${px}px 7px minmax(0,1fr)`;});
   for(const name of ['pointerup','pointercancel'])$('vs-bin-resizer').addEventListener(name,()=>{resizing=false;});
   window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
-  async function init(){try{const data=await api('list');csrf=data.csrf||csrf;library=data.items||[];renderLibrary();backgroundOptions();await loadProjects();newProject();const sourceId=new URL(location.href).searchParams.get('source');if(sourceId){const media=mediaById(sourceId);if(media)await importMedia(media);else message('Requested footage unavailable in your library.',true);}}
+  async function init(){try{const data=await api('list');csrf=data.csrf||csrf;library=data.items||[];renderLibrary();backgroundOptions();await loadProjects();newProject();const requestedProject=new URL(location.href).searchParams.get('projectId');if(requestedProject&&projects.some(p=>p.id===requestedProject))await loadProject(requestedProject);const sourceId=new URL(location.href).searchParams.get('source');if(sourceId){const media=mediaById(sourceId);if(media)await importMedia(media);else message('Requested footage unavailable in your library.',true);}}
     catch(e){message('Could not load private editor: '+e.message,true);}}
   setPane('media');void init();
 }
