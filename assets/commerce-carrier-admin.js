@@ -165,7 +165,7 @@ if(carrierRoot){
     capabilities=state;
     const status=document.getElementById('azh-carrier-status');
     if(status)status.textContent=state.configured
-      ?'EasyPost '+state.mode+' configured · Label buying '+(state.purchaseEnabled?'enabled (staff approval required)':'disabled')+
+      ?'EasyPost '+state.mode.toUpperCase()+' configured · Label buying '+(state.purchaseEnabled?'enabled (staff approval required)':'disabled')+
         ' · Tracking webhook '+(state.webhookConfigured?'configured':'not configured')
       :'EasyPost carrier rates are OFF. Configure server-side credentials before quoting.';
     document.getElementById('azh-shipping-refresh')?.click();
