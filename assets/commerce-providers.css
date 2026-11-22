@@ -1,0 +1,14 @@
+
+.azh-provider-card{margin-top:12px;padding:14px;border:1px solid #e8dfe5;border-radius:13px;background:#fcf9fb;display:grid;gap:9px;min-width:0}
+.azh-provider-card h4{font-size:15px;margin:0;color:#57394a}
+.azh-provider-card .azh-return-subtle{font-size:12px;line-height:1.45;margin:0;overflow-wrap:anywhere}
+.azh-provider-parcel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.azh-provider-parcel p,.azh-provider-parcel>label:has(input[type=checkbox]),.azh-provider-parcel button{grid-column:1/-1}
+.azh-provider-parcel label,.azh-provider-link-form label{display:grid;gap:5px;font-size:12px;min-width:0}
+.azh-provider-parcel input[type=number],.azh-provider-link-form input{min-width:0;width:100%;box-sizing:border-box;border:1px solid #d8cbd4;background:#fff;color:#302330;padding:9px;border-radius:8px}
+.azh-provider-card .azh-provider-rate{padding:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-radius:10px;background:#fff;border:1px solid #e7dbe4}
+.azh-provider-connect{margin-top:12px;display:grid;gap:8px;border-top:1px solid #efe1e8;padding-top:12px}
+.azh-provider-link-form{display:grid;gap:8px}
+.azh-provider-card button:disabled{opacity:.5;cursor:not-allowed}
+#azh-provider-status[data-error=true]{color:#b32c55}
+@media(max-width:620px){.azh-provider-parcel{grid-template-columns:minmax(0,1fr)}.azh-provider-rate button{width:100%}}

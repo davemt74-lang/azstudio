@@ -87,6 +87,7 @@ if(payoutsRoot){
         ' · Held '+cash(model.heldCents)+
         ' · Reserved '+cash(model.reservedCents)+
         ' · Recorded paid '+cash(model.paidCents));
+      window.azProviderModelEnhance?.(card,model,()=>refresh());
       if(model.overpaidCents>0)add(card,'p',
         'Further payout blocked: refund-adjusted overpayment '+cash(model.overpaidCents),
         'azh-return-payout-banner');
@@ -143,6 +144,7 @@ if(payoutsRoot){
         (item.paymentChannel?' · '+item.paymentChannel:''));
       if(item.evidenceReference)add(card,'small','External payment evidence: '+item.evidenceReference);
       actionButtons(card,item);
+      window.azProviderPayoutEnhance?.(card,item,()=>refresh());
     }
     if(!(snapshot?.batches||[]).length)
       add(batches,'p','No commission settlement batches yet.','azh-commerce-card');

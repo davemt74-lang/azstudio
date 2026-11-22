@@ -142,6 +142,7 @@ if(returnsRoot){
       if(item.refundReference)add(card,'p','Verified refund reference: '+item.refundReference);
       if(item.replacementReference)add(card,'p','Replacement reference: '+item.replacementReference);
       controls(card,item);
+      window.azProviderReturnEnhance?.(card,item,()=>refresh());
     }
     if(!cases.length)add(list,'p','No returns have been requested yet.','azh-commerce-card');
   }
