@@ -252,7 +252,7 @@ function az_customer_ship_inspect_address(PDO $db,string $orderId,array $attempt
        ->execute([az_now(),$orderId]);
     az_commerce_queue_admins('carrier-address-mismatch:'.$orderId,$actor,'carrier_address_review',
         'Paid order has a shipping address mismatch',
-        $title.' · The address entered at Stripe differs from the carrier quote. Payment is recorded, but dispatch is blocked until staff validates a new rate and destination.','commerce.php',true);
+        $title.' · The address entered at Stripe differs from the carrier quote. Payment is recorded, but dispatch is blocked until staff validates a new rate and destination.',true);
 }
 function az_customer_ship_briefing(array $user): array
 {
