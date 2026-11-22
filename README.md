@@ -1,3 +1,9 @@
+# AZHottie Studio — v1.36.0
+
+**Returns, Exchanges & Creator Commission Settlement:** Privacy-preserving return requests, staff-authorized inspection and restocking, like-for-like exchanges with inventory reservations, approved refunds reconciled to actual provider evidence, and a role-scoped creator commission payout ledger. External payouts require manual approval and confirmed transfer evidence; no automatic refunds or transfers. Returns, commissions, disputes and shipment delivery block payout eligibility. Schema 41 → 42. See `docs/RELEASE_1_36_0.txt`.
+
+---
+
 # AZHottie Studio — v1.35.0
 
 **Customer-Selected Carrier Checkout:** Real USPS/UPS/FedEx EasyPost rates selected before Stripe Checkout on product pages, creator videos and Live. Session-bound short-lived quotes, encrypted addresses, signed Stripe verification, staff shipping exception quarantine, and Agent/analytics integration. Existing flat/free shipping, cash pickup and local delivery remain. No automatic labels, returns, tax filings or creator payouts. Schema 40→41. See docs/RELEASE_1_35_0.txt.
