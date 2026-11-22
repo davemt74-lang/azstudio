@@ -1,3 +1,9 @@
+# AZHottie Studio — v1.30.0
+
+**Commerce & Creator Affiliate Agent, first layer:** Admin-managed products with external checkout links, private creator briefs, model interest/approval, revision-bound published-video affiliations, manually recorded/reconciled external orders, creator commission estimates, and Live Director product spotlight. Commerce reuses the existing Agent notification bell, History, Brain, and persistent Chat (with deduplicated delivery and hourly follow-through). Customer payment processing, independently verified payment/refund webhooks and actual creator payouts are not included. Schema upgrades 35 → 36. See `docs/RELEASE_1_30_0.txt` and `UPGRADE.txt`.
+
+---
+
 # AZHottie Studio — v1.29.0
 
 **Publishing & Audience Growth Specialist:** The existing admin User Submissions review queue now supports explicit approval for a future Arizona publication time. The site-private cron validates media, consent, model eligibility and exact revision immediately before release. A new admin Publishing & Growth workspace displays measured creator/interview Watch playback, approval/publishing calendars, metadata-based private promotion drafts, and explicit on-site featured placements. Agent Brain, Chat and History use verified role-scoped counts. No automatic external social/email posting or inferred footage analysis. Schema 34 → 35. See `docs/RELEASE_1_29_0.txt` for limitations, release gates and acceptance checks.

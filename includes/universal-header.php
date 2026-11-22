@@ -11,14 +11,14 @@ function az_render_universal_header(string $current, ?array $user = null, bool $
     $admin = $user !== null && az_has_role($user, 'admin');
     $liveEditor = $user !== null && az_has_role($user, 'editor');
     $team = $user !== null && ($admin || $liveEditor || az_has_role($user, 'model') || az_has_role($user, 'professional'));
-    $current = in_array($current, ['index','watch','dashboard','agent-chat','calendar','classes','appointments','account','user','settings','accounts','my-work','my-media','my-videos','my-editor','my-camera','productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','admin','login','signup','install','phone','apply','casting','admin-studio','live-director','live-productions','live','live-shows'], true) ? $current : 'index';
+    $current = in_array($current, ['index','watch','dashboard','agent-chat','calendar','classes','appointments','account','user','settings','accounts','my-work','my-media','my-videos','my-editor','my-camera','productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','admin','login','signup','install','phone','apply','casting','admin-studio','live-director','live-productions','live','live-shows','commerce','shop'], true) ? $current : 'index';
     $studioCurrent = in_array($current, ['productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','accounts','admin','casting'], true);
     $item = static function (string $href, string $label, bool $active = false): string {
         return '<a class="azh-nav-link' . ($active ? ' is-active' : '') . '" href="' . az_h($href) . '"' . ($active ? ' aria-current="page"' : '') . '>' . az_h($label) . '</a>';
     };
     $signedIn = $user !== null;
     $hasWorkspace = in_array($current, [
-        'dashboard','admin-studio','live-director','live-productions','live','live-shows','agent-chat','account','user','settings','accounts','calendar','classes','appointments','my-work','my-media','my-videos','my-editor','my-camera',
+        'dashboard','admin-studio','live-director','live-productions','live','live-shows','agent-chat','commerce','account','user','settings','accounts','calendar','classes','appointments','my-work','my-media','my-videos','my-editor','my-camera',
         'productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','admin','casting',
     ], true);
     if ($signedIn && !function_exists('az_render_member_nav_links')) {
@@ -51,6 +51,7 @@ function az_render_universal_header(string $current, ?array $user = null, bool $
           <a href="<?= az_h(az_url('account-settings.php')) ?>">Account settings</a>
           <?php if ($admin || $liveEditor): ?><a href="<?= az_h(az_url('admin-studio.php')) ?>">Admin Studio</a><?php endif; ?>
           <?php if ($team): ?><a href="<?= az_h(az_url('my-media.php')) ?>">My media gallery</a><?php endif; ?>
+          <?php if ($admin || az_has_role($user,'model')): ?><a href="<?= az_h(az_url('commerce.php')) ?>">Commerce</a><?php endif; ?>
           <?php if ($admin || az_has_role($user, 'model')): ?><a href="<?= az_h(az_url('my-videos.php')) ?>">My Videos</a><?php endif; ?>
           <form method="post" action="<?= az_h(az_url('logout.php')) ?>"><input type="hidden" name="csrf" value="<?= az_h(az_csrf_token()) ?>"><button type="submit">Sign out</button></form>
         </div>
@@ -60,6 +61,7 @@ function az_render_universal_header(string $current, ?array $user = null, bool $
       <?= $item('index.php', 'Home', $current === 'index') ?>
       <?php if ($installed): ?>
       <?= $item('watch.php', 'Watch', $current === 'watch') ?>
+      <?= $item('shop.php', 'Shop', $current === 'shop') ?>
       <?= $item('live-shows.php', 'Live shows', $current === 'live-shows') ?>
       <?= $item('apply.php', 'Model casting', $current === 'apply') ?>
       <?= $item('signup.php', 'Events', $current === 'calendar') ?>

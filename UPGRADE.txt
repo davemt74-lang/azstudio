@@ -1,3 +1,11 @@
+AZHottie Studio v1.30.0 — Commerce & Creator Affiliate Agent
+- Back up the complete production database, site files and private storage before deployment. Preserve storage/config.php, private media and uploads. Do not rerun install.php.
+- Deploy the full application archive; first bootstrap upgrades schema 35 → 36 with products, briefs, creator interest, approved video affiliations, external order ledger, live selections, and durable recipient-specific Agent deliveries.
+- Hard-refresh Commerce, Live Director, live.php, the notification bell and Agent Chat. Commerce events reuse the original Agent notification, History, Brain and Chat surfaces; existing private hourly cron now checks unreconciled orders after 48 hours.
+- Set up products with the seller's valid HTTPS checkout destination; verify the provider separately. AZHottie does not capture payments, verify provider webhooks, issue refunds, pay creators or automatically attribute real provider sales. Admin-entered orders and reconciliations are human attestations, not independently verified payments.
+- Test with separate admin, model, and unrelated model accounts. Confirm brief approval and private user boundaries, published-video approval, order reference uniqueness, commission snapshots, refund reversal, live product selection and viewer link, durable Chat messages, notification badge and History, and repeated cron delivery.
+- Verify live hosted MySQL migration and production events independently before any commercial launch. See docs/RELEASE_1_30_0.txt for limitations and testing.
+
 AZHottie Studio v1.29.1 — Public homepage visual refresh
 No database changes. Back up first; preserve private storage/media/configuration. Upload application files and refresh index.php. See docs/RELEASE_1_29_1_HOMEPAGE.md.
 

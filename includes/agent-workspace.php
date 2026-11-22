@@ -42,7 +42,7 @@ function az_agent_workspace_assert(array $user): void
 /** No external URLs or user-controlled raw HTML may be persisted as navigation targets. */
 function az_agent_workspace_href(string $href): string
 {
-    if (!preg_match('~\A(?:publishing|my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments|my-editor)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?\z~D',$href))
+    if (!preg_match('~\A(?:commerce|publishing|my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments|my-editor)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?\z~D',$href))
         throw new InvalidArgumentException('Agent activity contains an invalid destination.');
     return $href;
 }
@@ -207,6 +207,9 @@ function az_agent_workspace_brain(array $user): array
     $publishing=az_publishing_agent_briefing($user);
     foreach($publishing['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,$publishing['counts']);
+    $commerce=az_commerce_briefing($user);
+    foreach($commerce['cards'] as $item)$cards[]=$item;
+    $summary=array_merge($summary,$commerce['counts']);
     $schedule=az_agent_schedule_briefing($user);
     foreach($schedule['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,['upcomingSchedule'=>$schedule['counts']['upcoming'],'scheduleConflicts'=>$schedule['counts']['conflicts']]);
@@ -224,7 +227,7 @@ function az_agent_workspace_brain(array $user): array
     if ($admin) $summary['liveAlerts']=count($liveHealth['issues']??[]);
     $followthrough=['cron'=>az_agent_followthrough_status(), 'manual'=>$admin?az_agent_followthrough_status($id):null];
     return ['cards'=>array_slice($cards,0,16),'summary'=>$summary,'assignOptions'=>$assignmentChoices,'followthrough'=>$followthrough,
-      'liveHealth'=>$liveHealth,'casting'=>$casting,'video'=>$video,'publishing'=>$publishing,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, publishing, Watch engagement, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
+      'liveHealth'=>$liveHealth,'casting'=>$casting,'video'=>$video,'publishing'=>$publishing,'commerce'=>$commerce,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, publishing, commerce, Watch engagement, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
 }
 /** The only choices offered are owned active shots and eligible active roster members. */
 function az_agent_workspace_assign_options(array $user): array
