@@ -9,6 +9,7 @@ try {
     $result=az_agent_followthrough_run();
     // Shared private hourly cron; failure in one specialist is reported, not silently ignored.
     $result['casting']=az_agent_casting_scan();
+    $result['scheduling']=az_agent_schedule_scan();
     // Best-effort health-data retention; never roll back assignment reminders.
     try {$result['liveDiagnosticsPruned']=az_live_agent_prune();}
     catch (Throwable $healthError){error_log('Live Agent retention failed: '.$healthError->getMessage());}

@@ -63,6 +63,8 @@ function az_db(): PDO
     if (function_exists('az_upgrade_agent_workspace_schema') && az_schema_version($GLOBALS['az_database']) >= 28) { az_upgrade_agent_workspace_schema($GLOBALS['az_database']); }
     if (function_exists('az_upgrade_agent_followthrough_schema') && az_schema_version($GLOBALS['az_database']) >= 29) { az_upgrade_agent_followthrough_schema($GLOBALS['az_database']); }
     if (function_exists('az_upgrade_live_agent_schema') && az_schema_version($GLOBALS['az_database']) >= 30) { az_upgrade_live_agent_schema($GLOBALS['az_database']); }
+    if (function_exists('az_upgrade_agent_casting_schema') && az_schema_version($GLOBALS['az_database']) >= 31) { az_upgrade_agent_casting_schema($GLOBALS['az_database']); }
+    if (function_exists('az_upgrade_agent_scheduling_schema') && az_schema_version($GLOBALS['az_database']) >= 32) { az_upgrade_agent_scheduling_schema($GLOBALS['az_database']); }
     return $GLOBALS['az_database'];
 }
 
@@ -127,6 +129,7 @@ function az_create_schema(PDO $db): void
     if (function_exists('az_upgrade_agent_followthrough_schema') && az_schema_version($db) >= 29) { az_upgrade_agent_followthrough_schema($db); }
     if (function_exists('az_upgrade_live_agent_schema') && az_schema_version($db) >= 30) { az_upgrade_live_agent_schema($db); }
     if (function_exists('az_upgrade_agent_casting_schema') && az_schema_version($db) >= 31) { az_upgrade_agent_casting_schema($db); }
+    if (function_exists('az_upgrade_agent_scheduling_schema') && az_schema_version($db) >= 32) { az_upgrade_agent_scheduling_schema($db); }
 }
 
 

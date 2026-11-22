@@ -5,7 +5,7 @@ export function badgeLabel(count) {
 }
 export function safeAgentHref(href) {
   // Keep all activity and suggestion destinations on known, same-site workspace pages.
-  return typeof href==='string' && /^(?:my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?$/.test(href)?href:null;
+  return typeof href==='string' && /^(?:my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?$/.test(href)?href:null;
 }
 export function validWorkAction(action) {
   if(!action || typeof action!=='object')return false;
@@ -100,10 +100,23 @@ function mountAgentWorkspace(root=document) {
     const brain=state?.brain||{};
     content.append(text('p',brain.basis||'Suggestions are based on verified workspace data.','azh-aw-section-summary'));
     const summary=brain.summary||{};
-    if(Object.keys(summary).length){const wrap=make('div','azh-aw-counts');const labels={pendingReviews:'Pending reviews',submittedAssignments:'Submitted work',awaitingResponses:'Awaiting response',awaitingResponse:'Needs response',overdue:'Overdue',videosUnderReview:'Videos under review',availableShots:'Open shots',liveAlerts:'Live alerts',newApplications:'New casting applications',screening:'Screenings',interviews:'Interviews',approved:'Approved applications',converted:'Converted models',onboardingPending:'Onboarding needs review',onboardingComplete:'Onboarding completed',onboardingTotal:'Onboarding steps'};
+    if(Object.keys(summary).length){const wrap=make('div','azh-aw-counts');const labels={pendingReviews:'Pending reviews',submittedAssignments:'Submitted work',awaitingResponses:'Awaiting response',awaitingResponse:'Needs response',overdue:'Overdue',videosUnderReview:'Videos under review',availableShots:'Open shots',liveAlerts:'Live alerts',newApplications:'New casting applications',screening:'Screenings',interviews:'Interviews',approved:'Approved applications',converted:'Converted models',onboardingPending:'Onboarding needs review',onboardingComplete:'Onboarding completed',onboardingTotal:'Onboarding steps',upcomingSchedule:'Upcoming commitments',scheduleConflicts:'Schedule conflicts'};
       for(const [key,num] of Object.entries(summary)){const item=make('div');item.append(text('b',num),text('span',labels[key]||key));wrap.append(item);}content.append(wrap);}
     if(!brain.cards?.length)content.append(empty('Nothing urgent to review','Your current assignments and submissions are up to date.'));
     for(const item of brain.cards||[]){const card=make('article','azh-aw-brain-card');card.append(text('p',String(item.kind||'update').replaceAll('_',' ').toUpperCase(),'azh-aw-eyebrow'),text('h3',item.title),text('p',item.detail));card.append(link('Open workspace ↗',item.href));workActionControls(card,item.action);content.append(card);}
+    const schedule=brain.scheduling||{};
+    if(schedule.counts){
+      const section=make('section','azh-aw-followthrough');
+      section.append(text('p','CALENDAR & SCHEDULING SPECIALIST','azh-aw-eyebrow'),text('h3',`${schedule.counts.upcoming} upcoming commitments`));
+      section.append(text('p',`${schedule.counts.appointments} appointments · ${schedule.counts.assignments} assignment deadlines · ${schedule.counts.conflicts} conflicts. Times are in America/Phoenix.`,'azh-aw-meta'));
+      for(const item of (schedule.upcoming||[]).slice(0,3)){const line=make('p','azh-aw-meta');line.append(text('span',`${new Date(item.startAt).toLocaleString('en-US',{timeZone:'America/Phoenix',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · ${item.title} `),link('View ↗',item.href));section.append(line);}
+      section.append(link('Open unified calendar ↗','calendar.php'),link('Discuss scheduling with Agent Chat ↗','agent-chat.php?topic=scheduling'));
+      if(state.role==='admin'){
+        const scan=schedule.scan||{};section.append(text('p',scan.completedAt?`Last hourly schedule check: ${new Date(scan.completedAt).toLocaleString()}.`:'Schedule reminders have not run on the server. Configure the private hourly cron.','azh-aw-meta'));
+        section.append(button('Check my schedule now','azh-aw-outline',()=>void executeAgentAction('checkSchedule',{})));
+      }
+      content.append(section);
+    }
     // Casting is one specialist feeding this shared Brain, not a separate assistant.
     const casting=brain.casting||{};
     if(casting.report){
@@ -172,7 +185,7 @@ function mountAgentWorkspace(root=document) {
       content.append(section);
       renderAssignForm(brain.assignOptions||[]);
     }
-    const hint=make('div','azh-aw-brain-hint');hint.append(text('strong','What the Brain does'),text('p','It reads verified assignments, casting and onboarding workflows, reviews, and browser-reported live health. The private hourly cron can send deduplicated assignment reminders when installed. It does not independently change assignments, contact users outside AZHottie, publish videos, or inspect private footage.'));content.append(hint);
+    const hint=make('div','azh-aw-brain-hint');hint.append(text('strong','What the Brain does'),text('p','It reads verified assignments, casting, private schedules and onboarding workflows, reviews, and browser-reported live health. The private hourly cron can send deduplicated assignment reminders when installed. It does not independently change assignments, contact users outside AZHottie, publish videos, or inspect private footage.'));content.append(hint);
   }
   function render(){
     content.replaceChildren();content.setAttribute('aria-labelledby',`azh-aw-tab-${active}`);
@@ -196,13 +209,13 @@ function mountAgentWorkspace(root=document) {
   }
   async function executeAgentAction(action,body){
     if(loading)return;
-    loading=true;setStatus(action==='checkFollowthrough'?'Checking current assignments…':action==='checkCasting'?'Checking casting records…':'Saving confirmed action…');
+    loading=true;setStatus(action==='checkFollowthrough'?'Checking current assignments…':action==='checkCasting'?'Checking casting records…':action==='checkSchedule'?'Checking upcoming schedule…':'Saving confirmed action…');
     let outcome=null,error=null;
     try{outcome=await request('agent-workspace-api.php',action,body);}
     catch(e){error=e;}
     finally{loading=false;await load();}
     if(error)setStatus(error.message,true);
-    else if(action==='checkFollowthrough'||action==='checkCasting')setStatus(`Checked ${outcome.checked} ${action==='checkCasting'?'applications':'assignments'} · ${outcome.delivered} new notifications${outcome.truncated?' · scan limit reached':''}.`);
+    else if(action==='checkFollowthrough'||action==='checkCasting'||action==='checkSchedule')setStatus(`Checked ${outcome.checked} ${action==='checkCasting'?'applications':action==='checkSchedule'?'schedule commitments':'assignments'} · ${outcome.delivered} new notifications${outcome.truncated?' · scan limit reached':''}.`);
     else setStatus(action==='castingAdvance'?'Casting stage updated':action==='castingCheckpoint'?'Onboarding checkpoint updated':'Reminder delivered to model notifications');
   }
   async function executeWork(action,body){
