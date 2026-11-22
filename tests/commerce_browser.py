@@ -120,10 +120,14 @@ def run():
                     page.locator('#commerce-products-list .azh-commerce-card button').first.click()
                     assert page.locator('[name=localEnabled]').is_checked(),('product cash selected',width)
                     assert page.locator('[name=pickupAddress]').input_value()=='123 Example St, Phoenix AZ',('per-product pickup details',width)
-                    page.locator('#commerce-product-form button[type=submit]').click()
-                    page.wait_for_function("document.querySelector('#commerce-status').textContent.includes('product-specific')")
-                    assert any(action=='saveProduct' and json.loads(body)['localSettings']['pickupAddress']=='123 Example St, Phoenix AZ'
-                               for action,body in calls if body),('per-product payload',width,calls)
+                    validity=page.locator('#commerce-product-form').evaluate(
+                        "(f)=>({valid:f.checkValidity(),invalid:[...f.elements].filter(e=>e.willValidate&&!e.validity.valid).map(e=>e.name)})")
+                    assert validity['valid'],('product editor invalid',width,validity)
+                    with page.expect_request(lambda req:'action=saveProduct' in req.url,timeout=8000) as request:
+                        page.locator('#commerce-product-form button[type=submit]').click()
+                    payload=json.loads(request.value.post_data)
+                    assert payload['localSettings']['pickupAddress']=='123 Example St, Phoenix AZ',('per-product payload',width,payload)
+                    page.wait_for_function("document.querySelector('#commerce-status').textContent.includes('product-specific')",timeout=8000)
                 page.locator('[data-tab=briefs]').click()
                 assert page.locator('#commerce-brief-list .azh-commerce-card').count()==1,(role,width,'brief render')
                 if admin:
