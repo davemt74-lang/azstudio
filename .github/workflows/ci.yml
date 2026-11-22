@@ -81,6 +81,7 @@ jobs:
       - run: |
           python tests/commerce_browser.py
           python tests/commerce_local_browser.py
+          python tests/commerce_fulfillment_browser.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -88,6 +89,7 @@ jobs:
           path: |
             ${{ runner.temp }}/azh_commerce_browser/*.png
             ${{ runner.temp }}/azh_cash_browser/*.png
+            ${{ runner.temp }}/azh_shipping_browser/*.png
           if-no-files-found: ignore
           retention-days: 14
 
