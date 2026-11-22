@@ -64,7 +64,10 @@ $ok($second['deliveryZips']===['85002','85003']&&$first['deliveryZips']===[],'in
 $public=az_commerce_public_products();
 $ok(count($public)===2&&$public[0]['localEnabled']&&$public[1]['localEnabled'],'cash-only products appear in public Shop without card checkout');
 $ok(count(az_commerce_state($admin)['products'])===2,'admin sees both product settings');
-$ok(!array_key_exists('localSettings',az_commerce_state($model)['products'][0]),'non-admin cannot fetch private product editing settings');
+az_commerce_brief_save($admin,['productId'=>$p1,'title'=>'Cash creator brief',
+    'instructions'=>'Approved creator video for this product.','state'=>'active']);
+$modelProductView=az_commerce_state($model)['products'];
+$ok(count($modelProductView)===1&&!array_key_exists('localSettings',$modelProductView[0]),'non-admin cannot fetch private product editing settings');
 $local=az_local_settings_admin($admin,$p1);
 $ok($local['pickupAddress']==='123 Market St, Phoenix, AZ','admin reads selected product settings');
 $expect(static fn()=>az_local_settings_admin($model,$p1),'role_required');
