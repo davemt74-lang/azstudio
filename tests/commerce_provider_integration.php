@@ -495,15 +495,15 @@ $GLOBALS['az_provider_stripe_test_transport']=static function(string $method,str
     throw new RuntimeException('Unexpected Stripe provider operation: '.$method.' '.$path);
 };
 $reject(static fn()=>az_provider_refund_initiate($model,[
-    'returnId'=>$caseId,'revision'=>4,'expectedCents'=>1599,'confirmRefund'=>true]),'role_required');
+    'returnId'=>$caseId,'revision'=>5,'expectedCents'=>1599,'confirmRefund'=>true]),'role_required');
 $reject(static fn()=>az_provider_refund_initiate($admin,[
-    'returnId'=>$caseId,'revision'=>4,'expectedCents'=>1599]),'confirmation_required');
+    'returnId'=>$caseId,'revision'=>5,'expectedCents'=>1599]),'confirmation_required');
 $refund=az_provider_refund_initiate($admin,[
-    'returnId'=>$caseId,'revision'=>4,'expectedCents'=>1599,'confirmRefund'=>true]);
+    'returnId'=>$caseId,'revision'=>5,'expectedCents'=>1599,'confirmRefund'=>true]);
 $assert($refund['status']==='provider_pending'&&$transportCalls['refunds']===1,
     'staff-approved idempotent Stripe refund request reaches provider exactly once');
 $reject(static fn()=>az_provider_refund_initiate($admin,[
-    'returnId'=>$caseId,'revision'=>4,'expectedCents'=>1599,'confirmRefund'=>true]),'refund_already_requested');
+    'returnId'=>$caseId,'revision'=>5,'expectedCents'=>1599,'confirmRefund'=>true]),'refund_already_requested');
 $assert($transportCalls['refunds']===1,'second refund cannot be issued');
 $pending=az_provider_refund_reconcile($admin,['returnId'=>$caseId]);
 $assert($pending['status']==='provider_pending'&&$transportCalls['refunds']===1,
