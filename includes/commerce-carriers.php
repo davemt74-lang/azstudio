@@ -430,6 +430,19 @@ function az_carrier_label_public(array $row): array
         'labelUrl'=>$row['status']==='purchased'?$row['label_url']:null,
         'trackingStatus'=>$row['tracking_status'],'purchasedAt'=>$row['purchased_at']];
 }
+/** Non-PII packing defaults. Staff verifies actual packaged measurements. */
+function az_carrier_default_parcel(string $id): array
+{
+    $q=az_db()->prepare("SELECT f.weight_grams,f.length_mm,f.width_mm,f.height_mm,o.quantity
+        FROM commerce_shipments s JOIN commerce_orders o ON o.id=s.order_id
+        LEFT JOIN commerce_product_fulfillment f ON f.product_id=o.product_id
+        WHERE s.order_id=?");
+    $q->execute([$id]);$r=$q->fetch(PDO::FETCH_ASSOC);
+    if(!$r)return ['weightGrams'=>0,'lengthMm'=>0,'widthMm'=>0,'heightMm'=>0];
+    return ['weightGrams'=>(int)$r['weight_grams']*(int)$r['quantity'],
+        'lengthMm'=>(int)$r['length_mm'],'widthMm'=>(int)$r['width_mm'],
+        'heightMm'=>(int)$r['height_mm']];
+}
 function az_carrier_order_snapshot(string $id): array
 {
     $quote=az_carrier_quote_row($id);$label=az_carrier_label_row($id);
