@@ -303,4 +303,69 @@ az_stripe_webhook_receive($refundEvent,$signed($refundEvent));
 $assert((int)$db->query("SELECT commission_cents FROM commerce_orders")->fetchColumn()===0,
     'full tax-and-shipping-inclusive refund removes creator commission');
 $assert((int)az_fulfillment_row($p)['on_hand']===1,'refund never silently restocks physical merchandise');
+
+/* Simulate a carrier purchase that was charged but whose HTTP response timed out.
+ * The platform must never issue a second buy; GET reconciliation recovers it.
+ */
+$secondId=az_id();$secondRef='stripe:carrier-fixture-'.$secondId;
+$now=az_now();
+$db->prepare("INSERT INTO commerce_orders(
+    id,external_reference,product_id,quantity,amount_cents,currency,commission_bps,commission_cents,
+    state,recorded_by,provider,created_at,paid_at,updated_at
+    ) VALUES(?,?,?,1,1599,'USD',0,0,'paid',3,'stripe',?,?,?)")
+    ->execute([$secondId,$secondRef,$p,$now,$now,$now]);
+$db->prepare("INSERT INTO commerce_shipments(
+    order_id,contact_ciphertext,product_title,shipping_fee_cents,status,created_at,updated_at
+    ) VALUES(?,?,?,375,'packed',?,?)")
+    ->execute([$secondId,az_local_encrypt([
+        'name'=>'Private Recipient Two','street'=>'789 Recovery Ave','unit'=>'',
+        'city'=>'Phoenix','state'=>'AZ','zip'=>'85002','country'=>'US'
+    ]),'Carrier recovery parcel',$now,$now]);
+$secondProviderId='shp_RECOVERY123456789';
+$secondRateId='rate_RECOVERY123456789';
+$secondTrackerId='trk_RECOVERY123456789';
+$uncertainCharges=0;$getAfterTimeout=0;
+$GLOBALS['az_carrier_test_transport']=static function(string $method,string $path,?array $payload)
+    use($secondProviderId,$secondRateId,$secondTrackerId,&$uncertainCharges,&$getAfterTimeout):array {
+    $purchased=[
+        'object'=>'Shipment','id'=>$secondProviderId,'mode'=>'test',
+        'selected_rate'=>['id'=>$secondRateId,'carrier'=>'UPS','service'=>'Ground','rate'=>'7.00'],
+        'tracking_code'=>'1Z999AA10123456785',
+        'postage_label'=>['label_url'=>'https://easypost-files.s3.us-west-2.amazonaws.com/recoveredlabel.png'],
+        'tracker'=>['id'=>$secondTrackerId]
+    ];
+    if($method==='POST'&&$path==='/shipments')
+        return ['id'=>$secondProviderId,'object'=>'Shipment','mode'=>'test',
+            'rates'=>[['id'=>$secondRateId,'carrier'=>'UPS','service'=>'Ground',
+                'currency'=>'USD','rate'=>'7.00','delivery_days'=>4]]];
+    if($method==='POST'&&$path==='/shipments/'.$secondProviderId.'/buy'){
+        $uncertainCharges++;
+        throw new AzHttpError(502,'Simulated timeout after EasyPost charged a label.','carrier_provider_unavailable');
+    }
+    if($method==='GET'&&$path==='/shipments/'.$secondProviderId){
+        $getAfterTimeout++;return $purchased;
+    }
+    throw new RuntimeException('Unexpected carrier recovery test endpoint.');
+};
+$secondParcel=['id'=>$secondId,'confirmParcel'=>true,
+    'weightGrams'=>400,'lengthMm'=>220,'widthMm'=>150,'heightMm'=>70];
+$recoveryQuote=az_carrier_quote($admin,$secondParcel);
+$reject(static fn()=>az_carrier_buy($admin,[
+    'id'=>$secondId,'rateId'=>$secondRateId,'expectedCents'=>700,
+    'revision'=>$recoveryQuote['revision'],'confirmPurchase'=>true
+]),'label_outcome_unknown');
+$unknownLabel=az_carrier_label_row($secondId);
+$assert($unknownLabel['status']==='needs_review'&&$uncertainCharges===1,
+    'ambiguous paid provider response becomes durable needs_review state');
+$reject(static fn()=>az_carrier_buy($admin,[
+    'id'=>$secondId,'rateId'=>$secondRateId,'expectedCents'=>700,
+    'revision'=>$recoveryQuote['revision'],'confirmPurchase'=>true
+]),'label_already_requested');
+$assert($uncertainCharges===1,'uncertain label is NEVER purchased twice');
+$recovered=az_carrier_reconcile($admin,['id'=>$secondId]);
+$assert($recovered['status']==='purchased'&&$getAfterTimeout===1&&$uncertainCharges===1,
+    'GET reconciliation recovers label without another charge');
+$assert(az_carrier_label_row($secondId)['status']==='purchased',
+    'recovered purchase persists for future staff and Agent review');
+
 echo "Multi-carrier EasyPost rate, label and signed tracker integration: $checks passed\n";
