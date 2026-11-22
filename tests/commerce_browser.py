@@ -75,7 +75,7 @@ def state_for(role):
 
 def run():
     with sync_playwright() as p:
-        browser=p.chromium.launch(headless=True,args=['--no-sandbox'])
+        browser=p.chromium.launch(headless=True,channel='chrome',args=['--no-sandbox'])
         results=[]
         for role in ('admin','model'):
             for width in (1440,768,390,320):
