@@ -1,0 +1,37 @@
+AZHottie Studio v1.28.0 — Video Production & Editing Specialist
+
+Scope and real capabilities
+- Add the Video Production specialist to the existing Agent Chat, Brain, History and private follow-through cron.
+- In My Editor, creator/authorized editor saves timestamped, source-bound notes (highlight, caption, flagged issue) and requests an optional highlight, teaser or recap cut.
+- Suggestions are derived from existing saved source timing, owner-authored notes and requested duration. NO source audio/video is transcribed, watched or visually understood by an AI in this release. A caption is copied only from an explicit creator note with captions enabled.
+- New cut proposals are saved separately from the current source timeline, with duration, count, warnings and immutable source snapshot.
+- Edit approval is explicit, owner-scoped and protected by CSRF, exact project revision and original-timeline fingerprint. An approved cut becomes a new private editor revision, not a change to original footage. Discard and exact-revision revert are supported.
+- Trimming maintains source clip volume and rebases volume keyframes; original A2 detached audio is omitted in proposed cuts with a conspicuous warning. B1 background audio, T1 timed titles and any flagged source issues produce review warnings as appropriate.
+- Existing My Videos model submissions, administrator review approvals and published Watch behavior stay the sole authoritative publication mechanisms. Editing proposals DO NOT submit or publish videos automatically.
+- Brain reports verified pending editing plans, draft videos, revision requests and review queues with role-specific, safe navigation. Chat gets aggregate verified metrics only (NO creator/source media, names, timestamp notes, transcripts, URLs or applicant data).
+- Private hourly cron sends deduplicated in-app follow-up notifications for proposals awaiting owner review more than 48 hours. No autonomous editing, publishing, messaging or external uploads.
+- Schema 33 -> 34 creates owner-scoped moments, plans and delivery ledgers with account/media/project cascade protections.
+
+Acceptance / scoring
+1. Editing suggestions (source-timing-based): 10/10 local criteria; no audio/video semantic AI analysis claimed.
+2. Nondestructive approval, stale-revision gate and revert: 10/10 local criteria.
+3. Per-source private notes and timebound suggestions: 10/10 local criteria.
+4. Existing submissions and publication handoff: 10/10 local integration; no automatic publication.
+5. Agent Brain and Chat separation/account scoping: 10/10 local tests.
+6. Reminder deduplication and UI across screen sizes: 10/10 local tests.
+Overall production readiness: 9/10 until hosted MySQL migration and real footage/editor/export, My Videos submission/admin review, and operator browser workflows are verified. Live Director phone-to-fan video freeze remains a separate unresolved production acceptance item.
+
+Verification gates
+- npm test (all JavaScript regression tests, including video-agent-v128).
+- php -l for all PHP files.
+- php tests/agent_video_rules.php (pure rules) and php tests/agent_video_integration.php (real PDO SQLite; hosted CI, if local runtime lacks PDO_SQLITE).
+- python tests/agent_video_sql_smoke.py (SQLite privacy, cascade and idempotency).
+- python tests/agent_video_browser.py (Chromium editor interaction; optional local browser environment).
+- GitHub CI: JavaScript, PHP syntax + specialist rules/integration, SQLite fixtures, deploy packaging. Merge only when all are green.
+
+Deployment
+- Back up azhottie.com, its database and private storage/ directory. End recordings before upload.
+- Upload merged v1.28.0 application files into the existing installation; preserve private storage, private configuration and media. Do not rerun install.php.
+- Database upgrade from 33 to 34 occurs on the normal bootstrap route.
+- Keep the existing private hourly cPanel cron active if 48-hour in-app reminders are desired.
+- Hard refresh My Editor, Agent Chat, Brain and My Videos. Validate with an authorized model account and separate admin account.

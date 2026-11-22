@@ -39,6 +39,8 @@ jobs:
           php tests/agent_followthrough_rules.php
           php tests/live_agent_rules.php
           php tests/agent_scheduling_rules.php
+          php tests/agent_video_rules.php
+          php tests/agent_video_integration.php
 
   fixtures:
     name: SQLite permissions and migration fixtures
@@ -53,6 +55,7 @@ jobs:
           python tests/agent_followthrough_sql_smoke.py
           python tests/live_agent_sql_smoke.py
           python tests/agent_scheduling_sql_smoke.py
+          python tests/agent_video_sql_smoke.py
 
   deployment:
     name: Build safe deployment archive

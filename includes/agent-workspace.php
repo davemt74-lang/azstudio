@@ -42,7 +42,7 @@ function az_agent_workspace_assert(array $user): void
 /** No external URLs or user-controlled raw HTML may be persisted as navigation targets. */
 function az_agent_workspace_href(string $href): string
 {
-    if (!preg_match('~\A(?:my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?\z~D',$href))
+    if (!preg_match('~\A(?:my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments|my-editor)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?\z~D',$href))
         throw new InvalidArgumentException('Agent activity contains an invalid destination.');
     return $href;
 }
@@ -111,7 +111,7 @@ function az_agent_workspace_history(int $recipient): array
     return array_map(static fn($r):array=>[
         'id'=>$r['id'],'kind'=>$r['kind'],'title'=>$r['title'],'detail'=>$r['detail'],
         'href'=>$r['href'],'createdAt'=>$r['created_at'],'readAt'=>$r['read_at'],
-        'actor'=>(str_starts_with($r['kind'],'followthrough_')||str_starts_with($r['kind'],'casting_review_')||str_starts_with($r['kind'],'casting_new_')||str_starts_with($r['kind'],'casting_contacted_')||str_starts_with($r['kind'],'casting_screening_')||str_starts_with($r['kind'],'casting_interview_')||str_starts_with($r['kind'],'casting_onboarding_incomplete')||str_starts_with($r['kind'],'casting_invitation_missing')||str_starts_with($r['kind'],'casting_invitation_expiring'))?'AZHottie Agent':((int)$r['actor_id']===$recipient?'You':$r['actor_name']),
+        'actor'=>(str_starts_with($r['kind'],'followthrough_')||str_starts_with($r['kind'],'casting_review_')||str_starts_with($r['kind'],'casting_new_')||str_starts_with($r['kind'],'casting_contacted_')||str_starts_with($r['kind'],'casting_screening_')||str_starts_with($r['kind'],'casting_interview_')||str_starts_with($r['kind'],'casting_onboarding_incomplete')||str_starts_with($r['kind'],'casting_invitation_missing')||str_starts_with($r['kind'],'casting_invitation_expiring')||str_starts_with($r['kind'],'video_review_due'))?'AZHottie Agent':((int)$r['actor_id']===$recipient?'You':$r['actor_name']),
     ],$q->fetchAll());
 }
 function az_agent_workspace_mark_read(int $recipient,array $body): void
@@ -201,6 +201,9 @@ function az_agent_workspace_brain(array $user): array
         }
         $assignmentChoices=[];$summary=['awaitingResponse'=>$assigned,'submittedAssignments'=>$underReview,'overdue'=>$overdue,'videosUnderReview'=>$pending,'availableShots'=>$open];
     }
+    $video=az_video_agent_briefing($user);
+    foreach($video['cards'] as $item)$cards[]=$item;
+    $summary=array_merge($summary,$video['counts']);
     $schedule=az_agent_schedule_briefing($user);
     foreach($schedule['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,['upcomingSchedule'=>$schedule['counts']['upcoming'],'scheduleConflicts'=>$schedule['counts']['conflicts']]);
@@ -218,7 +221,7 @@ function az_agent_workspace_brain(array $user): array
     if ($admin) $summary['liveAlerts']=count($liveHealth['issues']??[]);
     $followthrough=['cron'=>az_agent_followthrough_status(), 'manual'=>$admin?az_agent_followthrough_status($id):null];
     return ['cards'=>array_slice($cards,0,16),'summary'=>$summary,'assignOptions'=>$assignmentChoices,'followthrough'=>$followthrough,
-      'liveHealth'=>$liveHealth,'casting'=>$casting,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
+      'liveHealth'=>$liveHealth,'casting'=>$casting,'video'=>$video,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
 }
 /** The only choices offered are owned active shots and eligible active roster members. */
 function az_agent_workspace_assign_options(array $user): array
