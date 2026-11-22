@@ -1,3 +1,9 @@
+# AZHottie Studio — v1.35.0
+
+**Customer-Selected Carrier Checkout:** Real USPS/UPS/FedEx EasyPost rates selected before Stripe Checkout on product pages, creator videos and Live. Session-bound short-lived quotes, encrypted addresses, signed Stripe verification, staff shipping exception quarantine, and Agent/analytics integration. Existing flat/free shipping, cash pickup and local delivery remain. No automatic labels, returns, tax filings or creator payouts. Schema 40→41. See docs/RELEASE_1_35_0.txt.
+
+---
+
 # AZHottie Studio — v1.34.0
 
 **Carrier Integration:** Optional EasyPost multi-carrier USPS/UPS/FedEx rate comparison in the existing staff Shipping workspace, explicit cost-capped test/production label purchases, provider-label reconciliation after uncertain results, signed monotonic tracking webhooks, and shared Commerce Agent notification/Brain/Chat updates. Customer shipping addresses remain encrypted and hidden from Agent context. Carrier account credentials and real label purchasing are disabled until independently configured on the server. **Customer checkout pricing remains per-product flat/free shipping**; carrier rates are used by staff for fulfillment. Schema 39 → 40. See `docs/RELEASE_1_34_0.txt`.
