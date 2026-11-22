@@ -1,3 +1,14 @@
+AZHottie Studio v1.34.0 — EasyPost Carrier Integration
+- Back up the database, entire application, protected config, media and uploads. Deploy ZIP over application code, preserving storage/config.php and private uploads. Do not rerun install.php.
+- First database boot upgrades schema 39→40 with carrier quotes, pending/purchased labels and signed tracking event deduplication.
+- Get an EasyPost TEST API key and register a webhook with its own private signing secret. Add ship-from address, phone and origin ZIP in private server environment. USPS may be enabled by default; UPS/FedEx depend on enabled carrier accounts.
+- Set AZH_EASYPOST_API_KEY, AZH_EASYPOST_WEBHOOK_SECRET, AZH_EASYPOST_FROM_NAME/STREET/CITY/STATE/ZIP/PHONE.
+- Purchases are OFF until AZH_EASYPOST_ALLOW_LABEL_PURCHASES=1. Production key purchases also require AZH_EASYPOST_ALLOW_LIVE=1. Default maximum label amount AZH_EASYPOST_MAX_LABEL_CENTS=3000 (USD cents).
+- In Commerce > Shipping, get rates for a verified-paid parcel, confirm actual package size, pack, and explicitly buy a TEST label. Printing the label does not mark a parcel handed to the carrier. Tracking updates require an authenticated EasyPost tracker.updated webhook at /commerce-carrier-webhook.php.
+- If a charge times out, do NOT buy again; use Reconcile Label, which inspects the original provider shipment without charging. Never paste customer addresses into Agent Chat.
+- Existing flat/free customer shipping charges continue; EasyPost quotes are for the staff fulfillment stage only. No carrier checkout price selection, returns/payouts, automatic label refund or international service yet.
+- Verify hosted MySQL, Stripe test payment, EasyPost test rates/label and signed webhook before live merchant operations. See docs/RELEASE_1_34_0.txt.
+
 AZHottie Studio v1.33.0 — Inventory & Carrier Shipping
 - Back up the entire database, protected storage/config.php, media and uploads. Deploy application ZIP over existing code; preserve private data. DO NOT rerun install.php.
 - First database access upgrades schema 38→39 (per-product stock/shipping, reservation ledger and encrypted Stripe shipment destinations).

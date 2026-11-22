@@ -1,3 +1,9 @@
+# AZHottie Studio — v1.34.0
+
+**Carrier Integration:** Optional EasyPost multi-carrier USPS/UPS/FedEx rate comparison in the existing staff Shipping workspace, explicit cost-capped test/production label purchases, provider-label reconciliation after uncertain results, signed monotonic tracking webhooks, and shared Commerce Agent notification/Brain/Chat updates. Customer shipping addresses remain encrypted and hidden from Agent context. Carrier account credentials and real label purchasing are disabled until independently configured on the server. **Customer checkout pricing remains per-product flat/free shipping**; carrier rates are used by staff for fulfillment. Schema 39 → 40. See `docs/RELEASE_1_34_0.txt`.
+
+---
+
 # AZHottie Studio — v1.33.0
 
 **Inventory, Shipping & Fulfillment Specialist:** Per-product SKU and inventory settings, tracked stock holds with idempotent Stripe/cash checkout, US flat/free shipping (Stripe-hosted only), verified shipping address collection, privacy-protected shipment queue, staff parcel/tracking controls, low-stock and fulfillment Agent alerts. No live carrier rates or automatic label purchase; carrier tracking is staff-entered, and physical restocking requires human inspection. Schema 38→39. See `docs/RELEASE_1_33_0.txt`.
