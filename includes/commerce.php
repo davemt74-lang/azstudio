@@ -213,6 +213,7 @@ function az_commerce_product_save(array $user,array $body): array
     $state=az_text($body['state']??'draft',16,'Product state');
     $id=az_text($body['id']??'',32,'Product ID');
     $localInput=$body['localSettings']??null;
+    if($localInput instanceof stdClass)$localInput=get_object_vars($localInput);
     if($localInput!==null&&!is_array($localInput))throw new AzHttpError(400,'Invalid product pickup/delivery settings.','invalid_local_settings');
     $localSettings=$localInput===null?null:az_local_prepare_settings($localInput);
     $cashReady=$localSettings!==null?$localSettings['available']:($id!==''&&az_valid_id($id)?az_local_options($id)['available']:false);

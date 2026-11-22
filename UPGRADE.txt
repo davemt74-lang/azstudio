@@ -1,3 +1,12 @@
+AZHottie Studio v1.32.0 — Product-specific cash checkout, pickup and local delivery
+- Back up the full database, site, uploads and private storage/config.php. Merge the deployment ZIP into the existing application; DO NOT rerun install.php or overwrite private media and settings.
+- First installed database access upgrades schema 37→38, creating per-product pickup/delivery settings and encrypted cash-order contacts. Existing product cash availability defaults to OFF.
+- From Commerce > Products, edit each eligible product separately. Enable cash orders, pickup address/hours and/or delivery state, five-digit ZIP allowlist, delivery fee and minimum. Saving a product also saves its cash rules as one transaction.
+- The shared Commerce > Local Orders tab is staff fulfillment only; no global cash/delivery options exist. Staff must quote applicable tax and total before accepting; cash collection and full refunds require explicit confirmation.
+- Test two products with different rules, buyer receipt status/cancellation, admin-only contact access, affiliate commission after cash collection, refunds, and Agent notification/chat redaction.
+- Existing Stripe, manual external-seller checkout and scheduled Agent cron remain unchanged. Tax calculation, delivery logistics, cash exchange and creator payouts require human operations. Verify real hosted MySQL and live pickup/delivery procedures before launch.
+- See docs/RELEASE_1_32_0.txt for code tests and separate production acceptance gates.
+
 AZHottie Studio v1.31.0 — Verified Commerce
 - Back up database, whole site and private storage/config.php/uploads. Merge application files from the new ZIP; do not rerun install.php.
 - First database boot upgrades schema 36→37; verify on hosted MySQL.

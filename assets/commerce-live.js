@@ -11,8 +11,9 @@ if(container){
       const res=await fetch(url,{credentials:'same-origin',cache:'no-store'}),body=await res.json();
       const item=body?.ok?body.data:null;
       if(!res.ok||!item){container.hidden=true;last='';return;}
-      if(item.roomId+item.id+(item.promotionId||'')===last)return;
-      last=item.roomId+item.id+(item.promotionId||'');title.textContent=item.title;desc.textContent=item.description;
+      const signature=item.roomId+item.id+(item.promotionId||'')+'|'+String(item.localEnabled)+'|'+String(item.stripeReady)+'|'+String(item.checkoutUrl||'');
+      if(signature===last)return;
+      last=signature;title.textContent=item.title;desc.textContent=item.description;
       price.textContent=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(item.priceCents/100);
       checkout.hidden=!(item.checkoutMode==='external'&&Boolean(item.checkoutUrl));
       form.hidden=!item.stripeReady;
