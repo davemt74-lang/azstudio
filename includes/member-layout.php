@@ -8,7 +8,7 @@ function az_render_member_nav_links(string $page, array $user): void
 {
     $admin = az_has_role($user, 'admin');
     $liveEditor = $admin || az_has_role($user, 'editor');
-    $adminPage = in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','accounts','admin'], true);
+    $adminPage = in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','accounts','admin'], true);
     $contributor = $admin || az_has_role($user, 'editor') || az_has_role($user, 'model') || az_has_role($user, 'professional');
     $links = [
         ['dashboard.php', 'Overview', 'dashboard', '⌂'],
@@ -39,6 +39,7 @@ function az_render_member_nav_links(string $page, array $user): void
         ['questionnaires.php', 'Questionnaires', 'questionnaires', '☷'],
         ['videos.php', 'Video library', 'videos', '▸'],
         ['user-submissions.php', 'User Submissions', 'user-submissions', '▤'],
+        ['publishing.php', 'Publishing & Growth', 'publishing', '◈'],
         ['accounts.php', 'Manage accounts', 'accounts', '◈'],
         ['admin.php', 'AI settings', 'admin', '✳'],
     ];
@@ -47,7 +48,7 @@ function az_render_member_nav_links(string $page, array $user): void
         'classes'=>'Classes','appointments'=>'Spa & appointments','my-work'=>'My assignments','my-videos'=>'My Videos',
         'my-camera'=>'Phone camera','productions'=>'Productions','director'=>'Production Director','library'=>'Interviews','my-media'=>'My media gallery','my-editor'=>'Video editor',
         'interview'=>'Recording room','editor'=>'Video editor','profiles'=>'Models',
-        'questionnaires'=>'Questionnaires','casting'=>'Casting CRM','videos'=>'Finished videos','user-submissions'=>'User Submissions','accounts'=>'Manage accounts',
+        'questionnaires'=>'Questionnaires','casting'=>'Casting CRM','videos'=>'Finished videos','user-submissions'=>'User Submissions','publishing'=>'Publishing & Growth','accounts'=>'Manage accounts',
         'admin'=>'AI settings',
     ][$page] ?? 'My workspace';
     // Details and nested routes retain the corresponding navigation highlight.
@@ -90,7 +91,7 @@ function az_render_member_layout_open(string $page, array $user): void
     <div id="azh-side-navigation"><?php az_render_member_nav_links($page, $user); ?></div>
   </aside>
   <div class="azh-member-canvas" id="azh-page-canvas">
-    <div class="azh-canvas-topline"><span>AZHOTTIE <span class="azh-canvas-slash">/</span> <?= az_h($page === 'my-media' ? 'My media gallery' : ('dashboard' === $page ? 'Overview' : ucwords(str_replace('-', ' ', $page)))) ?></span><span class="azh-canvas-member-pill"><span aria-hidden="true">✳</span> <?= in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','accounts','admin'], true) ? 'ADMIN STUDIO' : 'MEMBER AREA' ?></span></div>
+    <div class="azh-canvas-topline"><span>AZHOTTIE <span class="azh-canvas-slash">/</span> <?= az_h($page === 'my-media' ? 'My media gallery' : ('dashboard' === $page ? 'Overview' : ucwords(str_replace('-', ' ', $page)))) ?></span><span class="azh-canvas-member-pill"><span aria-hidden="true">✳</span> <?= in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','accounts','admin'], true) ? 'ADMIN STUDIO' : 'MEMBER AREA' ?></span></div>
 <?php
 }
 

@@ -77,6 +77,7 @@ function az_model_video_data(array $row): array
         'sizeBytes' => (int)$row['size_bytes'], 'sourceRevision' => (int)$row['source_revision'],
         'submittedAt' => $row['submitted_at'], 'publishedAt' => $row['published_at'],
         'updatedAt' => $row['updated_at'], 'createdAt' => $row['created_at'],
+        'scheduledAt' => $row['status']==='scheduled' ? (az_publishing_schedule_lookup($id)['publish_at']??null) : null,
         'publicCredit' => $row['public_credit'],
         'videoUrl' => az_url('model-video-file.php?id=' . $id),
         'coverUrl' => $row['cover_storage_name'] ? az_url('model-video-file.php?id=' . $id . '&type=cover&v=' . $row['source_revision']) : null,
@@ -134,7 +135,8 @@ function az_model_video_update(array $body, int $owner): array
     $q=az_db()->prepare("UPDATE model_videos SET title=?,description=?,status='draft',review_note='',rights_confirmed=0,submitted_at=NULL,published_at=NULL,reviewed_at=NULL,reviewed_by=NULL,revision=revision+1,updated_at=? WHERE id=? AND user_id=? AND revision=?");
     $q->execute([$title,$description,az_now(),$row['id'],$owner,$revision]);
     if ($q->rowCount()!==1) throw new AzHttpError(409,'This video changed. Reload it.','revision_conflict');
-    az_agent_workspace_video_event($owner,$owner,'video_updated','Video details updated',$title,$row['id'],$row['status']==='pending_review'||$row['status']==='published');
+    az_publishing_cancel_schedule($row['id']);
+    az_agent_workspace_video_event($owner,$owner,'video_updated','Video details updated',$title,$row['id'],$row['status']==='pending_review'||$row['status']==='published'||$row['status']==='scheduled');
     return az_model_video_data(az_model_video_row($row['id'],$owner));
 }
 
@@ -181,6 +183,7 @@ function az_model_video_withdraw(array $body,int $owner): array
     $q=az_db()->prepare("UPDATE model_videos SET status='draft',rights_confirmed=0,review_note='',submitted_at=NULL,published_at=NULL,reviewed_at=NULL,reviewed_by=NULL,revision=revision+1,updated_at=? WHERE id=? AND user_id=? AND revision=?");
     $q->execute([az_now(),$row['id'],$owner,$revision]);
     if ($q->rowCount()!==1) throw new AzHttpError(409,'Video changed. Reload it.','revision_conflict');
+    az_publishing_cancel_schedule($row['id']);
     az_agent_workspace_video_event($owner,$owner,'video_withdrawn','Video withdrawn from review/publication',$row['title'],$row['id'],true);
     return az_model_video_data(az_model_video_row($row['id'],$owner));
 }
@@ -202,8 +205,10 @@ function az_model_video_delete(array $body,int $owner): array
 /** Changes to the gallery poster cannot silently alter an approved public publication. */
 function az_model_video_source_cover_changed(string $mediaId,int $owner): void
 {
-    $q=az_db()->prepare("UPDATE model_videos SET status='draft',rights_confirmed=0,submitted_at=NULL,published_at=NULL,review_note='',reviewed_at=NULL,reviewed_by=NULL,revision=revision+1,updated_at=? WHERE media_id=? AND user_id=? AND status IN ('pending_review','published')");
+    $q=az_db()->prepare("UPDATE model_videos SET status='draft',rights_confirmed=0,submitted_at=NULL,published_at=NULL,review_note='',reviewed_at=NULL,reviewed_by=NULL,revision=revision+1,updated_at=? WHERE media_id=? AND user_id=? AND status IN ('pending_review','published','scheduled')");
     $q->execute([az_now(),$mediaId,$owner]);
+    $cancel=az_db()->prepare("UPDATE publishing_agent_schedules SET state='cancelled',updated_at=? WHERE user_id=? AND video_id IN (SELECT id FROM model_videos WHERE media_id=? AND user_id=?) AND state='scheduled'");
+    $cancel->execute([az_now(),$owner,$mediaId,$owner]);
 }
 
 function az_model_video_review_list(): array
@@ -213,7 +218,7 @@ function az_model_video_review_list(): array
             m.revision AS source_revision,u.name AS owner_name,u.status AS owner_status
         FROM model_videos p JOIN personal_media m ON m.id=p.media_id AND m.user_id=p.user_id
             JOIN users u ON u.id=p.user_id
-        WHERE p.status IN ('pending_review','published','changes_requested','rejected')
+        WHERE p.status IN ('pending_review','published','scheduled','changes_requested','rejected')
         ORDER BY CASE p.status WHEN 'pending_review' THEN 0 WHEN 'changes_requested' THEN 1 WHEN 'rejected' THEN 2 ELSE 3 END,
             p.submitted_at DESC,p.id DESC LIMIT 200");
     $items=[];
@@ -232,23 +237,25 @@ function az_model_video_moderate(array $body,int $admin): array
     $revision=az_integer($body['revision']??0,1,PHP_INT_MAX,'Revision');
     if ($revision!==(int)$row['revision']) throw new AzHttpError(409,'This video changed. Reload the queue.','revision_conflict');
     $decision=az_text($body['decision']??'',24,'Review decision');
-    if (!in_array($decision,['approve','request_changes','reject','unpublish'],true)) throw new AzHttpError(400,'Invalid review decision.','invalid_decision');
-    if ($decision==='unpublish' && $row['status']!=='published') throw new AzHttpError(409,'Only a published video can be unpublished.','invalid_status');
+    if (!in_array($decision,['approve','schedule','request_changes','reject','unpublish'],true)) throw new AzHttpError(400,'Invalid review decision.','invalid_decision');
+    if ($decision==='unpublish' && !in_array($row['status'],['published','scheduled'],true)) throw new AzHttpError(409,'Only a published or scheduled video can be unpublished.','invalid_status');
     if ($decision!=='unpublish' && $row['status']!=='pending_review') throw new AzHttpError(409,'Only submitted videos can be reviewed.','invalid_status');
     $note=az_text($body['note']??'',2000,'Review notes');
     if (in_array($decision,['request_changes','reject'],true) && $note==='') throw new AzHttpError(400,'Enter a review reason for the model.','note_required');
-    if ($decision==='approve') {
+    if (in_array($decision,['approve','schedule'],true)) {
         $account=az_account_user((int)$row['user_id']);
         if (!$account || $account['status']!=='active' || !az_has_role($account,'model')) throw new AzHttpError(409,'The model account is not active.','model_unavailable');
         if (!(int)$row['rights_confirmed'] || !str_starts_with((string)$row['mime_type'],'video/') || !is_file(az_media_path($row)))
             throw new AzHttpError(409,'Video is missing, invalid, or not approved for sharing by the model.','video_unavailable');
     }
+    if ($decision==='schedule') return az_publishing_schedule_video($row,$admin,$body['publishAt']??null);
     $now=az_now();
     $status=match($decision){'approve'=>'published','request_changes'=>'changes_requested','reject'=>'rejected','unpublish'=>'draft'};
     $credit=$decision==='approve'?az_model_video_credit((int)$row['user_id']):($decision==='unpublish'?'':$row['public_credit']);
     $q=az_db()->prepare('UPDATE model_videos SET status=?,review_note=?,public_credit=?,published_at=?,reviewed_at=?,reviewed_by=?,revision=revision+1,updated_at=? WHERE id=? AND revision=?');
     $q->execute([$status,$note,$credit,$decision==='approve'?$now:null,$now,$admin,$now,$row['id'],$revision]);
     if ($q->rowCount()!==1) throw new AzHttpError(409,'Video changed. Reload the queue.','revision_conflict');
+    if ($decision==='unpublish')az_publishing_cancel_schedule($row['id']);
     az_agent_workspace_video_event($admin,(int)$row['user_id'],'video_'.$status, 'Admin review: '.str_replace('_',' ',$status), $row['title'].($note!==''?' · '.$note:''),$row['id'],true);
     $item=az_model_video_data(az_model_video_any_row($row['id']));
     return $item;
@@ -327,7 +334,7 @@ function az_model_video_public_profile(int $owner): array
 /** Dashboard teaser for administrators. Keep detailed private submissions inside the admin queue. */
 function az_model_video_dashboard_summary(): array
 {
-    $summary=['pending'=>0,'published'=>0,'changes_requested'=>0,'rejected'=>0,'total'=>0,'recent'=>[]];
+    $summary=['pending'=>0,'published'=>0,'changes_requested'=>0,'rejected'=>0,'scheduled'=>0,'total'=>0,'recent'=>[]];
     $counts=az_db()->query('SELECT status,COUNT(*) AS total FROM model_videos GROUP BY status');
     foreach ($counts->fetchAll() as $row) {
         $status=(string)$row['status'];

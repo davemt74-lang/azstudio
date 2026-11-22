@@ -66,6 +66,7 @@ function az_db(): PDO
     if (function_exists('az_upgrade_agent_casting_schema') && az_schema_version($GLOBALS['az_database']) >= 31) { az_upgrade_agent_casting_schema($GLOBALS['az_database']); }
     if (function_exists('az_upgrade_agent_scheduling_schema') && az_schema_version($GLOBALS['az_database']) >= 32) { az_upgrade_agent_scheduling_schema($GLOBALS['az_database']); }
     if (function_exists('az_upgrade_agent_video_schema') && az_schema_version($GLOBALS['az_database']) >= 33) { az_upgrade_agent_video_schema($GLOBALS['az_database']); }
+    if (function_exists('az_upgrade_agent_publishing_schema') && az_schema_version($GLOBALS['az_database']) >= 34) { az_upgrade_agent_publishing_schema($GLOBALS['az_database']); }
     return $GLOBALS['az_database'];
 }
 

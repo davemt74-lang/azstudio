@@ -29,10 +29,10 @@ test('Admin User Submissions requires admin, supports explicit approve/request c
   assert.match(admin,/az_require_admin\(\)/);
   assert.match(reviewApi,/az_require_admin\(true\)/);
   assert.match(reviewApi,/az_require_csrf\(\)/);
-  assert.match(backend,/\['approve','request_changes','reject','unpublish'\]/);
+  assert.match(backend,/\['approve','schedule','request_changes','reject','unpublish'\]/);
   assert.match(backend,/only submitted videos can be reviewed/i);
   assert.match(backend,/review reason for the model/);
-  for(const action of ['approve','request_changes','reject','unpublish'])assert.match(adminJs,new RegExp("'"+action+"'"));
+  for(const action of ['approve','schedule','request_changes','reject','unpublish'])assert.match(adminJs,new RegExp("'"+action+"'"));
   assert.match(adminJs,/Play video to review/);
 });
 test('public Watch is approval and consent gated and never exposes private source metadata',()=>{

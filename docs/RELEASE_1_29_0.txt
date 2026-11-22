@@ -1,0 +1,12 @@
+AZHottie Studio v1.29.0 — Publishing & Audience Growth Specialist
+
+- Unified model-video publication pipeline with admin-only, explicitly approved schedule (15 minutes to 180 days in America/Phoenix). A scheduled video stays private. The existing private hourly cron publishes at or after the approved time (up to the next hourly check), only if the active model, consent, media and exact video revision still qualify. Withdrawals/changes prevent publication. The cron never approves submissions.
+- The existing User Submissions moderation page can approve & publish immediately, approve & schedule, request changes, reject, unpublish, or cancel a scheduled release.
+- Publishing & Growth dashboard shows measured aggregate public creator-video and published interview Watch play starts, completions, watched minutes, prior-30-day comparison, daily chart, pending/approved/scheduled videos and top posts. These are creator-video Watch counters, NOT external ad or conversion attribution.
+- Admin promotion drafts are generated from human-entered title and copy or verified video metadata, not assumed footage understanding. A feature is pinned to the exact approved video revision, preventing old copy from resurfacing after a video is withdrawn, changed and reapproved. Approved onsite features can display in public Watch only while the referenced model video remains approved and consented. Social promotion copy can be approved for human sharing; NO external send occurs.
+- Agent Chat receives aggregate-only publishing counts. Brain shows verified review, scheduling, promotion and audience opportunities, with History recording actual moderator decisions.
+- Schema migration 34 → 35 creates account-scoped scheduling and promotion tables with foreign-key cascade. Private storage and media remain excluded from Git.
+- Production certification requires MySQL migration, private hourly cron running, real video moderation, scheduled publish and withdrawal test, public Watch feature and engagement collection.
+- Original interviews retain their existing production publication route; scheduling and on-site feature apply to standalone model videos.
+
+Testing: npm test; php -l; php tests/agent_publishing_rules.php; php tests/agent_publishing_integration.php; python tests/agent_publishing_sql_smoke.py. CI must pass before merging.
