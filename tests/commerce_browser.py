@@ -134,7 +134,7 @@ def run():
                 assert page.get_by_text('Sample Product').count()>=1,(role,width,'missing product')
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+2'),(role,width,'overflow')
                 page.locator('[data-tab=analytics]').click()
-                assert page.locator('.azh-commerce-kpi').count()==8,(role,width,'analytics cards')
+                assert page.locator('.azh-commerce-kpi').count()==11,(role,width,'analytics cards')
                 if admin:
                     page.locator('[data-tab=products]').click()
                     page.locator('#commerce-products-list .azh-commerce-card button').first.click()
