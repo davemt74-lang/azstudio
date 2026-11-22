@@ -16,21 +16,23 @@ function az_upgrade_commerce_local_schema(PDO $db): void
         $mysql=$db->getAttribute(PDO::ATTR_DRIVER_NAME)==='mysql';
         $uid=$mysql?'BIGINT UNSIGNED':'INTEGER';
         $suffix=$mysql?' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci':'';
-        // MySQL DDL may commit each step. Like the Stripe migration, replay each column independently.
-        if(!az_stripe_has_column($db,'commerce_products','local_enabled'))
-            $db->exec('ALTER TABLE commerce_products ADD COLUMN local_enabled INTEGER NOT NULL DEFAULT 0');
-        $db->exec("CREATE TABLE IF NOT EXISTS commerce_local_settings (
-            id INTEGER PRIMARY KEY, enabled INTEGER NOT NULL DEFAULT 0,
-            pickup_enabled INTEGER NOT NULL DEFAULT 0, delivery_enabled INTEGER NOT NULL DEFAULT 0,
+        $db->exec("CREATE TABLE IF NOT EXISTS commerce_local_product_settings (
+            product_id CHAR(32) PRIMARY KEY,
+            enabled INTEGER NOT NULL DEFAULT 0,
+            pickup_enabled INTEGER NOT NULL DEFAULT 0,
+            delivery_enabled INTEGER NOT NULL DEFAULT 0,
             pickup_location VARCHAR(160) NOT NULL DEFAULT '',
             pickup_address VARCHAR(320) NOT NULL DEFAULT '',
             pickup_hours VARCHAR(200) NOT NULL DEFAULT '',
             pickup_instructions VARCHAR(500) NOT NULL DEFAULT '',
-            delivery_zips TEXT NOT NULL, delivery_state CHAR(2) NOT NULL DEFAULT 'AZ',
+            delivery_zips TEXT NOT NULL,
+            delivery_state CHAR(2) NOT NULL DEFAULT 'AZ',
             delivery_fee_cents BIGINT NOT NULL DEFAULT 0,
             delivery_min_cents BIGINT NOT NULL DEFAULT 0,
             delivery_instructions VARCHAR(500) NOT NULL DEFAULT '',
-            revision INTEGER NOT NULL DEFAULT 1, updated_at VARCHAR(32) NOT NULL)$suffix");
+            revision INTEGER NOT NULL DEFAULT 1,
+            updated_at VARCHAR(32) NOT NULL,
+            FOREIGN KEY(product_id) REFERENCES commerce_products(id) ON DELETE CASCADE)$suffix");
         $db->exec("CREATE TABLE IF NOT EXISTS commerce_local_orders (
             order_id CHAR(32) PRIMARY KEY, request_key CHAR(64) NOT NULL UNIQUE,
             cart_hash CHAR(64) NOT NULL, receipt_hash CHAR(64) NOT NULL UNIQUE,
@@ -60,12 +62,13 @@ function az_upgrade_commerce_local_schema(PDO $db): void
         $db->exec('UPDATE studio_schema SET version=38 WHERE id=1');
     }finally{flock($lock,LOCK_UN);fclose($lock);}
 }
-function az_local_settings_row(): array
+function az_local_settings_row(string $productId): array
 {
-    $q=az_db()->query('SELECT * FROM commerce_local_settings WHERE id=1');
-    $row=$q->fetch(PDO::FETCH_ASSOC);
+    if(!az_valid_id($productId))throw new AzHttpError(404,'Product not found.','not_found');
+    $q=az_db()->prepare('SELECT * FROM commerce_local_product_settings WHERE product_id=?');
+    $q->execute([$productId]);$row=$q->fetch(PDO::FETCH_ASSOC);
     return $row?:[
-        'id'=>1,'enabled'=>0,'pickup_enabled'=>0,'delivery_enabled'=>0,
+        'product_id'=>$productId,'enabled'=>0,'pickup_enabled'=>0,'delivery_enabled'=>0,
         'pickup_location'=>'','pickup_address'=>'','pickup_hours'=>'','pickup_instructions'=>'',
         'delivery_zips'=>'[]','delivery_state'=>'AZ','delivery_fee_cents'=>0,'delivery_min_cents'=>0,
         'delivery_instructions'=>'','revision'=>0,'updated_at'=>''
@@ -97,16 +100,16 @@ function az_local_clean(mixed $value,int $limit,string $field,bool $required=fal
     if($required&&$result==='')throw new AzHttpError(400,'Enter '.$field.'.','missing_contact');
     return $result;
 }
-function az_local_options(): array
+function az_local_options(string $productId): array
 {
-    $s=az_local_settings_row();
+    $s=az_local_settings_row($productId);
     $zips=json_decode((string)$s['delivery_zips'],true);
     if(!is_array($zips))$zips=[];
     $pickup=(int)$s['enabled']===1&&(int)$s['pickup_enabled']===1
         &&trim((string)$s['pickup_address'])!==''&&trim((string)$s['pickup_hours'])!=='';
     $delivery=(int)$s['enabled']===1&&(int)$s['delivery_enabled']===1&&count($zips)>0;
     return [
-        'available'=>$pickup||$delivery,
+        'productId'=>$productId,'available'=>$pickup||$delivery,
         'pickupEnabled'=>$pickup,'deliveryEnabled'=>$delivery,
         'pickupLocation'=>$pickup?(string)$s['pickup_location']:'',
         'pickupAddress'=>$pickup?(string)$s['pickup_address']:'',
@@ -119,11 +122,13 @@ function az_local_options(): array
         'notice'=>'Cash orders are requests until staff approve the final price and timing. No cash is collected online. Any applicable tax is confirmed by staff before collection.'
     ];
 }
-function az_local_settings_admin(array $user): array
+function az_local_settings_admin(array $user,string $productId): array
 {
-    az_commerce_admin($user);$s=az_local_settings_row();
-    return ['revision'=>(int)$s['revision'],'enabled'=>(bool)$s['enabled'],
-        'pickupEnabled'=>(bool)$s['pickup_enabled'],'deliveryEnabled'=>(bool)$s['delivery_enabled'],
+    az_commerce_admin($user);
+    $s=az_local_settings_row($productId);
+    return ['productId'=>$productId,'revision'=>(int)$s['revision'],
+        'enabled'=>(bool)$s['enabled'],'pickupEnabled'=>(bool)$s['pickup_enabled'],
+        'deliveryEnabled'=>(bool)$s['delivery_enabled'],
         'pickupLocation'=>$s['pickup_location'],'pickupAddress'=>$s['pickup_address'],
         'pickupHours'=>$s['pickup_hours'],'pickupInstructions'=>$s['pickup_instructions'],
         'deliveryZips'=>implode(', ',(array)(json_decode((string)$s['delivery_zips'],true)?:[])),
@@ -143,12 +148,12 @@ function az_local_write(callable $fn): array
     catch(Throwable $e){error_log('Cash Commerce delivery deferred: '.$e->getMessage());}
     return $result;
 }
-function az_local_settings_save(array $user,array $body): array
+/** Validate one product's cash and fulfillment settings before saving the product. */
+function az_local_prepare_settings(array $body): array
 {
-    az_commerce_admin($user);
-    $enabled=az_bool($body['enabled']??false,'Cash ordering enabled');
-    $pickup=az_bool($body['pickupEnabled']??false,'Pickup enabled');
-    $delivery=az_bool($body['deliveryEnabled']??false,'Delivery enabled');
+    $enabled=az_bool($body['enabled']??false,'Cash orders');
+    $pickup=az_bool($body['pickupEnabled']??false,'Cash pickup');
+    $delivery=az_bool($body['deliveryEnabled']??false,'Cash delivery');
     $location=az_local_clean($body['pickupLocation']??'',160,'Pickup location');
     $address=az_local_clean($body['pickupAddress']??'',320,'Pickup address');
     $hours=az_local_clean($body['pickupHours']??'',200,'Pickup hours');
@@ -156,32 +161,53 @@ function az_local_settings_save(array $user,array $body): array
     $deliveryNotes=az_local_clean($body['deliveryInstructions']??'',500,'Delivery instructions');
     $zips=az_local_zips($body['deliveryZips']??'');
     $state=strtoupper(az_local_clean($body['deliveryState']??'AZ',2,'Delivery state'));
-    if(!preg_match('/^[A-Z]{2}$/D',$state))throw new AzHttpError(400,'Enter a two-letter US state.','invalid_state');
+    if(!preg_match('/^[A-Z]{2}$/D',$state))
+        throw new AzHttpError(400,'Enter a two-letter US state.','invalid_state');
     $fee=az_integer($body['deliveryFeeCents']??0,0,1000000,'Delivery fee');
     $minimum=az_integer($body['deliveryMinCents']??0,0,100000000,'Minimum delivery subtotal');
-    if($enabled&&!$pickup&&!$delivery)throw new AzHttpError(400,'Enable pickup, delivery, or both.','no_cash_methods');
+    if($enabled&&!$pickup&&!$delivery)
+        throw new AzHttpError(400,'Choose pickup, delivery, or both for this product.','no_cash_methods');
     if($enabled&&$pickup&&($address===''||$hours===''))
-        throw new AzHttpError(400,'Publish a pickup address and hours before enabling pickup.','pickup_unavailable');
-    if($enabled&&$delivery&&!$zips)throw new AzHttpError(400,'Add delivery ZIP codes before enabling delivery.','delivery_unavailable');
-    $rev=az_integer($body['revision']??0,0,PHP_INT_MAX,'Settings revision');
-    $actor=(int)$user['id'];
-    return az_local_write(static function(PDO $db)use($enabled,$pickup,$delivery,$location,$address,$hours,$pickupNotes,
-        $deliveryNotes,$zips,$state,$fee,$minimum,$rev,$actor):array{
-        $existing=az_local_settings_row();$now=az_now();$json=json_encode($zips,JSON_THROW_ON_ERROR);
-        if($rev!==(int)$existing['revision'])
-            throw new AzHttpError(409,'Cash settings changed. Reload before saving.','revision_conflict');
-        if((int)$existing['revision']===0){
-            $db->prepare('INSERT INTO commerce_local_settings(id,enabled,pickup_enabled,delivery_enabled,pickup_location,pickup_address,pickup_hours,pickup_instructions,delivery_zips,delivery_state,delivery_fee_cents,delivery_min_cents,delivery_instructions,revision,updated_at) VALUES(1,?,?,?,?,?,?,?,?,?,?,?,?,1,?)')
-              ->execute([$enabled?1:0,$pickup?1:0,$delivery?1:0,$location,$address,$hours,$pickupNotes,$json,$state,$fee,$minimum,$deliveryNotes,$now]);
-        }else{
-            $q=$db->prepare('UPDATE commerce_local_settings SET enabled=?,pickup_enabled=?,delivery_enabled=?,pickup_location=?,pickup_address=?,pickup_hours=?,pickup_instructions=?,delivery_zips=?,delivery_state=?,delivery_fee_cents=?,delivery_min_cents=?,delivery_instructions=?,revision=revision+1,updated_at=? WHERE id=1 AND revision=?');
-            $q->execute([$enabled?1:0,$pickup?1:0,$delivery?1:0,$location,$address,$hours,$pickupNotes,$json,$state,$fee,$minimum,$deliveryNotes,$now,$rev]);
-            if($q->rowCount()!==1)throw new AzHttpError(409,'Cash settings changed before saving.','revision_conflict');
-        }
-        az_commerce_queue('local-settings:'.$now.':'.($rev+1),$actor,$actor,'local_settings',
-            'Local cash ordering settings updated','Pickup and delivery availability was changed by an administrator.','commerce.php',false);
-        return ['revision'=>$rev+1,'enabled'=>$enabled,'pickupEnabled'=>$pickup,'deliveryEnabled'=>$delivery];
-    });
+        throw new AzHttpError(400,'Add a pickup address and hours for this product.','pickup_unavailable');
+    if($enabled&&$delivery&&!$zips)
+        throw new AzHttpError(400,'Add the delivery ZIP codes for this product.','delivery_unavailable');
+    $revision=az_integer($body['revision']??0,0,PHP_INT_MAX,'Product local settings revision');
+    return [
+        'enabled'=>$enabled,'pickupEnabled'=>$pickup,'deliveryEnabled'=>$delivery,
+        'pickupLocation'=>$location,'pickupAddress'=>$address,'pickupHours'=>$hours,
+        'pickupInstructions'=>$pickupNotes,'deliveryZips'=>$zips,'deliveryState'=>$state,
+        'deliveryFeeCents'=>$fee,'deliveryMinCents'=>$minimum,
+        'deliveryInstructions'=>$deliveryNotes,'revision'=>$revision,
+        'available'=>$enabled&&(($pickup&&$address!==''&&$hours!=='')||($delivery&&count($zips)>0))
+    ];
+}
+/** Persist inside the caller's product transaction, so availability cannot drift. */
+function az_local_save_product_settings(PDO $db,string $productId,array $settings): void
+{
+    $old=az_local_settings_row($productId);
+    $revision=$settings['revision'];
+    if($revision!==(int)$old['revision'])
+        throw new AzHttpError(409,'Product pickup/delivery settings changed. Reload before saving.','revision_conflict');
+    $params=[$settings['enabled']?1:0,$settings['pickupEnabled']?1:0,
+        $settings['deliveryEnabled']?1:0,$settings['pickupLocation'],
+        $settings['pickupAddress'],$settings['pickupHours'],$settings['pickupInstructions'],
+        json_encode($settings['deliveryZips'],JSON_THROW_ON_ERROR),$settings['deliveryState'],
+        $settings['deliveryFeeCents'],$settings['deliveryMinCents'],$settings['deliveryInstructions']];
+    $now=az_now();
+    if($revision===0){
+        $q=$db->prepare('INSERT INTO commerce_local_product_settings(product_id,enabled,pickup_enabled,delivery_enabled,
+            pickup_location,pickup_address,pickup_hours,pickup_instructions,delivery_zips,delivery_state,
+            delivery_fee_cents,delivery_min_cents,delivery_instructions,revision,updated_at)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,1,?)');
+        $q->execute(array_merge([$productId],$params,[$now]));
+    }else{
+        $q=$db->prepare('UPDATE commerce_local_product_settings SET enabled=?,pickup_enabled=?,delivery_enabled=?,
+            pickup_location=?,pickup_address=?,pickup_hours=?,pickup_instructions=?,delivery_zips=?,
+            delivery_state=?,delivery_fee_cents=?,delivery_min_cents=?,delivery_instructions=?,
+            revision=revision+1,updated_at=? WHERE product_id=? AND revision=?');
+        $q->execute(array_merge($params,[$now,$productId,$revision]));
+        if($q->rowCount()!==1)throw new AzHttpError(409,'Product local settings changed.','revision_conflict');
+    }
 }
 function az_local_secret(): string
 {
