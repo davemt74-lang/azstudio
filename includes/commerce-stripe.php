@@ -7,7 +7,7 @@ declare(strict_types=1);
  */
 function az_stripe_has_column(PDO $db,string $table,string $column): bool
 {
-    if(!in_array($table,['commerce_products','commerce_orders','commerce_live_features'],true))throw new InvalidArgumentException('Unsafe schema table');
+    if(!in_array($table,['commerce_products','commerce_orders','commerce_live_features','commerce_checkout_attempts'],true))throw new InvalidArgumentException('Unsafe schema table');
     if($db->getAttribute(PDO::ATTR_DRIVER_NAME)==='mysql'){
         $q=$db->prepare('SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name=? AND column_name=?');
         $q->execute([$table,$column]);return (int)$q->fetchColumn()>0;
