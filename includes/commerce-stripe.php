@@ -211,8 +211,6 @@ function az_stripe_checkout_start(array $body): array
     if(!az_valid_id($token))throw new AzHttpError(400,'Invalid checkout token.','invalid_token');
     [$promotionId,$channel,$sourceRef,$attributed]=az_stripe_attribution($id,$body);
     $stock=az_fulfillment_row($id);
-    if($stock['stock_mode']==='tracked'&&$qty>(int)$stock['on_hand']-(int)$stock['reserved'])
-        throw new AzHttpError(409,'This product no longer has enough stock.','insufficient_stock');
     $ship=(int)$stock['shipping_enabled']===1?'shipping':'none';
     $shippingFee=$ship==='shipping'?az_fulfillment_shipping_fee($id,(int)$product['price_cents']*$qty):0;
     $identity=session_id();
@@ -387,16 +385,16 @@ function az_stripe_apply_payment(PDO $db,array $session): void
 function az_stripe_apply_failure(PDO $db,array $session): void
 {
     $r=az_stripe_attempt_for_session($db,$session);
-    $db->prepare("UPDATE commerce_checkout_attempts SET state='failed',redirect_url=NULL,updated_at=? WHERE id=? AND state='open'")
-        ->execute([az_now(),$r['id']]);
-    az_inventory_resolve($db,hash('sha256','stripe|'.$r['id']),'released');
+    $q=$db->prepare("UPDATE commerce_checkout_attempts SET state='failed',redirect_url=NULL,updated_at=? WHERE id=? AND state='open'");
+    $q->execute([az_now(),$r['id']]);
+    if($q->rowCount()===1)az_inventory_resolve($db,hash('sha256','stripe|'.$r['id']),'released');
 }
 function az_stripe_apply_expiry(PDO $db,array $session): void
 {
     $r=az_stripe_attempt_for_session($db,$session);
-    $db->prepare("UPDATE commerce_checkout_attempts SET state='expired',redirect_url=NULL,updated_at=? WHERE id=? AND state='open'")
-        ->execute([az_now(),$r['id']]);
-    az_inventory_resolve($db,hash('sha256','stripe|'.$r['id']),'released');
+    $q=$db->prepare("UPDATE commerce_checkout_attempts SET state='expired',redirect_url=NULL,updated_at=? WHERE id=? AND state='open'");
+    $q->execute([az_now(),$r['id']]);
+    if($q->rowCount()===1)az_inventory_resolve($db,hash('sha256','stripe|'.$r['id']),'released');
 }
 function az_stripe_apply_refund(PDO $db,array $charge): void
 {
