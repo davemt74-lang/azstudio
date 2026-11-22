@@ -34,6 +34,7 @@ $expect=static function(callable $fn,string $code)use($ok):void{
 az_upgrade_commerce_schema($db);$ok(az_schema_version($db)===36,'base Commerce v36');
 az_upgrade_commerce_stripe_schema($db);$ok(az_schema_version($db)===37,'verified Commerce v37');
 az_upgrade_commerce_local_schema($db);$ok(az_schema_version($db)===38,'local cash schema v38');
+az_upgrade_commerce_fulfillment_schema($db);$ok(az_schema_version($db)===39,'inventory/shipping schema v39');
 az_upgrade_commerce_local_schema($db);$ok(az_schema_version($db)===38,'local migration replay safe');
 $ok(az_local_zips('85002,85001,85002')===['85001','85002'],'ZIPs normalized');
 $expect(static fn()=>az_local_zips('8500x'),'invalid_zips');
