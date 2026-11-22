@@ -426,20 +426,22 @@ function az_commerce_live_select(array $user,array $body): array
     $product=az_commerce_row(az_text($body['productId']??'',32,'Product'));
     if(!az_commerce_active($product))throw new AzHttpError(409,'Only active checkout-ready products can be featured.','product_inactive');
     $actor=(int)$user['id'];
-    return az_commerce_write(static function(PDO $db)use($room,$product,$actor):array {
+    $promotion=az_text($body['promotionId']??'',32,'Creator promotion');
+    if($promotion!=='')az_stripe_promotion_row($promotion,$product['id']);
+    return az_commerce_write(static function(PDO $db)use($room,$product,$actor,$promotion):array {
         $q=$db->prepare('SELECT room_id FROM commerce_live_features WHERE room_id=?');$q->execute([$room['id']]);
-        if($q->fetchColumn())$db->prepare('UPDATE commerce_live_features SET product_id=?,selected_by=?,updated_at=? WHERE room_id=?')
-            ->execute([$product['id'],$actor,az_now(),$room['id']]);
-        else $db->prepare('INSERT INTO commerce_live_features(room_id,product_id,selected_by,updated_at) VALUES(?,?,?,?)')
-            ->execute([$room['id'],$product['id'],$actor,az_now()]);
+        if($q->fetchColumn())$db->prepare('UPDATE commerce_live_features SET product_id=?,promotion_id=?,selected_by=?,updated_at=? WHERE room_id=?')
+            ->execute([$product['id'],$promotion?:null,$actor,az_now(),$room['id']]);
+        else $db->prepare('INSERT INTO commerce_live_features(room_id,product_id,promotion_id,selected_by,updated_at) VALUES(?,?,?,?,?)')
+            ->execute([$room['id'],$product['id'],$promotion?:null,$actor,az_now()]);
         az_commerce_queue_admins('live:'.$room['id'].':'.$product['id'],$actor,'live_feature','Live shopping feature selected',
             $product['title'].' is available beside the active live player. This does not initiate a sale.',true);
-        return ['roomId'=>$room['id'],'productId'=>$product['id']];
+        return ['roomId'=>$room['id'],'productId'=>$product['id'],'promotionId'=>$promotion?:null];
     });
 }
 function az_commerce_public_products(): array
 {
-    $q=az_db()->query("SELECT id,title,description,price_cents,currency,checkout_url,checkout_mode FROM commerce_products
+    $q=az_db()->query("SELECT id,title,description,price_cents,currency,checkout_url,checkout_mode,state FROM commerce_products
         WHERE state='active' AND ((checkout_mode='external' AND checkout_url<>'') OR checkout_mode='stripe')
         ORDER BY updated_at DESC LIMIT 48");
     $rows=array_filter($q->fetchAll(PDO::FETCH_ASSOC),static fn($r)=>($r['checkout_mode']==='external'||az_stripe_product_ready($r)));
@@ -450,7 +452,7 @@ function az_commerce_public_products(): array
 function az_commerce_live_feature(): ?array
 {
     $room=az_live_active_room();if(!$room)return null;
-    $q=az_db()->prepare("SELECT p.id,p.title,p.description,p.price_cents,p.currency,p.checkout_url,p.checkout_mode,f.promotion_id
+    $q=az_db()->prepare("SELECT p.id,p.title,p.description,p.price_cents,p.currency,p.checkout_url,p.checkout_mode,p.state,f.promotion_id
         FROM commerce_live_features f JOIN commerce_products p ON p.id=f.product_id AND p.state='active'
         WHERE f.room_id=?");
     $q->execute([$room['id']]);$r=$q->fetch();
@@ -467,7 +469,7 @@ function az_commerce_live_feature(): ?array
 function az_commerce_video_products(string $videoId): array
 {
     if(!az_valid_id($videoId))return [];
-    $q=az_db()->prepare("SELECT a.id AS promotion_id,a.product_id,p.title,p.description,p.price_cents,p.currency,p.checkout_url,p.checkout_mode
+    $q=az_db()->prepare("SELECT a.id AS promotion_id,a.product_id,p.title,p.description,p.price_cents,p.currency,p.checkout_url,p.checkout_mode,p.state
         FROM commerce_promotions a JOIN commerce_products p ON p.id=a.product_id
         JOIN model_videos v ON v.id=a.video_id AND v.user_id=a.model_id
         JOIN users u ON u.id=a.model_id AND u.status='active'

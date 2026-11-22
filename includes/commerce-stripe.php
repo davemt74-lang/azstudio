@@ -110,12 +110,12 @@ function az_stripe_promotion_row(string $promotionId,string $productId,?string $
 {
     if(!az_valid_id($promotionId))throw new AzHttpError(404,'Promotion does not exist.','promotion_missing');
     $q=az_db()->prepare("SELECT a.*,v.status AS video_status,v.revision AS current_revision,
-        v.rights_confirmed,u.status AS model_status
+        v.rights_confirmed,v.published_at,u.status AS model_status
         FROM commerce_promotions a JOIN model_videos v ON v.id=a.video_id AND v.user_id=a.model_id
         JOIN users u ON u.id=a.model_id
         WHERE a.id=? AND a.product_id=?");
     $q->execute([$promotionId,$productId]);$r=$q->fetch();
-    if(!$r||$r['state']!=='approved'||$r['video_status']!=='published'
+    if(!$r||$r['state']!=='approved'||$r['video_status']!=='published'||$r['published_at']===null
         ||(int)$r['current_revision']!==(int)$r['video_revision']
         ||(int)$r['rights_confirmed']!==1||$r['model_status']!=='active'
         ||($videoId!==null&&$r['video_id']!==$videoId))
