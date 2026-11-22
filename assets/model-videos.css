@@ -79,3 +79,5 @@
 @media(max-width:900px){.mv-review-columns{grid-template-columns:1fr}.mv-review-card .mv-cover{max-width:680px}}
 @media(max-width:650px){.mv-header{flex-direction:column;align-items:start}.mv-create-form{grid-template-columns:1fr}.mv-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.mv-review-heading{flex-direction:column}.mv-dialog-body{padding:19px}}
 @media(max-width:420px){.mv-stats{gap:8px}.mv-stats>div{padding:14px}.mv-card-content{padding:14px}}
+
+.mv-badge-scheduled{background:#fef2d5!important;color:#654419!important;border-color:#e4c68d!important}

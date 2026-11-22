@@ -3,7 +3,7 @@ const root=document.querySelector('.mv-page:not(.mv-admin)');
 if(root){
   const $=id=>document.getElementById(id);
   const make=(tag,className,text)=>{const n=document.createElement(tag);if(className)n.className=className;if(text!==undefined)n.textContent=String(text);return n;};
-  const labels={draft:'Private draft',pending_review:'Awaiting admin review',published:'Published',changes_requested:'Changes requested',rejected:'Rejected'};
+  const labels={draft:'Private draft',pending_review:'Awaiting admin review',scheduled:'Approved · scheduled',published:'Published',changes_requested:'Changes requested',rejected:'Rejected'};
   let csrf=root.dataset.csrf,items=[],gallery=[],selected=null,busy=false;
   const edit=$('mv-edit-dialog'),submit=$('mv-submit-dialog');
   function notice(message,error=false){const node=$('mv-message');node.hidden=!message;node.textContent=message||'';node.classList.toggle('is-error',error);if(message)node.scrollIntoView({block:'nearest',behavior:'smooth'});}
@@ -42,11 +42,12 @@ if(root){
       body.append(make('h3','',item.title));
       if(item.description)body.append(make('p','',item.description));
       body.append(make('small','mv-card-meta',`${item.durationMs?Math.round(item.durationMs/1000)+' sec · ':''}Updated ${new Date(item.updatedAt).toLocaleDateString()}`));
+      if(item.status==='scheduled' && item.scheduledAt)body.append(make('small','mv-card-meta','Approved release: '+new Date(item.scheduledAt).toLocaleString('en-US',{timeZone:'America/Phoenix',dateStyle:'medium',timeStyle:'short'})+' Arizona time'));
       if(item.reviewNote){const note=make('div','mv-review-note');note.append(make('strong','',item.status==='rejected'?'Rejection reason:':'Admin notes: '),document.createTextNode(item.reviewNote));body.append(note);}
       const actions=make('div','mv-card-actions');
       actions.append(button('Edit details',()=>{selected=item;$('mv-edit-title').value=item.title;$('mv-edit-description').value=item.description;edit.showModal();}));
       if(['draft','changes_requested'].includes(item.status))actions.append(button('Submit for review',()=>{selected=item;$('mv-rights').checked=false;$('mv-submit-title').textContent=item.title;submit.showModal();},'mv-button-primary'));
-      if(['pending_review','published','changes_requested','rejected'].includes(item.status))actions.append(button(item.status==='published'?'Unpublish video':'Return to draft',async()=>{
+      if(['pending_review','scheduled','published','changes_requested','rejected'].includes(item.status))actions.append(button(item.status==='published'?'Unpublish video':'Return to draft',async()=>{
         const note=item.status==='published'?'Remove this video from Watch and return it to a private draft?':'Withdraw this video and make it private again?';
         if(!confirm(note))return;
         await mutate('withdraw',{id:item.id,revision:item.revision},'Video returned to a private draft.');

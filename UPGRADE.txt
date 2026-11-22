@@ -1,6 +1,7 @@
-AZHottie Studio v1.28.0 — upgrade from v1.27.0
+AZHottie Studio v1.29.0 — upgrade from v1.27.0
 - Backup all site files, database, and protected storage/ before replacing application files. Do not rerun install.php or overwrite private configuration/media.
-- Apply the direct-deploy ZIP over the existing installation; database schema upgrades 33→34 on bootstrapping.
+- Apply the direct-deploy ZIP over the existing installation; database schema upgrades 34→35 on bootstrapping.
+- Scheduled publication requires the existing private hourly PHP cron. Without it, approved scheduled posts remain private. Confirm the hosted migration and test admin approvals, model withdrawal, actual publication, and Watch engagement.
 - Clear browser caches/hard refresh my-editor.php, Agent Chat and the Brain drawer.
 - Check video note ownership, draft generation, explicit approval, revision-safe revert and separate admin publication review on the live MySQL host.
 - Private hourly cron may report plans awaiting owner review after 48 hours; without cron, background reminders are not active. No external AI audio/video understanding or automated publication is included.

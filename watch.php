@@ -15,6 +15,7 @@ try {
             $state['video'] = az_public_watch_video($id);
         } else {
             $state['feed'] = az_public_watch_feed($_GET);
+            if ($state['search']==='' && (int)($_GET['page']??1)===1) $state['featured']=az_publishing_public_feature();
         }
     } elseif (isset($_GET['id'])) {
         throw new AzHttpError(404, 'This video is not available.', 'not_found');
