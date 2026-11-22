@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__.'/includes/bootstrap.php';
 $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robots-Tag: noindex,nofollow');
-?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Live Director · AZHottie</title><link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/live-studio.css?v=1.25.0"></head>
+?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Live Director · AZHottie</title><link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/live-studio.css?v=1.25.0"><link rel="stylesheet" href="assets/commerce.css?v=1.30.0"></head>
 <body class="azh-director-body" data-page="live-director">
 <main class="azh-director azh-director-app" id="azh-director" data-csrf="<?= az_h(az_csrf_token()) ?>" aria-label="Full-screen live production control room">
   <header class="azh-director-toolbar">
@@ -40,6 +40,7 @@ $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robot
           <button type="button" id="live-tab-overlays" class="azh-director-tab" data-live-tab="overlays" role="tab" aria-controls="live-panel-overlays" aria-selected="false" tabindex="-1">Overlays</button>
           <button type="button" id="live-tab-scenes" class="azh-director-tab" data-live-tab="scenes" role="tab" aria-controls="live-panel-scenes" aria-selected="false" tabindex="-1">Scenes</button>
           <button type="button" id="live-tab-audience" class="azh-director-tab" data-live-tab="audience" role="tab" aria-controls="live-panel-audience" aria-selected="false" tabindex="-1">Audience</button>
+          <?php if(az_has_role($user,'admin')): ?><button type="button" id="live-tab-shopping" class="azh-director-tab" data-live-tab="shopping" role="tab" aria-controls="live-panel-shopping" aria-selected="false" tabindex="-1">Live shopping</button><?php endif; ?>
           <button type="button" id="live-tab-recording" class="azh-director-tab" data-live-tab="recording" role="tab" aria-controls="live-panel-recording" aria-selected="false" tabindex="-1">Recording</button>
         </div>
         <div class="azh-director-tabpanels">
@@ -120,6 +121,23 @@ $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robot
               <p id="live-audience-status" role="status" aria-live="polite">Go live to enable fan reactions and chat.</p>
             </section>
           </div>
+          <?php if(az_has_role($user,'admin')): ?>
+          <div class="azh-director-tabpanel" id="live-panel-shopping" role="tabpanel" aria-labelledby="live-tab-shopping" hidden>
+            <section class="azh-live-commerce" aria-label="Live product spotlight" id="director-commerce" data-csrf="<?= az_h(az_csrf_token()) ?>">
+              <div class="azh-live-subhead"><h2>Shopping spotlight</h2><span>Verified active product · external checkout · no automatic purchase</span></div>
+              <form id="director-commerce-form" class="azh-show-form-row">
+                <label>Product <select id="director-commerce-product" aria-label="Live product"><option value="">Loading active products…</option></select></label>
+                <button type="submit" class="azh-live-button">Feature product for viewers</button>
+                <a class="azh-live-button azh-live-secondary" href="commerce.php">Manage products &amp; briefs ↗</a>
+              </form>
+              <p id="director-commerce-status" role="status" aria-live="polite">Go live to feature a product.</p>
+              <div id="director-commerce-preview" class="azh-commerce-card" hidden>
+                <p class="azh-commerce-eyebrow">VIEWER PRODUCT PREVIEW</p><h3 id="director-commerce-title"></h3>
+                <p id="director-commerce-description"></p><strong id="director-commerce-price"></strong>
+              </div>
+            </section>
+          </div>
+          <?php endif; ?>
           <div class="azh-director-tabpanel" id="live-panel-recording" role="tabpanel" aria-labelledby="live-tab-recording" hidden>
       <div class="azh-record-controls"><button type="button" id="live-record" class="azh-live-button" disabled>● Record Program</button><button type="button" id="live-record-stop" class="azh-live-button azh-live-secondary" disabled>■ Stop recording</button><span id="live-record-clock">00:00</span><span id="live-record-message" role="status" aria-live="polite">Record and save the combined Program feed privately.</span><div id="live-record-backup"></div></div>
           </div>
@@ -129,5 +147,5 @@ $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robot
   </div>
   <p id="live-status" class="azh-live-message azh-director-toast" role="status" aria-live="polite" hidden></p>
 </main>
-<script src="assets/qr.js"></script><script type="module" src="assets/live-director.js?v=1.25.0"></script>
+<script src="assets/qr.js"></script><script type="module" src="assets/live-director.js?v=1.25.0"></script><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/commerce-director.js?v=1.30.0"></script><?php endif; ?>
 </body></html>
