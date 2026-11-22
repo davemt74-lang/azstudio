@@ -227,7 +227,8 @@ $approve=az_return_admin_transition($admin,['id'=>$caseId,'revision'=>1,'decisio
     'confirm'=>true,'evidence'=>'verified-order-email-001']);
 $ok($approve['status']==='authorized','staff identity verification authorizes return');
 $held=az_payout_model_balance(1);
-$ok($held['heldCents']>=250&&$held['eligibleCents']===0,'authorized case holds full order commission');
+$ok($held['heldCents']+$held['reservedCents']>=250&&$held['eligibleCents']===0,
+    'authorized case blocks payout while its existing draft allocation remains reserved');
 $expect(static fn()=>az_payout_change($admin,[
     'id'=>$draft['id'],'revision'=>1,'decision'=>'approve','confirmApproval'=>true
 ]),'commission_held');
