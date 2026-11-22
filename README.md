@@ -1,3 +1,9 @@
+# AZHottie Studio — v1.33.0
+
+**Inventory, Shipping & Fulfillment Specialist:** Per-product SKU and inventory settings, tracked stock holds with idempotent Stripe/cash checkout, US flat/free shipping (Stripe-hosted only), verified shipping address collection, privacy-protected shipment queue, staff parcel/tracking controls, low-stock and fulfillment Agent alerts. No live carrier rates or automatic label purchase; carrier tracking is staff-entered, and physical restocking requires human inspection. Schema 38→39. See `docs/RELEASE_1_33_0.txt`.
+
+---
+
 # AZHottie Studio — v1.32.0
 
 **Pay with Cash, Local Pickup & Local Delivery — configured on each product.** In Commerce > Products > Create/Edit, set cash availability, pickup location and hours, delivery ZIP coverage, fees, minimums and instructions independently for every item. Shoppers can request pickup/delivery from Shop, approved shoppable videos and Live, without paying online. The shared Local Orders queue handles staff quotes, acceptance, cash collection, pickup/delivery fulfillment and full cash refunds. Private contact details are encrypted at rest and excluded from Agent Chat, Brain, creator accounts and public receipts. Cash commissions begin only after staff record actual collection; Stripe-signed and manually recorded payments remain separately labeled. Schema 37 → 38, cash opt-in defaults OFF. See `docs/RELEASE_1_32_0.txt`.
