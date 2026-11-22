@@ -305,6 +305,7 @@ function az_fulfillment_shipments(array $user): array
     az_commerce_admin($user);
     $q=az_db()->query("SELECT s.order_id,s.product_title,s.shipping_fee_cents,s.status,s.carrier,s.tracking_number,
         s.revision,s.created_at,s.updated_at,s.shipped_at,s.delivered_at,
+        s.carrier_tracking_status,s.carrier_tracking_updated_at,
         o.quantity,o.state AS payment_state,o.provider
         FROM commerce_shipments s JOIN commerce_orders o ON o.id=s.order_id
         ORDER BY CASE WHEN s.status IN ('awaiting_dispatch','packed','exception') THEN 0 ELSE 1 END,s.updated_at DESC LIMIT 150");
@@ -313,7 +314,11 @@ function az_fulfillment_shipments(array $user): array
         'carrier'=>$r['carrier'],'trackingNumber'=>$r['tracking_number'],'revision'=>(int)$r['revision'],
         'createdAt'=>$r['created_at'],'updatedAt'=>$r['updated_at'],'shippedAt'=>$r['shipped_at'],'deliveredAt'=>$r['delivered_at'],
         'quantity'=>(int)$r['quantity'],'paymentState'=>$r['payment_state'],'provider'=>$r['provider'],
-        'shippingFeeCents'=>(int)$r['shipping_fee_cents']
+        'shippingFeeCents'=>(int)$r['shipping_fee_cents'],
+        'carrierTrackingStatus'=>$r['carrier_tracking_status'],
+        'carrierTrackingUpdatedAt'=>$r['carrier_tracking_updated_at'],
+        'carrierIntegration'=>az_carrier_order_snapshot($r['order_id']),
+        'parcel'=>az_carrier_default_parcel($r['order_id'])
     ],$q->fetchAll(PDO::FETCH_ASSOC));
 }
 function az_fulfillment_shipment_details(array $user,string $orderId): array
@@ -364,6 +369,16 @@ function az_fulfillment_shipment_action(array $user,array $body): array
             throw new AzHttpError(409,'Shipment changed. Reload before updating.','revision_conflict');
         if($r['provider']!=='stripe'||!in_array($r['order_state'],['paid','partially_refunded'],true))
             throw new AzHttpError(409,'Only paid, non-disputed Stripe orders can ship.','payment_required');
+        if($action==='ship'){
+            $label=az_carrier_label_row($id);
+            if($label){
+                if($label['status']!=='purchased')
+                    throw new AzHttpError(409,'Label outcome must be reconciled before dispatch.','label_pending');
+                if($tracking!==$label['tracking_number']
+                    ||$carrier!==($label['carrier']==='FedEx'?'fedex':strtolower($label['carrier'])))
+                    throw new AzHttpError(409,'Use the purchased label tracking information.','label_tracking_mismatch');
+            }
+        }
         $allowed=['pack'=>['awaiting_dispatch'],'ship'=>['packed'],'deliver'=>['shipped'],
             'exception'=>['awaiting_dispatch','packed','shipped'],'reopen'=>['exception']];
         if(!in_array($r['status'],$allowed[$action],true))
@@ -410,7 +425,12 @@ function az_fulfillment_briefing(array $user): array
         WHERE r.status='held' AND a.state IN ('open','creating') AND a.created_at<=?");
     $q->execute([$cutoff]);
     $counts['staleStockHolds']=(int)$q->fetchColumn();
+    $labelRisk=(int)$db->query("SELECT COUNT(*) FROM commerce_carrier_labels WHERE status IN ('pending','needs_review')")->fetchColumn();
+    $counts['carrierLabelsNeedReview']=$labelRisk;
     $cards=[];
+    if($labelRisk)$cards[]=az_agent_workspace_card('commerce','Shipping label purchases need reconciliation',
+        $labelRisk.' EasyPost label operations have an uncertain outcome. Check the provider before purchasing again.',
+        'commerce.php',1);
     if($counts['lowStockProducts'])$cards[]=az_agent_workspace_card('commerce','Product inventory running low',
         $counts['lowStockProducts'].' products are below their configured stock thresholds. Review quantities in Commerce.',
         'commerce.php',1);
