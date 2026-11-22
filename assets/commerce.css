@@ -59,3 +59,5 @@
 .azh-carrier-label-link{display:inline-block;color:#9b4261;text-decoration:underline;font-weight:700}
 #azh-carrier-status{font-size:13px;color:#785968}
 @media(max-width:620px){.azh-carrier-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.azh-carrier-rate{display:grid}}
+
+.azh-shipping-product-summary{min-width:0}.azh-commerce-card form[data-stripe-checkout]{min-width:0}

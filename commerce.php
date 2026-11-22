@@ -13,7 +13,7 @@ $admin=az_has_role($user,'admin');
 <title>Commerce &amp; Creator Briefs · AZHottie</title><meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css">
-<link rel="stylesheet" href="assets/commerce.css?v=1.34.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0"></head>
+<link rel="stylesheet" href="assets/commerce.css?v=1.35.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0"></head>
 <body data-page="commerce"><?php az_render_universal_header('commerce',$user);az_render_member_layout_open('commerce',$user); ?>
 <main class="azh-commerce" id="azh-commerce" data-role="<?= $admin?'admin':'model' ?>" data-csrf="<?= az_h(az_csrf_token()) ?>">
   <header class="azh-commerce-hero"><div><p class="azh-eyebrow">AZHOTTIE · COMMERCE AGENT</p><h1>Commerce<span>.</span></h1>
@@ -82,6 +82,7 @@ $admin=az_has_role($user,'admin');
             <label>Shipping price<select name="shippingRate">
               <option value="flat">Flat rate (with optional free-shipping threshold)</option>
               <option value="free">Always free shipping</option>
+              <option value="carrier">Live USPS/UPS/FedEx rates chosen by customer at checkout</option>
             </select></label>
             <div class="azh-commerce-row">
               <label>Flat shipping fee (USD)<input name="shippingFeeDollars" type="number" min="0" max="10000" step="0.01" value="0.00" required></label>
@@ -97,7 +98,7 @@ $admin=az_has_role($user,'admin');
             </div>
             <label>Height (millimeters)<input name="heightMm" type="number" min="0" max="3000" step="1" value="0" required></label>
             <input type="hidden" name="shipCountry" value="US">
-            <p class="azh-commerce-hint">This version supports one flat or free shipping rate for US addresses through hosted Stripe Checkout. Shipping fees are not included in creator commission. Staff record packing, carrier and tracking; label buying and live carrier-rate quotes are not enabled.</p>
+            <p class="azh-commerce-hint">Each product may charge flat/free shipping or let customers choose live USPS/UPS/FedEx rates before Stripe Checkout. Carrier rates require matching private Stripe and EasyPost test/live accounts, then staff separately approve and buy labels. Shipping charges do not contribute to creator commission.</p>
           </div>
         </details>
         <label>Visibility<select name="state"><option value="draft">Draft</option><option value="active">Active</option><option value="archived">Archived</option></select></label>
@@ -186,6 +187,6 @@ $admin=az_has_role($user,'admin');
   </section><?php endif; ?>
   <p class="azh-commerce-disclaimer">External orders remain administrator-attested; Stripe orders require signed payment-provider events. Commissions remain estimated and no automatic payouts occur. The Agent cannot approve, sell, pay or refund without an authorized human action.</p>
 </main>
-<?php az_render_member_layout_close(); ?><script type="module" src="assets/commerce.js?v=1.33.0"></script><?php if($admin): ?><script type="module" src="assets/commerce-local-admin.js?v=1.32.0"></script><script type="module" src="assets/commerce-fulfillment-admin.js?v=1.33.0"></script>
+<?php az_render_member_layout_close(); ?><script type="module" src="assets/commerce.js?v=1.35.0"></script><?php if($admin): ?><script type="module" src="assets/commerce-local-admin.js?v=1.32.0"></script><script type="module" src="assets/commerce-fulfillment-admin.js?v=1.33.0"></script>
 <script type="module" src="assets/commerce-carrier-admin.js?v=1.34.0"></script><?php endif; ?>
 </body></html>

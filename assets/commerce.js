@@ -43,7 +43,9 @@ if(root){
       text(meta,'small',inv.stockMode==='tracked'
         ?'Stock: '+inv.available+' available'+(inv.lowStock?' · LOW STOCK':'')
         :inv.stockMode==='made_to_order'?'Made to order':'Unlimited stock');
-      if(inv.shippingEnabled)text(meta,'small','US shipping · '+(inv.shippingRate==='free'?'free':money(inv.shippingFeeCents))+' · '+inv.handlingDays+' day handling');
+      if(inv.shippingEnabled)text(meta,'small','US shipping · '+(inv.shippingRate==='carrier'
+        ?(inv.carrierCheckoutAvailable?'live carrier checkout':'carrier account not configured')
+        :inv.shippingRate==='free'?'free':money(inv.shippingFeeCents))+' · '+inv.handlingDays+' day handling');
       if(admin)choice(meta,'Edit product',()=>{
         const f=$('commerce-product-form');for(const k of ['id','title','description','checkoutUrl','checkoutMode','state','revision'])f.elements.namedItem(k).value=p[k]??'';
         f.elements.priceDollars.value=(p.priceCents/100).toFixed(2);f.elements.commissionPercent.value=(p.commissionBps/100).toFixed(2);
