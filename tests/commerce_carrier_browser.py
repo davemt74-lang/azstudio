@@ -102,7 +102,9 @@ def run():
             page.get_by_role('button',name='Buy UPS label').wait_for(timeout=8000)
             assert page.get_by_role('button',name='Buy UPS label').is_disabled(),('not packed',width)
             page.get_by_role('button',name='Mark packed').click()
-            page.get_by_role('button',name='Buy UPS label').wait_for(timeout=8000)
+            page.wait_for_function(
+              "(()=>{const x=[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Buy UPS label'));return !!x&&!x.disabled})()",
+              timeout=8000)
             assert page.get_by_role('button',name='Buy UPS label').is_enabled(),('packed',width)
             page.get_by_role('button',name='Buy UPS label').click()
             page.get_by_role('link',name='Open purchased shipping label').wait_for(timeout=8000)
