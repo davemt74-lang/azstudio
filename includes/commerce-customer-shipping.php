@@ -276,3 +276,52 @@ function az_customer_ship_briefing(array $user): array
     return ['counts'=>['carrierQuoteRequests24h'=>$quotes,'carrierQuoteCheckouts24h'=>$started,'carrierAddressExceptions'=>$unresolved],
         'cards'=>$cards];
 }
+
+/** Safe, carrier-attributed selection for staff. Never returns the customer's address. */
+function az_customer_ship_order_summary(string $orderId): ?array
+{
+    if(!az_valid_id($orderId))return null;
+    $q=az_db()->prepare("SELECT external_reference FROM commerce_orders WHERE id=? AND provider='stripe'");
+    $q->execute([$orderId]);$reference=$q->fetchColumn();
+    if(!is_string($reference)||!str_starts_with($reference,'stripe:'))return null;
+    $selection=az_customer_ship_selection(substr($reference,7));
+    if(!$selection)return null;
+    return ['carrier'=>$selection['carrier'],'service'=>$selection['service'],
+        'selectedCents'=>(int)$selection['rate_cents'],
+        'quotedMode'=>$selection['provider_mode']];
+}
+function az_customer_ship_metrics(array $user): array
+{
+    $db=az_db();$admin=az_has_role($user,'admin');
+    $since=gmdate('Y-m-d\TH:i:s\Z',time()-30*86400);
+    if($admin){
+        $q=$db->prepare('SELECT COUNT(*) FROM commerce_customer_shipping_quotes WHERE created_at>=?');
+        $q->execute([$since]);$quotes=(int)$q->fetchColumn();
+    }else $quotes=null;
+    $filter=$admin?'':' JOIN commerce_promotions m ON m.id=a.promotion_id AND m.model_id=?';
+    $q=$db->prepare("SELECT a.state,COUNT(*) AS n,SUM(s.rate_cents) AS cents
+        FROM commerce_customer_shipping_selections s
+        JOIN commerce_checkout_attempts a ON a.id=s.attempt_id $filter
+        WHERE a.created_at>=? GROUP BY a.state");
+    $q->execute($admin?[$since]:[(int)$user['id'],$since]);
+    $started=0;$paid=0;$paidRates=0;
+    foreach($q->fetchAll(PDO::FETCH_ASSOC) as $r){
+        $n=(int)$r['n'];$started+=$n;
+        if($r['state']==='paid'){$paid+=$n;$paidRates+=(int)$r['cents'];}
+    }
+    $q=$db->prepare("SELECT SUM(l.rate_cents) AS cost,COUNT(*) AS labels
+        FROM commerce_carrier_labels l
+        JOIN commerce_shipments sh ON sh.order_id=l.order_id
+        JOIN commerce_orders o ON o.id=sh.order_id
+        ".($admin?'':'JOIN commerce_promotions m ON m.id=o.promotion_id AND m.model_id=?')."
+        WHERE l.status='purchased' AND l.purchased_at>=?");
+    $q->execute($admin?[$since]:[(int)$user['id'],$since]);
+    $labels=$q->fetch(PDO::FETCH_ASSOC);
+    return [
+        'periodDays'=>30,'liveQuoteRequests'=>$quotes,'carrierCheckoutStarts'=>$started,
+        'carrierPaidOrders'=>$paid,'carrierShippingChargedCents'=>$paidRates,
+        'labelPurchases'=>(int)($labels['labels']??0),
+        'purchasedPostageCents'=>(int)($labels['cost']??0),
+        'basis'=>'Provider shipping quotes, paid Stripe checkout selections and approved postage-label purchases. Taxes, refunds and unmatched costs must be reconciled separately.'
+    ];
+}
