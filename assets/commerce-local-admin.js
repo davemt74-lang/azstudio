@@ -6,31 +6,17 @@ if(localRoot){
   const $=id=>document.getElementById(id);
   const money=c=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(c||0)/100);
   const cents=value=>Math.round(Number(value)*100);
-  let settings=null,orders=[],busy=false,selected=null;
-  const make=(tag,cls='',value='')=>{const el=document.createElement(tag);el.className=cls;el.textContent=value;return el;};
-  function note(text,error=false){const node=$('azh-local-admin-status');node.textContent=text;node.dataset.error=error?'true':'false';}
+  let orders=[],busy=false,selected=null;
+  function note(message,error=false){const el=$('azh-local-admin-status');el.textContent=message;el.dataset.error=error?'true':'false';}
   async function call(action,body=null){
-    const u=new URL(endpoint);u.searchParams.set('action',action);
-    const res=await fetch(u,{method:body===null?'GET':'POST',credentials:'same-origin',cache:'no-store',
+    const url=new URL(endpoint);url.searchParams.set('action',action);
+    const response=await fetch(url,{method:body===null?'GET':'POST',
+      credentials:'same-origin',cache:'no-store',
       headers:body===null?{}:{'Content-Type':'application/json','X-CSRF-Token':csrf},
       ...(body===null?{}:{body:JSON.stringify(body)})});
-    const parsed=await res.json().catch(()=>null);
-    if(!res.ok||!parsed?.ok)throw new Error(parsed?.error?.message||'Local order request failed.');
-    return parsed.data;
-  }
-  const settingsForm=$('azh-local-settings');
-  const sfield=name=>settingsForm.elements.namedItem(name);
-  function setFields(value){
-    settings=value;
-    for(const key of ['enabled','pickupEnabled','deliveryEnabled'])sfield(key).checked=Boolean(value[key]);
-    for(const key of ['pickupLocation','pickupAddress','pickupHours','pickupInstructions','deliveryZips','deliveryState','deliveryInstructions'])
-      sfield(key).value=value[key]??'';
-    sfield('deliveryFeeDollars').value=(value.deliveryFeeCents/100).toFixed(2);
-    sfield('deliveryMinDollars').value=(value.deliveryMinCents/100).toFixed(2);
-  }
-  async function refreshSettings(){
-    try{setFields(await call('settings'));note('Local cash settings loaded.');}
-    catch(error){note(error.message,true);}
+    const data=await response.json().catch(()=>null);
+    if(!response.ok||!data?.ok)throw new Error(data?.error?.message||'Cash order request failed.');
+    return data.data;
   }
   function element(parent,tag,cls,value){const item=make(tag,cls,value);parent.append(item);return item;}
   const button=(parent,label,handle)=>{
@@ -133,27 +119,14 @@ if(localRoot){
     try{orders=await call('orders');paintOrders();}
     catch(error){note(error.message,true);}
   }
-  settingsForm.addEventListener('submit',async e=>{
-    e.preventDefault();if(busy)return;
-    const cost=cents(sfield('deliveryFeeDollars').value),min=cents(sfield('deliveryMinDollars').value);
-    if(!Number.isSafeInteger(cost)||!Number.isSafeInteger(min)||cost<0||min<0){
-      note('Enter valid nonnegative delivery amounts.',true);return;
-    }
-    const body={revision:settings?.revision??0,
-      enabled:sfield('enabled').checked,pickupEnabled:sfield('pickupEnabled').checked,
-      deliveryEnabled:sfield('deliveryEnabled').checked,pickupLocation:sfield('pickupLocation').value,
-      pickupAddress:sfield('pickupAddress').value,pickupHours:sfield('pickupHours').value,
-      pickupInstructions:sfield('pickupInstructions').value,deliveryZips:sfield('deliveryZips').value,
-      deliveryState:sfield('deliveryState').value,
-      deliveryFeeCents:cost,deliveryMinCents:min,deliveryInstructions:sfield('deliveryInstructions').value};
-    busy=true;note('Saving pickup and delivery settings…');
-    try{await call('saveSettings',body);await refreshSettings();note('Local cash settings saved.');}
-    catch(error){note(error.message,true);}finally{busy=false;}
-  });
   $('azh-local-refresh').addEventListener('click',()=>void refreshOrders());
+  $('azh-local-edit-products').addEventListener('click',()=>{
+    document.querySelector('[data-tab=products]')?.click();
+    document.getElementById('commerce-product-form')?.scrollIntoView({behavior:'smooth',block:'start'});
+  });
   const tab=document.querySelector('[data-tab=local]');
   tab?.addEventListener('click',()=>{void refreshOrders();});
-  if(tab)void Promise.all([refreshSettings(),refreshOrders()]);
+  if(tab)void refreshOrders();
   setInterval(()=>{
     const panel=localRoot.closest('[data-panel=local]');
     if(panel&&!panel.hidden&&document.visibilityState==='visible'&&!busy&&selected===null)void refreshOrders();
