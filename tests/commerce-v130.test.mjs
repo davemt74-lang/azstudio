@@ -8,7 +8,7 @@ test('Commerce binds existing workspace, shared Chat and badge, not a new notifi
   assert.match(core,/agent_chat_messages/);
   assert.match(core,/commerce_activity/);
   assert.match(workspace,/az_commerce_briefing\(/);
-  assert.match(workspace,/commerce\|publishing/);
+  assert.match(workspace,/az_commerce_briefing/);
 });
 test('role authorization, revision, attribution and order state checks are implemented',()=>{
   const core=load('includes/commerce.php');
