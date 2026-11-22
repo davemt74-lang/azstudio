@@ -1,3 +1,11 @@
+AZHottie Studio v1.37.0 — Provider Refunds, Return Labels & Connect Transfers
+- Back up database, protected storage/config.php, site/media/uploads. Deploy application files while preserving private data; do NOT rerun install.php. Database schema upgrades 42 to 43.
+- TEST by default. Enable private AZH_STRIPE_ALLOW_REFUND_ACTIONS, AZH_STRIPE_ALLOW_CONNECT_TRANSFERS, AZH_EASYPOST_ALLOW_RETURN_LABEL_PURCHASES and existing EasyPost label-purchase switch only after configuring supported Stripe/EasyPost test accounts. Separate maximum per-label/refund/transfer amounts apply.
+- Refunds need approved return and staff click, signed Stripe refund webhook and exact provider refund ID reconciliation; no automatic refund is sent from return intake.
+- EasyPost return labels require delivered original domestic shipment, authorized case, verified parcel and explicit rate-purchase approval. A timeout never reissues the charge; use GET Reconcile.
+- Connect transfers require an existing active Stripe creator account, payout approval, exact amount and staff confirmation. The transferred state is a platform-to-Connect transfer, not a bank payout.
+- Verify hosted MySQL migration and real TEST refunds, labels and connected transfers before enabling production. See docs/RELEASE_1_37_0.txt.
+
 AZHottie Studio v1.36.0 — Returns & Creator Payout Reconciliation
 - Back up the database and site, private storage/config.php, uploads and media. Deploy ZIP over application code without rerunning install.php or overwriting private files.
 - First database initialization upgrades schema 41→42. Verify on real hosted MySQL.

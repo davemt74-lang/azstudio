@@ -1,3 +1,9 @@
+# AZHottie Studio — v1.37.0
+
+**Provider-Guarded Returns & Creator Payouts:** Staff-approved Stripe refund initiation, EasyPost return-label purchasing, and Stripe Connect transfers to existing verified creator accounts. All irreversible actions are disabled by default, require exact evidence and approval, and use GET-only reconciliation after timeouts. A Connect platform transfer is not a confirmed bank deposit. Schema 42 to 43. See docs/RELEASE_1_37_0.txt.
+
+---
+
 # AZHottie Studio — v1.36.0
 
 **Returns, Exchanges & Creator Commission Settlement:** Privacy-preserving return requests, staff-authorized inspection and restocking, like-for-like exchanges with inventory reservations, approved refunds reconciled to actual provider evidence, and a role-scoped creator commission payout ledger. External payouts require manual approval and confirmed transfer evidence; no automatic refunds or transfers. Returns, commissions, disputes and shipment delivery block payout eligibility. Schema 41 → 42. See `docs/RELEASE_1_36_0.txt`.
