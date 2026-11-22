@@ -153,6 +153,9 @@ $failed=false;try{az_local_decrypt(base64_encode($broken));}catch(Throwable){$fa
 $ok($failed,'tampering protected customer contact fails closed');
 
 /* v1.36 — tracked cash exchange/refund, verified provider holds, payout ledger. */
+// This isolated integration fixture intentionally exercises more orders than a
+// public buyer can place. Reset only the synthetic test throttling rows.
+$db->exec('DELETE FROM auth_attempts');
 $lastReturn=$db->query('SELECT COUNT(*) FROM commerce_returns')->fetchColumn();
 $ok((int)$lastReturn===0,'return table starts empty');
 $holdDays=az_payout_hold_days();$ok($holdDays>=7,'settlement hold has nonzero safety default');
