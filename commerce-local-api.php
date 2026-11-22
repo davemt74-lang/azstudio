@@ -11,8 +11,10 @@ try{
     $method=strtoupper((string)($_SERVER['REQUEST_METHOD']??'GET'));
     if(!az_is_installed())throw new AzHttpError(503,'Local Commerce is not installed.','not_installed');
     if($method==='GET'&&$action==='options'){
+        $product=az_commerce_row(az_text($_GET['productId']??'',32,'Product'));
+        if($product['state']!=='active')throw new AzHttpError(404,'Product is unavailable.','not_found');
         session_write_close();
-        az_json(['ok'=>true,'data'=>az_local_options()]);
+        az_json(['ok'=>true,'data'=>az_local_options($product['id'])]);
     }
     if($method==='POST'&&in_array($action,['create','status','cancel'],true)){
         if($action!=='status')az_require_csrf();
@@ -27,16 +29,12 @@ try{
         az_json(['ok'=>true,'data'=>$result]);
     }
     $user=az_require_auth(true);az_commerce_admin($user);
-    if($method==='GET'&&$action==='settings'){
-        session_write_close();az_json(['ok'=>true,'data'=>az_local_settings_admin($user)]);
-    }
     if($method==='GET'&&$action==='orders'){
         session_write_close();az_json(['ok'=>true,'data'=>az_local_admin_orders($user)]);
     }
-    if($method==='POST'&&in_array($action,['saveSettings','details','transition'],true)){
+    if($method==='POST'&&in_array($action,['details','transition'],true)){
         az_require_csrf();$body=az_json_body();session_write_close();
-        if($action==='saveSettings')$result=az_local_settings_save($user,$body);
-        elseif($action==='details')$result=az_local_admin_details($user,
+        if($action==='details')$result=az_local_admin_details($user,
             az_text($body['id']??'',32,'Cash order'));
         else $result=az_local_admin_action($user,$body);
         az_json(['ok'=>true,'data'=>$result]);

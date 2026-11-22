@@ -115,7 +115,6 @@ function az_commerce_row(string $id): array
 function az_commerce_active(array $row): bool
 {
     if($row['state']!=='active')return false;
-    $cash=(int)($row['local_enabled']??0)===1&&az_local_options()['available'];
     return az_local_options((string)$row['id'])['available'] || (($row['checkout_mode']??'external')==='external'
         ? $row['checkout_url']!=='' : az_stripe_product_ready($row));
 }
@@ -574,7 +573,7 @@ function az_commerce_briefing(array $user): array
             'commerceOrdersToReview'=>$orders,'commerceRecordedPaidOrders'=>$paid,'commerceVerifiedPaidOrders'=>$verified];
     }else{
         $q=$db->prepare("SELECT COUNT(*) FROM commerce_briefs b JOIN commerce_products p ON p.id=b.product_id
-            WHERE b.state='active' AND p.state='active' AND p.checkout_url<>'' AND NOT EXISTS
+            WHERE b.state='active' AND p.state='active' AND NOT EXISTS
             (SELECT 1 FROM commerce_interests i WHERE i.product_id=p.id AND i.model_id=?)");
         $q->execute([$id]);$open=(int)$q->fetchColumn();
         $q=$db->prepare("SELECT COUNT(*) FROM commerce_interests WHERE model_id=? AND state='approved'");

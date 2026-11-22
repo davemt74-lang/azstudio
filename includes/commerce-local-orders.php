@@ -46,10 +46,9 @@ function az_local_customer_view(array $r): array
 function az_local_create_order(array $body): array
 {
     az_account_throttle('cash-order',6,3600);
-    $s=az_local_options();
-    if(!$s['available'])throw new AzHttpError(409,'Cash pickup and delivery are not accepting orders.','local_closed');
     $product=az_commerce_row(az_text($body['productId']??'',32,'Product'));
-    if($product['state']!=='active'||(int)($product['local_enabled']??0)!==1)
+    $s=az_local_options($product['id']);
+    if($product['state']!=='active'||!$s['available'])
         throw new AzHttpError(409,'This product is not offered for cash pickup or delivery.','local_product_unavailable');
     $method=az_text($body['method']??'',12,'Fulfillment method');
     if(!in_array($method,['pickup','delivery'],true))
