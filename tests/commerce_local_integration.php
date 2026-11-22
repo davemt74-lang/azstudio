@@ -37,7 +37,8 @@ az_upgrade_commerce_local_schema($db);$ok(az_schema_version($db)===38,'local cas
 az_upgrade_commerce_fulfillment_schema($db);$ok(az_schema_version($db)===39,'inventory/shipping schema v39');
 az_upgrade_commerce_carrier_schema($db);$ok(az_schema_version($db)===40,'carrier schema v40');
 az_upgrade_commerce_customer_shipping_schema($db);$ok(az_schema_version($db)===41,'customer carrier quote schema v41');
-az_upgrade_commerce_local_schema($db);$ok(az_schema_version($db)===41,'local migration replay does not downgrade v41');
+az_upgrade_commerce_settlement_schema($db);$ok(az_schema_version($db)===42,'return and settlement schema v42');
+az_upgrade_commerce_local_schema($db);$ok(az_schema_version($db)===42,'local migration replay does not downgrade v42');
 $ok(az_local_zips('85002,85001,85002')===['85001','85002'],'ZIPs normalized');
 $expect(static fn()=>az_local_zips('8500x'),'invalid_zips');
 $pickupSettings=[
