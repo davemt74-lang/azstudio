@@ -107,7 +107,16 @@ function bind(){
     if(!validAgentMessage(message)){input.focus();return;}
     if(canvas){void send(message);return;}
     try{sessionStorage.setItem(STORE_KEY,JSON.stringify(agentPendingPayload(message)));location.assign('agent-chat.php');}
-    catch{const hint=dock.querySelector('.azh-agent-dock-meta span');if(hint)hint.textContent='Open Agent Chat to send your message. Your browser blocked temporary message storage.';}
+    catch{
+      // Keep the dock uncluttered unless the browser actually blocks pending-message storage.
+      let error=compose.querySelector('[data-agent-compose-error]');
+      if(!error){
+        error=document.createElement('p');error.className='azh-agent-compose-error';
+        error.setAttribute('role','alert');error.dataset.agentComposeError='';
+        compose.append(error);
+      }
+      error.textContent='Your browser blocked temporary message storage. Use Agent chat in the sidebar to send your message.';
+    }
   });
   if(!canvas)return;
   document.getElementById('azh-chat-new')?.addEventListener('click',()=>{
