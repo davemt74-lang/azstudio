@@ -16,6 +16,11 @@ function az_render_schedule_view(string $page): void
     <div id="schedule-loading" class="schedule-notice" role="status">Loading your schedule…</div>
     <section id="schedule-detail" class="schedule-detail" aria-live="polite" hidden></section>
     <?php if ($page === 'calendar'): ?>
+    <section id="schedule-agent-panel" class="schedule-agent-panel" aria-labelledby="schedule-agent-title">
+      <div class="schedule-section-heading"><div><p class="eyebrow">AGENT · VERIFIED SCHEDULE</p><h2 id="schedule-agent-title">My production schedule</h2></div><a href="agent-chat.php?topic=scheduling" class="button button--small">Discuss with Agent</a></div>
+      <div id="schedule-agent-status" role="status" class="schedule-filter-note">Loading your appointments, events, and assignment deadlines…</div>
+      <div id="schedule-agent-content"></div>
+    </section>
     <section id="calendar-main" hidden>
         <div class="schedule-toolbar"><div class="month-controls"><button id="calendar-prev" type="button" class="button button--small">Previous</button><h2 id="calendar-month"></h2><button id="calendar-next" type="button" class="button button--small">Next</button><button id="calendar-today" type="button" class="button button--quiet">Today</button></div><div class="schedule-filters"><label class="field compact-field"><span class="sr-only">Event type</span><select id="calendar-type"><option value="all">Events &amp; classes</option><option value="event">Events</option><option value="class">Classes</option></select></label><label class="checkbox-field"><input id="calendar-mine" type="checkbox">My registrations</label><button id="calendar-view" type="button" class="button button--small" aria-pressed="false">Agenda view</button></div></div>
         <div id="calendar-filter-note" class="schedule-filter-note" hidden></div><div id="calendar-metrics" class="schedule-metrics"></div>

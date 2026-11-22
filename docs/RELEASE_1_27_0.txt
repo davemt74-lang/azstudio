@@ -1,0 +1,36 @@
+AZHottie Studio v1.27.0 — Calendar & Scheduling Specialist
+
+Components
+- Authenticated unified read model built from existing schedule and Work records.
+- Private model weekly availability and unavailable windows; revision-gated edits.
+- Administrator-only active-production roster matching for a proposed date/time.
+- Account-scoped conflict detection for bookings/events; deadlines are informational.
+- In-app 24-hour appointment and registered-event reminders through existing private cron.
+- Agent Chat / Brain / History integration, no autonomous booking or assignments.
+- Light responsive calendar panel; no nested scrolling.
+
+Security
+- Only a model can edit their own availability or blocked dates.
+- Only production owners can query their own roster matching.
+- Only fully onboarded eligible models participate in matching.
+- Missing availability is unknown, never presumed available.
+- All POSTs use the canonical CSRF/session/shared mutation lock.
+- External AI receives aggregate schedule counts and event types/timestamps only,
+  with no personal name, booking notes, questionnaire or media.
+- In-app reminders are idempotent per recipient, item, rule and start time.
+
+Local verification
+- npm test: 388/388 passing.
+- PHP focused scheduling rules: 18 assertions passing.
+- Scheduling SQLite migrations/account isolation/dedup fixtures passing.
+- All PHP file syntax checks passing (132 files in source package).
+- Browser smoke test recommended on real site; JS fixtures cannot certify hosted data.
+
+Production acceptance
+- Hosted MySQL migration 32 -> 33, model permissions, full booking lifecycle,
+  admin scheduling suggestions, hourly cron, and multi-device browser/phone use
+  remain unverified until deployment on azhottie.com.
+- Existing Live Director frozen fan playback remains a separate outstanding check.
+
+No scheduled live-show table exists. Future live shows appear only when represented
+as scheduled events/productions; this release does not invent show times.

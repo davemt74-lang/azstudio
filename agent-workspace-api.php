@@ -22,7 +22,7 @@ try {
         session_write_close();
         az_json(['ok'=>true,'data'=>az_agent_workspace_state($user)]);
     }
-    if($method!=='POST'||!in_array($action,['markRead','checkFollowthrough','remindAssignment','checkCasting','castingAdvance','castingCheckpoint'],true))
+    if($method!=='POST'||!in_array($action,['markRead','checkFollowthrough','remindAssignment','checkCasting','castingAdvance','castingCheckpoint','checkSchedule'],true))
         throw new AzHttpError(405,'Unsupported agent workspace action.','method_not_allowed');
     az_require_csrf();$body=az_json_body();session_write_close();
     if($action==='markRead'){
@@ -30,6 +30,9 @@ try {
         az_json(['ok'=>true,'data'=>az_agent_workspace_state($user)]);
     }
     if(!az_has_role($user,'admin'))throw new AzHttpError(403,'Admin access required.','role_required');
+    if($action==='checkSchedule'){
+        az_json(['ok'=>true,'data'=>az_agent_schedule_scan((int)$user['id'])]);
+    }
     if($action==='checkCasting'){
         az_json(['ok'=>true,'data'=>az_agent_casting_scan((int)$user['id'])]);
     }

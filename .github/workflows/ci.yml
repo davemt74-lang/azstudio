@@ -21,7 +21,7 @@ jobs:
       - run: npm test
 
   php:
-    name: PHP syntax and casting rules
+    name: PHP syntax and specialist rules
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,11 +33,12 @@ jobs:
       - name: Lint PHP application and test files
         run: |
           find . -type f -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n 1 php -l
-      - name: Test casting and assignment follow-through rules
+      - name: Test agent specialist rules
         run: |
           php tests/agent_casting_rules.php
           php tests/agent_followthrough_rules.php
           php tests/live_agent_rules.php
+          php tests/agent_scheduling_rules.php
 
   fixtures:
     name: SQLite permissions and migration fixtures
@@ -51,6 +52,7 @@ jobs:
           python tests/agent_casting_sql_fixture.py
           python tests/agent_followthrough_sql_smoke.py
           python tests/live_agent_sql_smoke.py
+          python tests/agent_scheduling_sql_smoke.py
 
   deployment:
     name: Build safe deployment archive

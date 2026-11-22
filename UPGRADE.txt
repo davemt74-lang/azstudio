@@ -1,3 +1,26 @@
+AZHOTTIE STUDIO v1.27.0 — CALENDAR & SCHEDULING SPECIALIST
+
+Back up the entire website, database, and private storage/ directory before updating.
+Merge deployment files from the full deploy ZIP into the existing application path.
+Keep storage/config.php, private media and database. DO NOT rerun install.php.
+The next database request upgrades studio_schema 32 -> 33 with model availability,
+model blocked dates, and the private scheduling agent reminder ledger / scan status.
+
+After deploying:
+1. Confirm calendar.php shows your own registered events, confirmed appointments,
+   production sessions, and assignment deadlines without other members' private bookings.
+2. As a model, save weekly availability and block a future date. Confirm another
+   model cannot view or edit it. Existing appointments must not be blocked silently.
+3. As an administrator, select an active production and proposed future Arizona time.
+   The suggestions must distinguish available / busy / outside hours / not configured.
+4. Check that Admin and Model Brain reports reflect the same schedule; Chat receives
+   aggregate schedule facts only and no private booking notes or model names.
+5. Configure the pre-existing private hourly CLI cron (includes/agent-followthrough-cron.php).
+   Confirm 24-hour reminders arrive once, survive retries, and are retained in History.
+6. Test hosted MySQL, appointments, permissions, and responsive phone display before
+   certifying production 10/10. Verify existing Live Director phone-to-fan streaming
+   independently; this release does not replace the live transport.
+
 AZHOTTIE STUDIO v1.26.0 — CASTING & ONBOARDING AGENT
 
 Back up all website files, database, protected storage/ and private configuration

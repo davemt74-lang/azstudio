@@ -369,6 +369,13 @@ function az_schedule_get(string $action,array $query,array $user): mixed
     }
     if($action==='availability')return az_sched_availability(az_integer($query['professionalId']??$user['id'],1,PHP_INT_MAX,'Professional'),$user);
     if($action==='slots')return az_sched_slots($query,$user);
+    if($action==='unified')return az_agent_schedule_overview($user);
+    if($action==='modelAvailability')return az_agent_schedule_model_availability((int)$user['id'],$user);
+    if($action==='recommendModels')return az_agent_schedule_recommend($user,$query);
+    if($action==='productionOptions'){
+        if(!az_sched_admin($user))throw new AzHttpError(403,'Admin access required.','role_required');
+        $q=az_db()->prepare("SELECT id,title FROM production_projects WHERE owner_id=? AND status='active' ORDER BY updated_at DESC LIMIT 60");$q->execute([$user['id']]);return $q->fetchAll();
+    }
     if($action==='appointments')return az_sched_appointments($query,$user);
     if($action==='appointment')return az_sched_booking_data(az_sched_booking($query['id']??null,$user),$user);
     throw new AzHttpError(404,'This calendar action was not found.','unknown_action');
@@ -387,6 +394,9 @@ function az_schedule_post(string $action,array $body,array $user): mixed
     if($action==='saveClassSessions')return az_sched_class_sessions($body,$user);
     if($action==='saveAppointmentType')return az_sched_save_type($body,$user);
     if($action==='saveAvailability')return az_sched_save_availability($body,$user);
+    if($action==='saveModelAvailability')return az_agent_schedule_save_availability($body,$user);
+    if($action==='addModelBlackout')return az_agent_schedule_add_blackout($body,$user);
+    if($action==='removeModelBlackout')return az_agent_schedule_remove_blackout($body,$user);
     if($action==='saveBlackout')return az_sched_save_blackout($body,$user);
     if($action==='deleteBlackout'){$row=az_sched_row('schedule_blackouts',$body['id']??null);az_sched_provider_control($user,(int)$row['professional_id']);az_sched_query('DELETE FROM schedule_blackouts WHERE id=?',[$row['id']]);return['id'=>$row['id'],'deleted'=>true];}
     if($action==='bookAppointment')return az_sched_book($body,$user);
