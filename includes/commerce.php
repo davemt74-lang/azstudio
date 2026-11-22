@@ -115,8 +115,12 @@ function az_commerce_row(string $id): array
 function az_commerce_active(array $row): bool
 {
     if($row['state']!=='active')return false;
-    return az_local_options((string)$row['id'])['available'] || (($row['checkout_mode']??'external')==='external'
-        ? $row['checkout_url']!=='' : az_stripe_product_ready($row));
+    $online=(($row['checkout_mode']??'external')==='external')
+        ? ($row['checkout_url']??'')!=='' : az_stripe_product_ready($row);
+    if($online)return true;
+    // Video-attribution joins expose product_id rather than the product row's id.
+    $productId=(string)($row['id']??$row['product_id']??'');
+    return az_valid_id($productId) && az_local_options($productId)['available'];
 }
 function az_commerce_model_ids(): array
 {
