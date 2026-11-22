@@ -90,7 +90,7 @@ function az_payout_model_balance(int $model,bool $includeOrders=false): array
             ];
         }
     }
-    $q=$db->prepare("SELECT COALESCE(SUM(amount_cents),0) FROM commerce_connect_transfers t
+    $q=$db->prepare("SELECT COALESCE(SUM(t.amount_cents),0) FROM commerce_connect_transfers t
         JOIN commerce_payout_batches b ON b.id=t.batch_id WHERE b.model_id=? AND t.status='transferred'");
     $q->execute([$model]);$connectTransferred=(int)$q->fetchColumn();
     return ['modelId'=>$model,'eligibleCents'=>$eligible,'heldCents'=>$held,
