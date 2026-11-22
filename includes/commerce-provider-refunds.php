@@ -84,7 +84,8 @@ function az_provider_refund_initiate(array $user,array $body):array{
   return az_commerce_returns_lock_write(static function(PDO $db)use($id,$validated,$request):array{
    $db->prepare("UPDATE commerce_provider_refunds SET stripe_refund_id=?,status='provider_pending',updated_at=? WHERE return_id=?")
      ->execute([$validated['id'],az_now(),$id]);
-   az_provider_refund_signed_order($db,$request['payment_intent_id']);
+   // A provider API response is not a signed webhook. Await signed charge.refunded
+   // containing this exact refund object and private return metadata.
    return az_provider_refund_public(az_provider_refund_row($id));
   });
  }finally{flock($lock,LOCK_UN);fclose($lock);}
@@ -114,19 +115,34 @@ function az_provider_refund_reconcile(array $user,array $body):array{
   return az_commerce_returns_lock_write(static function(PDO $db)use($id,$matches,$r):array{
    $db->prepare("UPDATE commerce_provider_refunds SET stripe_refund_id=?,status='provider_pending',updated_at=? WHERE return_id=?")
     ->execute([$matches[0]['id'],az_now(),$id]);
-   az_provider_refund_signed_order($db,$r['payment_intent_id']);
+   // Read-only reconciliation verifies provider metadata; ledger status still
+   // depends on a subsequent signed matching refund event.
    return az_provider_refund_public(az_provider_refund_row($id));
   });
  }finally{flock($lock,LOCK_UN);fclose($lock);}
 }
-function az_provider_refund_signed_order(PDO $db,string $paymentIntent):void{
+function az_provider_refund_signed_order(PDO $db,string $paymentIntent,array $signedCharge):void{
+ $actual=$signedCharge['refunds']['data']??null;
+ // A signed charge.refunded event without refund objects cannot prove which
+ // authorized return caused the money movement. Do not certify that case.
+ if(!is_array($actual))return;
  $q=$db->prepare("SELECT r.return_id,r.amount_cents,o.refunded_cents,t.refund_baseline_cents
     FROM commerce_provider_refunds r JOIN commerce_orders o ON o.id=r.order_id
     JOIN commerce_returns t ON t.id=r.return_id
     WHERE r.payment_intent_id=? AND r.stripe_refund_id IS NOT NULL AND r.status='provider_pending'");
  $q->execute([$paymentIntent]);
  foreach($q->fetchAll(PDO::FETCH_ASSOC) as $row){
-  if((int)$row['refunded_cents']-(int)$row['refund_baseline_cents']>=(int)$row['amount_cents'])
+  $verified=false;
+  foreach($actual as $refund){
+   if(!is_array($refund))continue;
+   $check=(string)($refund['id']??'');
+   $q2=$db->prepare('SELECT stripe_refund_id FROM commerce_provider_refunds WHERE return_id=? AND payment_intent_id=?');
+   $q2->execute([$row['return_id'],$paymentIntent]);
+   if($check===(string)$q2->fetchColumn() && ($refund['amount']??null)===(int)$row['amount_cents']
+      && ($refund['metadata']['azh_return_id']??'')===$row['return_id']
+      && ($refund['status']??'')==='succeeded'){$verified=true;break;}
+  }
+  if($verified && (int)$row['refunded_cents']-(int)$row['refund_baseline_cents']>=(int)$row['amount_cents'])
    $db->prepare("UPDATE commerce_provider_refunds SET status='ledger_verified',verified_at=?,updated_at=? WHERE return_id=?")
       ->execute([az_now(),az_now(),$row['return_id']]);
  }

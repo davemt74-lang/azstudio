@@ -87,6 +87,9 @@ function az_return_admin_transition(array $user,array $body): array
             if(!$order)throw new AzHttpError(404,'Related order not found.','not_found');
             $provider=$row['provider'];
             if($provider==='stripe'){
+                $providerRefund=az_provider_refund_row($id);
+                if($providerRefund && $providerRefund['status']!=='ledger_verified')
+                    throw new AzHttpError(409,'The exact initiated Stripe refund has not appeared in a matching signed provider event.','provider_refund_unverified');
                 if(!in_array($order['state'],['partially_refunded','refunded'],true)
                     ||(int)$order['refunded_cents']-$baseline<$expected)
                     throw new AzHttpError(409,'A matching signed Stripe refund has not been verified for this approved return.','provider_refund_unverified');
