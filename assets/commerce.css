@@ -12,3 +12,8 @@
 .azh-commerce-analytics-products{background:#fff;padding:clamp(16px,2vw,24px);border:1px solid #e8dfe6;border-radius:16px;margin-bottom:15px}
 .azh-commerce-analytics-line{display:flex;gap:15px;justify-content:space-between;align-items:start;border-top:1px solid #eee5eb;padding:12px 0;flex-wrap:wrap}
 .azh-commerce-analytics-line span{font-variant-numeric:tabular-nums}
+
+@media(max-width:650px){
+  .azh-commerce-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:visible}
+  .azh-commerce-tabs button{min-width:0;white-space:normal;line-height:1.2;min-height:44px;text-align:center;padding:10px}
+}
