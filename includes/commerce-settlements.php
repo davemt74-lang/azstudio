@@ -291,3 +291,20 @@ function az_payout_briefing(array $user): array
     return ['cards'=>$cards,'counts'=>['payoutDrafts'=>$draft,'payoutApproved'=>$approved,
         'eligibleCommissionCents'=>$eligible,'commissionOverpaidCents'=>$debt]];
 }
+
+/** No auto-payout: shared cron checks only overdue external payment evidence. */
+function az_payout_scan(): array
+{
+    $cutoff=gmdate('Y-m-d\TH:i:s\Z',time()-7*86400);
+    $q=az_db()->prepare("SELECT b.id,b.state,b.amount_cents,b.created_by
+        FROM commerce_payout_batches b WHERE b.state IN ('draft','approved')
+        AND b.updated_at<=? ORDER BY b.updated_at LIMIT 100");
+    $q->execute([$cutoff]);$rows=$q->fetchAll(PDO::FETCH_ASSOC);
+    foreach($rows as $b){
+        az_commerce_queue_admins('payout-stale:'.$b['id'].':'.$b['state'],
+            (int)$b['created_by'],'payout_followup',
+            'Creator payout needs reconciliation',
+            'A '.$b['state'].' commission batch remains open after seven days. Recheck refund holds and external payment proof. No transfer is initiated.',true);
+    }
+    return ['checked'=>count($rows),'dispatch'=>az_commerce_dispatch(90)];
+}
