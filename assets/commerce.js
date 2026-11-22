@@ -39,6 +39,11 @@ if(root){
       if(p.state==='active'&&p.checkoutMode==='external'&&p.checkoutUrl)link(meta,p.checkoutUrl,'External checkout ↗');
       if(p.checkoutMode==='stripe')text(meta,'small',state.stripe?.available?'Stripe checkout configured ('+state.stripe.mode+')':'Stripe not configured');
       if(p.localEnabled)text(meta,'small','Cash pickup/delivery available · product-specific');
+      const inv=p.fulfillment||{};
+      text(meta,'small',inv.stockMode==='tracked'
+        ?'Stock: '+inv.available+' available'+(inv.lowStock?' · LOW STOCK':'')
+        :inv.stockMode==='made_to_order'?'Made to order':'Unlimited stock');
+      if(inv.shippingEnabled)text(meta,'small','US shipping · '+(inv.shippingRate==='free'?'free':money(inv.shippingFeeCents))+' · '+inv.handlingDays+' day handling');
       if(admin)choice(meta,'Edit product',()=>{
         const f=$('commerce-product-form');for(const k of ['id','title','description','checkoutUrl','checkoutMode','state','revision'])f.elements.namedItem(k).value=p[k]??'';
         f.elements.priceDollars.value=(p.priceCents/100).toFixed(2);f.elements.commissionPercent.value=(p.commissionBps/100).toFixed(2);
@@ -51,6 +56,20 @@ if(root){
         f.elements.deliveryFeeDollars.value=((l.deliveryFeeCents||0)/100).toFixed(2);
         f.elements.deliveryMinDollars.value=((l.deliveryMinCents||0)/100).toFixed(2);
         document.getElementById('azh-product-local-settings').open=Boolean(l.enabled);
+        const sh=p.fulfillmentSettings||{};
+        for(const key of ['sku','stockMode','stockOnHand','lowStockThreshold','weightGrams',
+          'lengthMm','widthMm','heightMm','handlingDays','shippingRate']){
+          f.elements[key].value=sh[key]??(key==='stockMode'?'unlimited':key==='shippingRate'?'flat':'0');
+        }
+        f.elements.stockRevision.value=sh.revision??0;
+        f.elements.stockAdjustmentReason.value='';
+        f.elements.shippingEnabled.checked=Boolean(sh.shippingEnabled);
+        f.elements.shippingFeeDollars.value=((sh.shippingFeeCents||0)/100).toFixed(2);
+        f.elements.freeAboveDollars.value=((sh.freeAboveCents||0)/100).toFixed(2);
+        const available=sh.available===null?'unlimited':sh.available;
+        $('azh-shipping-stock-snapshot').textContent='On hand: '+(sh.onHand??0)+
+          ' · Reserved: '+(sh.reserved??0)+' · Available: '+available;
+        document.getElementById('azh-product-shipping-settings').open=Boolean(sh.shippingEnabled)||sh.stockMode==='tracked';
         f.scrollIntoView({behavior:'smooth',block:'start'});
       });
       c.append(meta);
@@ -212,13 +231,31 @@ if(root){
         pickupInstructions:d.pickupInstructions||'',deliveryZips:d.deliveryZips||'',
         deliveryState:d.deliveryState||'AZ',deliveryFeeCents:fee,deliveryMinCents:minimum,
         deliveryInstructions:d.deliveryInstructions||''};
+      const shipFee=Math.round(Number(d.shippingFeeDollars)*100),
+        freeAbove=Math.round(Number(d.freeAboveDollars)*100);
+      if(!Number.isSafeInteger(shipFee)||!Number.isSafeInteger(freeAbove)||shipFee<0||freeAbove<0){
+        status('Enter valid flat and free-shipping amounts.',true);return;
+      }
+      const fulfillmentSettings={
+        sku:d.sku||'',stockMode:d.stockMode||'unlimited',
+        stockOnHand:Number(d.stockOnHand),stockRevision:Number(d.stockRevision||0),
+        lowStockThreshold:Number(d.lowStockThreshold),stockAdjustmentReason:d.stockAdjustmentReason||'',
+        shippingEnabled:f.elements.shippingEnabled.checked,
+        shippingRate:d.shippingRate||'flat',shippingFeeCents:shipFee,freeAboveCents:freeAbove,
+        weightGrams:Number(d.weightGrams),lengthMm:Number(d.lengthMm),
+        widthMm:Number(d.widthMm),heightMm:Number(d.heightMm),
+        handlingDays:Number(d.handlingDays),shipCountry:'US'
+      };
       void mutate('saveProduct',{id:d.id||'',revision:d.revision?Number(d.revision):undefined,title:d.title,description:d.description,
         priceCents:cents,commissionBps:bps,checkoutMode:d.checkoutMode,checkoutUrl:d.checkoutUrl,state:d.state,
-        localSettings},'Product and product-specific cash settings saved.');
+        localSettings,fulfillmentSettings},'Product, inventory and shipping settings saved.');
     });
     $('commerce-product-form').addEventListener('reset',()=>{const form=$('commerce-product-form');form.elements.id.value='';
       form.elements.revision.value='';form.elements.localRevision.value='0';
+      form.elements.stockRevision.value='0';form.elements.shippingEnabled.checked=false;
+      form.elements.stockAdjustmentReason.value='';
       document.getElementById('azh-product-local-settings').open=false;
+      document.getElementById('azh-product-shipping-settings').open=false;
     });
     $('commerce-brief-form').addEventListener('submit',e=>{
       e.preventDefault();const f=$('commerce-brief-form'),d=formData('commerce-brief-form');

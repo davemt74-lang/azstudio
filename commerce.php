@@ -13,7 +13,7 @@ $admin=az_has_role($user,'admin');
 <title>Commerce &amp; Creator Briefs · AZHottie</title><meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css">
-<link rel="stylesheet" href="assets/commerce.css?v=1.32.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0"></head>
+<link rel="stylesheet" href="assets/commerce.css?v=1.33.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0"></head>
 <body data-page="commerce"><?php az_render_universal_header('commerce',$user);az_render_member_layout_open('commerce',$user); ?>
 <main class="azh-commerce" id="azh-commerce" data-role="<?= $admin?'admin':'model' ?>" data-csrf="<?= az_h(az_csrf_token()) ?>">
   <header class="azh-commerce-hero"><div><p class="azh-eyebrow">AZHOTTIE · COMMERCE AGENT</p><h1>Commerce<span>.</span></h1>
@@ -26,6 +26,7 @@ $admin=az_has_role($user,'admin');
     <button type="button" role="tab" data-tab="promotions" aria-selected="false">Video affiliates</button>
     <button type="button" role="tab" data-tab="orders" aria-selected="false">Orders &amp; earnings</button>
     <button type="button" role="tab" data-tab="analytics" aria-selected="false">Sales analytics</button>
+    <?php if($admin): ?><button type="button" role="tab" data-tab="shipping" aria-selected="false">Shipping</button><?php endif; ?>
     <?php if($admin): ?><button type="button" role="tab" data-tab="local" aria-selected="false">Local Orders</button><?php endif; ?>
     <?php if($admin): ?><button type="button" role="tab" data-tab="live" aria-selected="false">Live shopping</button><?php endif; ?>
   </nav>
@@ -59,6 +60,44 @@ $admin=az_has_role($user,'admin');
             <label>Minimum merchandise subtotal for delivery (USD)<input name="deliveryMinDollars" type="number" step="0.01" min="0" max="1000000" value="0.00" required></label>
             <label>Delivery instructions<textarea name="deliveryInstructions" maxlength="500" rows="2" placeholder="Local delivery details and limitations"></textarea></label>
             <p class="azh-commerce-hint">Each product has independent cash availability, pickup address, ZIP coverage, delivery fees and minimums. Buyers submit unpaid requests. Staff must verify any applicable tax and confirm the final amount before acceptance.</p>
+          </div>
+        </details>
+<details id="azh-product-shipping-settings" class="azh-commerce-product-local">
+          <summary><strong>Inventory &amp; Carrier Shipping for this product</strong><span>Stock, SKU, shipping price &amp; parcel</span></summary>
+          <div class="azh-commerce-local-fields">
+            <input type="hidden" name="stockRevision" value="0">
+            <label>Product SKU<input name="sku" maxlength="64" placeholder="MERCH-001"></label>
+            <label>Inventory mode<select name="stockMode">
+              <option value="unlimited">Unlimited · no stock limit</option>
+              <option value="tracked">Track available units</option>
+              <option value="made_to_order">Made to order</option>
+            </select></label>
+            <div class="azh-commerce-row">
+              <label>On-hand quantity<input name="stockOnHand" type="number" min="0" max="100000000" step="1" value="0" required></label>
+              <label>Low-stock warning at<input name="lowStockThreshold" type="number" min="0" max="100000" step="1" value="3" required></label>
+            </div>
+            <p class="azh-commerce-hint" id="azh-shipping-stock-snapshot">Reserved: 0 · Available: unlimited. Inventory edits to an existing product require a reason.</p>
+            <label>Reason for stock adjustment (if on-hand quantity changed)<input name="stockAdjustmentReason" maxlength="180" placeholder="Received new stock / cycle count"></label>
+            <label class="azh-commerce-checkbox"><input type="checkbox" name="shippingEnabled"> Offer prepaid US carrier shipping for this product</label>
+            <label>Shipping price<select name="shippingRate">
+              <option value="flat">Flat rate (with optional free-shipping threshold)</option>
+              <option value="free">Always free shipping</option>
+            </select></label>
+            <div class="azh-commerce-row">
+              <label>Flat shipping fee (USD)<input name="shippingFeeDollars" type="number" min="0" max="10000" step="0.01" value="0.00" required></label>
+              <label>Free shipping from merchandise subtotal (USD, 0 = no threshold)<input name="freeAboveDollars" type="number" min="0" max="1000000" step="0.01" value="0.00" required></label>
+            </div>
+            <div class="azh-commerce-row">
+              <label>Weight (grams)<input name="weightGrams" type="number" min="0" max="100000" step="1" value="0" required></label>
+              <label>Handling time (days)<input name="handlingDays" type="number" min="1" max="30" step="1" value="3" required></label>
+            </div>
+            <div class="azh-commerce-row">
+              <label>Length (millimeters)<input name="lengthMm" type="number" min="0" max="3000" step="1" value="0" required></label>
+              <label>Width (millimeters)<input name="widthMm" type="number" min="0" max="3000" step="1" value="0" required></label>
+            </div>
+            <label>Height (millimeters)<input name="heightMm" type="number" min="0" max="3000" step="1" value="0" required></label>
+            <input type="hidden" name="shipCountry" value="US">
+            <p class="azh-commerce-hint">This version supports one flat or free shipping rate for US addresses through hosted Stripe Checkout. Shipping fees are not included in creator commission. Staff record packing, carrier and tracking; label buying and live carrier-rate quotes are not enabled.</p>
           </div>
         </details>
         <label>Visibility<select name="state"><option value="draft">Draft</option><option value="active">Active</option><option value="archived">Archived</option></select></label>
@@ -102,6 +141,22 @@ $admin=az_has_role($user,'admin');
     <div id="commerce-analytics" class="azh-commerce-analytics" aria-live="polite"></div>
   </section>
   <?php if($admin): ?>
+  <section class="azh-commerce-panel" data-panel="shipping" aria-label="Carrier shipping orders" hidden>
+    <section id="azh-shipping-admin" data-csrf="<?= az_h(az_csrf_token()) ?>">
+      <div class="azh-commerce-editor"><h2>Carrier Shipping &amp; Fulfillment</h2>
+        <p>Review paid orders, prepare parcels, enter a real carrier and tracking number, then record delivery. Address details are private to staff. This version does not purchase shipping labels or query carrier tracking scans.</p>
+        <div class="azh-commerce-actions">
+          <button type="button" id="azh-shipping-refresh" class="azh-commerce-small">Refresh shipments</button>
+          <button type="button" id="azh-shipping-edit-products" class="azh-commerce-small">Edit shipping settings</button>
+        </div>
+        <p id="azh-shipping-counts"></p><p id="azh-shipping-status" role="status" aria-live="polite"></p>
+      </div>
+      <div id="azh-shipping-orders" class="azh-commerce-list"></div>
+      <section class="azh-commerce-editor" id="azh-shipping-private" aria-label="Private shipment destination" hidden></section>
+    </section>
+  </section>
+  <?php endif; ?>
+  <?php if($admin): ?>
   <section class="azh-commerce-panel" data-panel="local" aria-label="Local cash order management" hidden>
     <div id="azh-local-admin" data-csrf="<?= az_h(az_csrf_token()) ?>">
       <div class="azh-commerce-editor">
@@ -129,5 +184,5 @@ $admin=az_has_role($user,'admin');
   </section><?php endif; ?>
   <p class="azh-commerce-disclaimer">External orders remain administrator-attested; Stripe orders require signed payment-provider events. Commissions remain estimated and no automatic payouts occur. The Agent cannot approve, sell, pay or refund without an authorized human action.</p>
 </main>
-<?php az_render_member_layout_close(); ?><script type="module" src="assets/commerce.js?v=1.32.0"></script><?php if($admin): ?><script type="module" src="assets/commerce-local-admin.js?v=1.32.0"></script><?php endif; ?>
+<?php az_render_member_layout_close(); ?><script type="module" src="assets/commerce.js?v=1.33.0"></script><?php if($admin): ?><script type="module" src="assets/commerce-local-admin.js?v=1.32.0"></script><script type="module" src="assets/commerce-fulfillment-admin.js?v=1.33.0"></script><?php endif; ?>
 </body></html>
