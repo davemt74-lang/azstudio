@@ -31,6 +31,8 @@ function az_upgrade_commerce_stripe_schema(PDO $db): void
             ['commerce_products','checkout_mode',"VARCHAR(12) NOT NULL DEFAULT 'external'"],
             ['commerce_orders','provider',"VARCHAR(16) NOT NULL DEFAULT 'manual'"],
             ['commerce_orders','refunded_cents','BIGINT NOT NULL DEFAULT 0'],
+            ['commerce_orders','provider_total_cents','BIGINT NOT NULL DEFAULT 0'],
+            ['commerce_orders','provider_tax_cents','BIGINT NOT NULL DEFAULT 0'],
             ['commerce_orders','provider_payment_id','VARCHAR(128) NULL'],
             ['commerce_live_features','promotion_id','CHAR(32) NULL']
         ] as [$table,$column,$definition]){
@@ -312,13 +314,19 @@ function az_stripe_attempt_for_session(PDO $db,array $session): array
     $q->execute([$sid]);$r=$q->fetch();
     if(!$r)throw new AzHttpError(409,'Unknown checkout session. Retry after creation is saved.','checkout_missing');
     $metadata=$session['metadata']??[];
+    $details=$session['total_details']??null;
+    $subtotal=$session['amount_subtotal']??null;$total=$session['amount_total']??null;
+    $tax=is_array($details)?($details['amount_tax']??null):null;
+    $shipping=is_array($details)?($details['amount_shipping']??null):null;
+    $discount=is_array($details)?($details['amount_discount']??null):null;
     if(!is_array($metadata)||($metadata['azh_attempt_id']??'')!==$r['id']
-        ||($session['client_reference_id']??'')!==$r['id']
-        ||($session['mode']??'')!=='payment'
-        ||(int)($session['amount_total']??-1)!==(int)$r['amount_cents']
+        ||($session['client_reference_id']??'')!==$r['id']||($session['mode']??'')!=='payment'
+        ||!is_int($subtotal)||$subtotal!==(int)$r['amount_cents']
+        ||!is_int($total)||!is_int($tax)||!is_int($shipping)||!is_int($discount)
+        ||$tax<0||$shipping<0||$discount<0||$total!==$subtotal+$tax+$shipping-$discount
         ||strtolower((string)($session['currency']??''))!=='usd'
-        ||(bool)($session['livemode']??null)!==($r['mode']==='live'))
-        throw new AzHttpError(409,'Checkout amount, currency, account mode or metadata did not match.','checkout_mismatch');
+        ||!is_bool($session['livemode']??null)||$session['livemode']!==($r['mode']==='live'))
+        throw new AzHttpError(409,'Checkout subtotal, Stripe total, currency, mode or metadata did not match.','checkout_mismatch');
     return $r;
 }
 function az_stripe_apply_payment(PDO $db,array $session): void
@@ -334,10 +342,11 @@ function az_stripe_apply_payment(PDO $db,array $session): void
     $price=(int)$attempt['amount_cents'];$commission=intdiv($price*(int)$attempt['commission_bps'],10000);
     $q=$db->prepare('SELECT owner_id,title FROM commerce_products WHERE id=?');$q->execute([$attempt['product_id']]);$product=$q->fetch();
     if(!$product)throw new AzHttpError(409,'Original checkout product no longer exists.','product_missing');
-    $db->prepare("INSERT INTO commerce_orders(id,external_reference,product_id,promotion_id,quantity,amount_cents,currency,commission_bps,commission_cents,state,evidence_reference,recorded_by,created_at,paid_at,updated_at,provider,refunded_cents,provider_payment_id)
-        VALUES(?,?,?,?,?,?,?,?,?,'paid',?,?,?,?,?,'stripe',0,?)")
+    $db->prepare("INSERT INTO commerce_orders(id,external_reference,product_id,promotion_id,quantity,amount_cents,currency,commission_bps,commission_cents,state,evidence_reference,recorded_by,created_at,paid_at,updated_at,provider,refunded_cents,provider_payment_id,provider_total_cents,provider_tax_cents)
+        VALUES(?,?,?,?,?,?,?,?,?,'paid',?,?,?,?,?,'stripe',0,?,?,?)")
       ->execute([az_id(),$reference,$attempt['product_id'],$attempt['promotion_id'],(int)$attempt['quantity'],
-        $price,'USD',(int)$attempt['commission_bps'],$commission,$pi,(int)$product['owner_id'],az_now(),az_now(),az_now(),$pi]);
+        $price,'USD',(int)$attempt['commission_bps'],$commission,$pi,(int)$product['owner_id'],az_now(),az_now(),az_now(),$pi,
+        (int)$session['amount_total'],(int)$session['total_details']['amount_tax']]);
     $db->prepare("UPDATE commerce_checkout_attempts SET state='paid',updated_at=? WHERE id=?")->execute([az_now(),$attempt['id']]);
     az_commerce_queue_admins('stripe-paid:'.$attempt['id'],(int)$product['owner_id'],'stripe_paid',
         'Verified Stripe sale',$product['title'].' · A signed provider event confirmed a paid checkout. Review fulfillment. ',true);

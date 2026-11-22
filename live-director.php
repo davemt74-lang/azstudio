@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__.'/includes/bootstrap.php';
 $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robots-Tag: noindex,nofollow');
-?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Live Director · AZHottie</title><link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/live-studio.css?v=1.25.0"><link rel="stylesheet" href="assets/commerce.css?v=1.30.0"></head>
+?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Live Director · AZHottie</title><link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/live-studio.css?v=1.25.0"><link rel="stylesheet" href="assets/commerce.css?v=1.31.0"></head>
 <body class="azh-director-body" data-page="live-director">
 <main class="azh-director azh-director-app" id="azh-director" data-csrf="<?= az_h(az_csrf_token()) ?>" aria-label="Full-screen live production control room">
   <header class="azh-director-toolbar">

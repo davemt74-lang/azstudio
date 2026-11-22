@@ -73,7 +73,7 @@ $event=static function(string $id,string $kind,array $obj):string{
 };
 $session=['id'=>$attempt['session_id'],'object'=>'checkout.session','livemode'=>false,'mode'=>'payment',
     'client_reference_id'=>$attempt['id'],'metadata'=>['azh_attempt_id'=>$attempt['id']],
-    'amount_total'=>2500,'currency'=>'usd','payment_status'=>'unpaid','payment_intent'=>'pi_fixture123456'];
+    'amount_subtotal'=>2500,'amount_total'=>2700,'total_details'=>['amount_tax'=>200,'amount_shipping'=>0,'amount_discount'=>0],'currency'=>'usd','payment_status'=>'unpaid','payment_intent'=>'pi_fixture123456'];
 $unpaid=$event('evt_pending12345','checkout.session.completed',$session);
 az_stripe_webhook_receive($unpaid,$signature($unpaid));
 $ok((int)$db->query('SELECT COUNT(*) FROM commerce_orders')->fetchColumn()===0,'no order from unpaid redirect or pending payment');
@@ -87,7 +87,8 @@ $ok((int)$db->query("SELECT COUNT(*) FROM commerce_orders WHERE provider='stripe
 az_stripe_webhook_receive($paidEvent,$signature($paidEvent));
 $ok((int)$db->query('SELECT COUNT(*) FROM commerce_orders')->fetchColumn()===1,'webhook duplicate idempotent');
 $stored=$db->query("SELECT * FROM commerce_orders WHERE provider='stripe'")->fetch();
-$ok((int)$stored['commission_cents']===300,'12 percent creator commission snapshot');
+$ok((int)$stored['commission_cents']===300,'12 percent commission excludes 200 cents provider sales tax');
+$ok((int)$stored['provider_total_cents']===2700&&(int)$stored['provider_tax_cents']===200,'signed provider tax and total reconciliation saved');
 $ok(count(az_commerce_state($model)['orders'])===1&&count(az_commerce_state($other)['orders'])===0,'model account isolation');
 $err(static fn()=>az_commerce_order_review($admin,['id'=>$stored['id'],'decision'=>'refunded','evidenceReference'=>'bogus-ref123']),'provider_controlled');
 $dispute=['object'=>'dispute','payment_intent'=>'pi_fixture123456','status'=>'needs_response'];

@@ -514,7 +514,7 @@ function az_commerce_state(array $user): array
     $q=$db->prepare($sql);$q->execute($admin?[]:[$id]);$promotions=$q->fetchAll(PDO::FETCH_ASSOC);
     $orders=[];
     if($admin){
-        $q=$db->query("SELECT o.id,o.external_reference,o.product_id,o.promotion_id,o.quantity,o.amount_cents,o.commission_cents,o.currency,o.state,o.provider,o.refunded_cents,o.created_at,o.updated_at,p.title AS product_title
+        $q=$db->query("SELECT o.id,o.external_reference,o.product_id,o.promotion_id,o.quantity,o.amount_cents,o.commission_cents,o.currency,o.state,o.provider,o.refunded_cents,o.provider_total_cents,o.provider_tax_cents,o.created_at,o.updated_at,p.title AS product_title
           FROM commerce_orders o JOIN commerce_products p ON p.id=o.product_id ORDER BY o.updated_at DESC LIMIT 100");
         $orders=$q->fetchAll(PDO::FETCH_ASSOC);
     }else{
