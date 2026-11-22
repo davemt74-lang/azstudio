@@ -28,6 +28,7 @@ require_once __DIR__ . '/live-agent.php';
 require_once __DIR__ . '/live.php';
 require_once __DIR__ . '/commerce.php';
 require_once __DIR__ . '/commerce-stripe.php';
+require_once __DIR__ . '/commerce-analytics.php';
 if (is_file(__DIR__ . '/scheduling.php')) { require_once __DIR__ . '/scheduling.php'; }
 if (is_file(__DIR__ . '/publication.php')) { require_once __DIR__ . '/publication.php'; }
 if (is_file(__DIR__ . '/work.php')) { require_once __DIR__ . '/work.php'; }

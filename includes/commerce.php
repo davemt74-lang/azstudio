@@ -514,11 +514,11 @@ function az_commerce_state(array $user): array
     $q=$db->prepare($sql);$q->execute($admin?[]:[$id]);$promotions=$q->fetchAll(PDO::FETCH_ASSOC);
     $orders=[];
     if($admin){
-        $q=$db->query("SELECT o.id,o.external_reference,o.product_id,o.promotion_id,o.quantity,o.amount_cents,o.commission_cents,o.currency,o.state,o.created_at,o.updated_at,p.title AS product_title
+        $q=$db->query("SELECT o.id,o.external_reference,o.product_id,o.promotion_id,o.quantity,o.amount_cents,o.commission_cents,o.currency,o.state,o.provider,o.refunded_cents,o.created_at,o.updated_at,p.title AS product_title
           FROM commerce_orders o JOIN commerce_products p ON p.id=o.product_id ORDER BY o.updated_at DESC LIMIT 100");
         $orders=$q->fetchAll(PDO::FETCH_ASSOC);
     }else{
-        $q=$db->prepare("SELECT o.id,o.product_id,o.quantity,o.amount_cents,o.commission_cents,o.currency,o.state,o.created_at,p.title AS product_title
+        $q=$db->prepare("SELECT o.id,o.product_id,o.quantity,o.amount_cents,o.commission_cents,o.currency,o.state,o.provider,o.refunded_cents,o.created_at,p.title AS product_title
           FROM commerce_orders o JOIN commerce_products p ON p.id=o.product_id JOIN commerce_promotions x ON x.id=o.promotion_id
           WHERE x.model_id=? ORDER BY o.updated_at DESC LIMIT 100");
         $q->execute([$id]);$orders=$q->fetchAll(PDO::FETCH_ASSOC);
@@ -531,7 +531,7 @@ function az_commerce_state(array $user): array
     return ['role'=>$admin?'admin':'model','products'=>$list,'interests'=>$interests,'promotions'=>$promotions,'orders'=>$orders,
         'videos'=>$videos,'liveFeature'=>$admin?az_commerce_live_feature():null,
         'paymentBasis'=>'Manual orders are administrator-attested; only Stripe events with valid provider signatures confirm Stripe payments. Creator payouts are not automated.',
-        'stripe'=>az_stripe_public_status()];
+        'stripe'=>az_stripe_public_status(),'analytics'=>az_commerce_analytics($user)];
 }
 function az_commerce_briefing(array $user): array
 {
@@ -542,12 +542,15 @@ function az_commerce_briefing(array $user): array
         $promos=(int)$db->query("SELECT COUNT(*) FROM commerce_promotions WHERE state='pending'")->fetchColumn();
         $orders=(int)$db->query("SELECT COUNT(*) FROM commerce_orders WHERE state='recorded'")->fetchColumn();
         $paid=(int)$db->query("SELECT COUNT(*) FROM commerce_orders WHERE state='paid'")->fetchColumn();
+        $verified=(int)$db->query("SELECT COUNT(*) FROM commerce_orders WHERE provider='stripe' AND state IN ('paid','partially_refunded')")->fetchColumn();
         if($interests)$cards[]=az_agent_workspace_card('commerce','Creator interests awaiting approval',$interests.' models requested participation in product briefs.','commerce.php',1);
         if($promos)$cards[]=az_agent_workspace_card('commerce','Product video approvals',$promos.' product video associations need an approval decision.','commerce.php',1);
         if($orders)$cards[]=az_agent_workspace_card('commerce','External orders require reconciliation',$orders.' recorded orders need confirmation or cancellation against your checkout provider.','commerce.php',1);
-        if($paid)$cards[]=az_agent_workspace_card('commerce','Review product conversion',$paid.' orders are marked paid by an administrator. Review sales and consider a live product feature.','commerce.php',3);
+        if($paid)$cards[]=az_agent_workspace_card('commerce','Review product conversion',$paid.' orders are recorded as paid. Compare verified and manual results in Commerce analytics.','commerce.php',3);
+        if($verified>=3)$cards[]=az_agent_workspace_card('commerce','Verified commerce growth opportunity',
+            $verified.' Stripe-paid orders have been received. Review the highest-selling approved product before planning the next live feature.','commerce.php',2);
         $counts=['commerceProducts'=>$products,'commerceInterests'=>$interests,'commercePromotions'=>$promos,
-            'commerceOrdersToReview'=>$orders,'commerceRecordedPaidOrders'=>$paid];
+            'commerceOrdersToReview'=>$orders,'commerceRecordedPaidOrders'=>$paid,'commerceVerifiedPaidOrders'=>$verified];
     }else{
         $q=$db->prepare("SELECT COUNT(*) FROM commerce_briefs b JOIN commerce_products p ON p.id=b.product_id
             WHERE b.state='active' AND p.state='active' AND p.checkout_url<>'' AND NOT EXISTS
@@ -557,17 +560,19 @@ function az_commerce_briefing(array $user): array
         $q->execute([$id]);$approved=(int)$q->fetchColumn();
         $q=$db->prepare("SELECT COUNT(*) FROM commerce_orders o JOIN commerce_promotions p ON p.id=o.promotion_id WHERE p.model_id=? AND o.state='paid'");
         $q->execute([$id]);$paid=(int)$q->fetchColumn();
+        $q=$db->prepare("SELECT COUNT(*) FROM commerce_orders o JOIN commerce_promotions p ON p.id=o.promotion_id WHERE p.model_id=? AND o.provider='stripe' AND o.state IN ('paid','partially_refunded')");
+        $q->execute([$id]);$verified=(int)$q->fetchColumn();
         if($open)$cards[]=az_agent_workspace_card('commerce','Creator product briefs available',$open.' product briefs invite your interest. Approval is required before promoting.','commerce.php',2);
         if($approved)$cards[]=az_agent_workspace_card('commerce','Your approved product affiliations',$approved.' product partnerships can be linked to a published, consented video.','commerce.php',2);
         if($paid)$cards[]=az_agent_workspace_card('commerce','Affiliate sales recorded',$paid.' attributed orders are recorded as paid, with commissions pending external settlement.','commerce.php',3);
-        $counts=['commerceOpenBriefs'=>$open,'commerceApprovedBriefs'=>$approved,'commerceRecordedPaidOrders'=>$paid];
+        $counts=['commerceOpenBriefs'=>$open,'commerceApprovedBriefs'=>$approved,'commerceRecordedPaidOrders'=>$paid,'commerceVerifiedPaidOrders'=>$verified];
     }
     return ['cards'=>$cards,'counts'=>$counts,'basis'=>'Current commerce records and role-scoped approvals only. Orders are administrator-reconciled, not independently payment-provider verified.'];
 }
 function az_commerce_chat_snapshot(array $user): array
 {
     $brief=az_commerce_briefing($user);
-    return ['counts'=>$brief['counts'],'recommendations'=>array_map(static fn($r)=>['title'=>$r['title'],'href'=>$r['href']],array_slice($brief['cards'],0,3)),
+    return ['analytics'=>az_commerce_analytics_chat($user),'counts'=>$brief['counts'],'recommendations'=>array_map(static fn($r)=>['title'=>$r['title'],'href'=>$r['href']],array_slice($brief['cards'],0,3)),
         'basis'=>$brief['basis'],'nextStep'=>az_has_role($user,'admin')?'Review pending approvals and external order evidence.':'Review active briefs and submit an eligible published video for approval.'];
 }
 /** Hourly read-only follow-up scan; queue is deduplicated, never changes order state. */

@@ -127,6 +127,7 @@ $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robot
               <div class="azh-live-subhead"><h2>Shopping spotlight</h2><span>Verified active product · external checkout · no automatic purchase</span></div>
               <form id="director-commerce-form" class="azh-show-form-row">
                 <label>Product <select id="director-commerce-product" aria-label="Live product"><option value="">Loading active products…</option></select></label>
+                <label>Creator attribution <select id="director-commerce-promotion" aria-label="Approved creator promotion"><option value="">No creator attribution</option></select></label>
                 <button type="submit" class="azh-live-button">Feature product for viewers</button>
                 <a class="azh-live-button azh-live-secondary" href="commerce.php">Manage products &amp; briefs ↗</a>
               </form>
@@ -147,5 +148,5 @@ $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robot
   </div>
   <p id="live-status" class="azh-live-message azh-director-toast" role="status" aria-live="polite" hidden></p>
 </main>
-<script src="assets/qr.js"></script><script type="module" src="assets/live-director.js?v=1.25.0"></script><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/commerce-director.js?v=1.30.0"></script><?php endif; ?>
+<script src="assets/qr.js"></script><script type="module" src="assets/live-director.js?v=1.25.0"></script><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/commerce-director.js?v=1.31.0"></script><?php endif; ?>
 </body></html>
