@@ -50,7 +50,9 @@ if(payoutsRoot){
       metric(summary,'Eligible after holds',cash(b.eligibleCents));
       metric(summary,'Held by policy or returns',cash(b.heldCents));
       metric(summary,'Reserved in payout drafts',cash(b.reservedCents));
-      metric(summary,'External payouts recorded',cash(b.recordedPaidCents));
+      metric(summary,'External payouts recorded',cash(Math.max(0,Number(b.recordedPaidCents||0)-Number(b.connectTransferredCents||0))));
+      metric(summary,'Stripe Connect platform transfers',cash(b.connectTransferredCents||0));
+      add(summary,'p','Connect transfers are not proof of a creator bank deposit. Stripe controls bank settlement.','azh-return-subtle');
       if(b.overpaidCents>0)add(summary,'p',
         'A refund or dispute reduced commissions after payout. Further settlements are blocked pending review: '+cash(b.overpaidCents),
         'azh-return-payout-banner');
@@ -86,7 +88,8 @@ if(payoutsRoot){
       add(card,'p','Eligible '+cash(model.eligibleCents)+
         ' · Held '+cash(model.heldCents)+
         ' · Reserved '+cash(model.reservedCents)+
-        ' · Recorded paid '+cash(model.paidCents));
+        ' · External paid '+cash(Math.max(0,Number(model.paidCents||0)-Number(model.connectTransferredCents||0)))+
+        ' · Connect sent '+cash(model.connectTransferredCents||0));
       window.azProviderModelEnhance?.(card,model,()=>refresh());
       if(model.overpaidCents>0)add(card,'p',
         'Further payout blocked: refund-adjusted overpayment '+cash(model.overpaidCents),

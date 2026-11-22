@@ -114,6 +114,7 @@ function az_payout_models(array $user): array
         $result[]=['id'=>(int)$m['id'],'name'=>$m['name'],
             'eligibleCents'=>$balance['eligibleCents'],'heldCents'=>$balance['heldCents'],
             'reservedCents'=>$balance['reservedCents'],'paidCents'=>$balance['recordedPaidCents'],
+            'connectTransferredCents'=>$balance['connectTransferredCents'],
             'overpaidCents'=>$balance['overpaidCents'],
             'connectAccount'=>az_connect_account_state($user,(int)$m['id'])];
     }
