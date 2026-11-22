@@ -1,0 +1,32 @@
+AZHottie Studio v1.33.0 — Inventory, Shipping & Fulfillment
+
+Product editor
+- Each product configures its own SKU, inventory mode (tracked / unlimited / made-to-order), current on-hand count, low-stock threshold and required reason for changed stock counts. Tracked "available" = on hand minus held order reservations. Do not lower on-hand below existing reservations. A stock mode change while reservations are held is blocked.
+- Each product can opt into prepaid US carrier shipping: flat shipping fee, optionally free above a merchandise-subtotal threshold, or always free; handling days and weight/dimensions are required for enabled shipping. This phase offers ONE fixed or free shipping rate per product. No live carrier quote/label service is present.
+- Cash pickup/delivery remains separately enabled per product in the adjacent settings section. Existing external seller URLs stay external and are not treated as site-fulfilled carrier shipments.
+
+Checkout and inventory
+- Server creates an immutable checkout attempt snapshot, including product quantity, item price, creator commission, shipping charge, channel and source. Only the configured Stripe checkout can collect prepaid carrier shipping.
+- Tracked stock is HELD transactionally before opening Stripe Checkout or accepting an unpaid cash request. Repeated request tokens do not double reserve. A signed paid Stripe webhook or staff-confirmed physical cash collection consumes the held stock. Signed Stripe expiry/failure and authorized cash cancellation release holds. Refunds DO NOT automatically restock goods; staff inventory adjustment is required after return inspection.
+- Stripe Checkout includes a verified fixed/free shipping option and captures a US destination. Signed webhook event must match our product subtotal, shipping fee, tax/total, country, payment mode, session and metadata. Redirects never mark orders paid. Invalid/missing addresses cause the signed webhook to retry, not silent fulfillment.
+- Stripe's provider_total includes optional tax and shipping. Product subtotal alone generates affiliate commissions; full Stripe refunds including tax/delivery correctly reverse eligible commissions.
+- Cash orders still require final staff-quoted tax/total; USPS/UPS/FedEx parcels are PREPAID Stripe orders, not cash-on-delivery. There is no promise of a carrier collect-on-delivery service.
+
+Staff shipping workspace and privacy
+- Commerce > Shipping shows verified Stripe-paid shipping orders, shipping fees, status, revision, and staff actions: packing, marking shipped with an actual carrier/tracking number, and confirming delivery. Shipping label purchase, carrier scan retrieval, automated returns and label printing are NOT implemented. Tracking URLs link to official carrier sites only after staff enters real tracking info.
+- Stripe shipment recipient and address are AES-256-GCM encrypted at rest using the existing private application secret. Only administrators can retrieve plaintext contact information through an authenticated CSRF-protected API. Creator dashboards, public responses, notifications, Brain and Agent Chat exclude shipping addresses/PII.
+- Existing shared Agent notification bell, History, Brain, Chat and private hourly cron report paid unshipped packages, low inventory and stalled shipments. Agents have read-only recommendations; shipping transitions are explicit staff controls.
+- Inventory is protected with a unique reservation key and serialized community lock. A missing checkout-expiry webhook can leave held stock outstanding; reconciliation must be done with Stripe before manually releasing inventory. No automatic "sweep" releases payment-provider holds based only on age.
+- Existing v1.32 cash records and v1.31 Stripe orders remain available; the release does not retrospectively invent shipping destinations for older orders. v1.33 schema 38→39 is replay safe after interrupted MySQL DDL.
+
+Release gate
+- Source acceptance: all GitHub CI on the final commit, PHP lint, PHP/SQLite payment+stock+shipment lifecycle, migration and PK/FK fixtures, Chrome desktop/phone regression and full deployment ZIP integrity.
+- Production acceptance requires a backed-up database, hosted MySQL v38→v39 migration, a real Stripe TEST shipping payment, actual shipping destination and tax collection, signed refund/expired webhook, low-stock concurrency check and a real staff tracking handoff on the host.
+- Verify legal shipping restrictions, delivery promises, carrier price account, packaging, tax treatment and fulfillment processes before accepting production shipping orders. Merchant tools do not guarantee rates, carrier delivery or payout settlement.
+
+Deployment
+1. Back up complete database, files, protected storage and media. Stop active checkouts/deploy outside active broadcast windows.
+2. Upload the new full deployment ZIP over application code while preserving storage/config.php, uploads and private media. Do NOT rerun install.php.
+3. Confirm schema version 39, Stripe credentials/webhooks and the existing hourly agent cron.
+4. Edit products individually; enable shipping, set rate/threshold and parcel weight/dimensions. Check inventory modes and stock counts. Test in Stripe TEST mode.
+5. Verify shipment privacy, staff pack/shipped/tracking/delivery flow, commission exclusions, refund handling and existing local cash options before live activation.

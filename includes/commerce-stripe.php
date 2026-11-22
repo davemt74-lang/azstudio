@@ -7,7 +7,7 @@ declare(strict_types=1);
  */
 function az_stripe_has_column(PDO $db,string $table,string $column): bool
 {
-    if(!in_array($table,['commerce_products','commerce_orders','commerce_live_features'],true))throw new InvalidArgumentException('Unsafe schema table');
+    if(!in_array($table,['commerce_products','commerce_orders','commerce_live_features','commerce_checkout_attempts'],true))throw new InvalidArgumentException('Unsafe schema table');
     if($db->getAttribute(PDO::ATTR_DRIVER_NAME)==='mysql'){
         $q=$db->prepare('SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name=? AND column_name=?');
         $q->execute([$table,$column]);return (int)$q->fetchColumn()>0;
@@ -182,8 +182,16 @@ function az_stripe_session_payload(array $attempt,array $product,array $config):
         'success_url'=>$return.'returned',
         'cancel_url'=>$return.'cancelled',
         'billing_address_collection'=>'auto',
-        'shipping_address_collection'=>['allowed_countries'=>['US']],
     ];
+    if(($attempt['fulfillment_method']??'none')==='shipping'){
+        $fee=(int)$attempt['shipping_fee_cents'];
+        $data['shipping_address_collection']=['allowed_countries'=>['US']];
+        $data['shipping_options']=[['shipping_rate_data'=>[
+            'type'=>'fixed_amount',
+            'display_name'=>$fee===0?'Free shipping':'Standard US shipping',
+            'fixed_amount'=>['amount'=>$fee,'currency'=>'usd']]]];
+    }
+    $data['expires_at']=time()+1800; // 30 minutes; outstanding stock holds need a signed expiry event.
     $autoTax=filter_var(getenv('AZH_STRIPE_AUTOMATIC_TAX')?:((az_config()['commerce']??[])['stripe_automatic_tax']??false),FILTER_VALIDATE_BOOLEAN);
     if($autoTax)$data['automatic_tax']=['enabled'=>'true'];
     return $data;
@@ -202,28 +210,40 @@ function az_stripe_checkout_start(array $body): array
     $token=az_text($body['clientToken']??'',32,'Checkout token');
     if(!az_valid_id($token))throw new AzHttpError(400,'Invalid checkout token.','invalid_token');
     [$promotionId,$channel,$sourceRef,$attributed]=az_stripe_attribution($id,$body);
+    $stock=az_fulfillment_row($id);
+    $ship=(int)$stock['shipping_enabled']===1?'shipping':'none';
+    $shippingFee=$ship==='shipping'?az_fulfillment_shipping_fee($id,(int)$product['price_cents']*$qty):0;
     $identity=session_id();
     if($identity==='')throw new AzHttpError(403,'A browser session is required.','session_required');
     $attemptKey=hash('sha256',$identity.'|'.$token);
     $lock=az_community_lock();
     try {
-        $db=az_db();
-        $q=$db->prepare('SELECT * FROM commerce_checkout_attempts WHERE attempt_key=?');
-        $q->execute([$attemptKey]);$old=$q->fetch();
-        if($old){
-            if($old['product_id']!==$id||(int)$old['quantity']!==$qty
-                ||$old['promotion_id']!==$promotionId||$old['channel']!==$channel||$old['source_ref']!==$sourceRef)
-                throw new AzHttpError(409,'This checkout token was used for another cart.','token_reused');
-            $attempt=$old;
-        }else{
-            $now=az_now();$attemptId=az_id();$mode=$c['mode'];
-            $commission=$attributed?(int)$product['commission_bps']:0;
-            $q=$db->prepare('INSERT INTO commerce_checkout_attempts(id,attempt_key,product_id,promotion_id,channel,source_ref,quantity,unit_cents,amount_cents,commission_bps,currency,mode,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-            $q->execute([$attemptId,$attemptKey,$id,$promotionId,$channel,$sourceRef,$qty,
-                (int)$product['price_cents'],(int)$product['price_cents']*$qty,$commission,'USD',$mode,$now,$now]);
-            $q=$db->prepare('SELECT * FROM commerce_checkout_attempts WHERE id=?');$q->execute([$attemptId]);
-            $attempt=$q->fetch();
-        }
+        $db=az_db();$db->beginTransaction();
+        try {
+            $q=$db->prepare('SELECT * FROM commerce_checkout_attempts WHERE attempt_key=?');
+            $q->execute([$attemptKey]);$old=$q->fetch();
+            if($old){
+                if($old['product_id']!==$id||(int)$old['quantity']!==$qty
+                    ||$old['promotion_id']!==$promotionId||$old['channel']!==$channel
+                    ||$old['source_ref']!==$sourceRef)
+                    throw new AzHttpError(409,'This checkout token was used for another cart.','token_reused');
+                $attempt=$old;
+            }else{
+                $now=az_now();$attemptId=az_id();$mode=$c['mode'];
+                $commission=$attributed?(int)$product['commission_bps']:0;
+                $q=$db->prepare('INSERT INTO commerce_checkout_attempts(
+                    id,attempt_key,product_id,promotion_id,channel,source_ref,quantity,unit_cents,amount_cents,
+                    commission_bps,currency,mode,shipping_fee_cents,fulfillment_method,created_at,updated_at
+                    ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+                $q->execute([$attemptId,$attemptKey,$id,$promotionId,$channel,$sourceRef,$qty,
+                    (int)$product['price_cents'],(int)$product['price_cents']*$qty,
+                    $commission,'USD',$mode,$shippingFee,$ship,$now,$now]);
+                az_inventory_reserve($db,$id,$qty,hash('sha256','stripe|'.$attemptId),'stripe',null,$attemptId);
+                $q=$db->prepare('SELECT * FROM commerce_checkout_attempts WHERE id=?');$q->execute([$attemptId]);
+                $attempt=$q->fetch();
+            }
+            $db->commit();
+        }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
     }finally{flock($lock,LOCK_UN);fclose($lock);}
     if($attempt['state']==='open' && $attempt['redirect_url']!==null && $attempt['redirect_url']!=='')
         return ['checkoutUrl'=>$attempt['redirect_url'],'status'=>$attempt['state'],'mode'=>$attempt['mode']];
@@ -324,6 +344,7 @@ function az_stripe_attempt_for_session(PDO $db,array $session): array
         ||!is_int($subtotal)||$subtotal!==(int)$r['amount_cents']
         ||!is_int($total)||!is_int($tax)||!is_int($shipping)||!is_int($discount)
         ||$tax<0||$shipping<0||$discount<0||$total!==$subtotal+$tax+$shipping-$discount
+        ||$shipping!==(int)$r['shipping_fee_cents']
         ||strtolower((string)($session['currency']??''))!=='usd'
         ||!is_bool($session['livemode']??null)||$session['livemode']!==($r['mode']==='live'))
         throw new AzHttpError(409,'Checkout subtotal, Stripe total, currency, mode or metadata did not match.','checkout_mismatch');
@@ -342,11 +363,15 @@ function az_stripe_apply_payment(PDO $db,array $session): void
     $price=(int)$attempt['amount_cents'];$commission=intdiv($price*(int)$attempt['commission_bps'],10000);
     $q=$db->prepare('SELECT owner_id,title FROM commerce_products WHERE id=?');$q->execute([$attempt['product_id']]);$product=$q->fetch();
     if(!$product)throw new AzHttpError(409,'Original checkout product no longer exists.','product_missing');
+    $orderId=az_id();
     $db->prepare("INSERT INTO commerce_orders(id,external_reference,product_id,promotion_id,quantity,amount_cents,currency,commission_bps,commission_cents,state,evidence_reference,recorded_by,created_at,paid_at,updated_at,provider,refunded_cents,provider_payment_id,provider_total_cents,provider_tax_cents)
         VALUES(?,?,?,?,?,?,?,?,?,'paid',?,?,?,?,?,'stripe',0,?,?,?)")
-      ->execute([az_id(),$reference,$attempt['product_id'],$attempt['promotion_id'],(int)$attempt['quantity'],
+      ->execute([$orderId,$reference,$attempt['product_id'],$attempt['promotion_id'],(int)$attempt['quantity'],
         $price,'USD',(int)$attempt['commission_bps'],$commission,$pi,(int)$product['owner_id'],az_now(),az_now(),az_now(),$pi,
         (int)$session['amount_total'],(int)$session['total_details']['amount_tax']]);
+    // This entire payment, stock, shipping, and notification change commits or rolls back together.
+    az_inventory_resolve($db,hash('sha256','stripe|'.$attempt['id']),'consumed');
+    az_fulfillment_create_shipment($db,$orderId,$attempt,$session,(string)$product['title']);
     $db->prepare("UPDATE commerce_checkout_attempts SET state='paid',updated_at=? WHERE id=?")->execute([az_now(),$attempt['id']]);
     az_commerce_queue_admins('stripe-paid:'.$attempt['id'],(int)$product['owner_id'],'stripe_paid',
         'Verified Stripe sale',$product['title'].' · A signed provider event confirmed a paid checkout. Review fulfillment. ',true);
@@ -360,14 +385,16 @@ function az_stripe_apply_payment(PDO $db,array $session): void
 function az_stripe_apply_failure(PDO $db,array $session): void
 {
     $r=az_stripe_attempt_for_session($db,$session);
-    $db->prepare("UPDATE commerce_checkout_attempts SET state='failed',redirect_url=NULL,updated_at=? WHERE id=? AND state='open'")
-        ->execute([az_now(),$r['id']]);
+    $q=$db->prepare("UPDATE commerce_checkout_attempts SET state='failed',redirect_url=NULL,updated_at=? WHERE id=? AND state='open'");
+    $q->execute([az_now(),$r['id']]);
+    if($q->rowCount()===1)az_inventory_resolve($db,hash('sha256','stripe|'.$r['id']),'released');
 }
 function az_stripe_apply_expiry(PDO $db,array $session): void
 {
     $r=az_stripe_attempt_for_session($db,$session);
-    $db->prepare("UPDATE commerce_checkout_attempts SET state='expired',redirect_url=NULL,updated_at=? WHERE id=? AND state='open'")
-        ->execute([az_now(),$r['id']]);
+    $q=$db->prepare("UPDATE commerce_checkout_attempts SET state='expired',redirect_url=NULL,updated_at=? WHERE id=? AND state='open'");
+    $q->execute([az_now(),$r['id']]);
+    if($q->rowCount()===1)az_inventory_resolve($db,hash('sha256','stripe|'.$r['id']),'released');
 }
 function az_stripe_apply_refund(PDO $db,array $charge): void
 {
@@ -383,8 +410,11 @@ function az_stripe_apply_refund(PDO $db,array $charge): void
     $q->execute([$paymentId]);$order=$q->fetch();
     if(!$order)throw new AzHttpError(409,'Payment not yet recorded. Stripe should retry.','payment_pending');
     $amount=(int)$order['amount_cents'];
-    if($refunded>$amount)throw new AzHttpError(409,'Refund exceeded original paid amount.','refund_mismatch');
-    $refunded=max((int)$order['refunded_cents'],$refunded);
+    $providerTotal=(int)($order['provider_total_cents']?:$amount);
+    if($refunded>$providerTotal)throw new AzHttpError(409,'Refund exceeded original Stripe payment.','refund_mismatch');
+    // Stripe refunds may include tax/shipping; this ledger tracks merchandise
+    // refund and reduces affiliate earnings conservatively, never below zero.
+    $refunded=max((int)$order['refunded_cents'],min($amount,$refunded));
     if($refunded===(int)$order['refunded_cents'])return;
     $remaining=$amount-$refunded;
     $state=in_array($order['state'],['disputed','reversed'],true)?$order['state']:($remaining===0?'refunded':'partially_refunded');

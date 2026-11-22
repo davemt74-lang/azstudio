@@ -21,7 +21,7 @@ if(root){
   }
   async function refresh(){
     try{
-      const data=await api('state');promotions=data.promotions.filter(p=>p.state==='approved');products=data.products.filter(p=>p.state==='active'&&(p.stripeReady||p.checkoutUrl||p.localEnabled));
+      const data=await api('state');promotions=data.promotions.filter(p=>p.state==='approved');products=data.products.filter(p=>p.state==='active'&&p.fulfillment?.inStock&&(p.stripeReady||p.checkoutUrl||p.localEnabled));
       const saved=select.value;select.replaceChildren();
       select.add(new Option(products.length?'Select a product':'No active products',''));
       for(const p of products)select.add(new Option(p.title+' · '+new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(p.priceCents/100),p.id));

@@ -1,3 +1,11 @@
+AZHottie Studio v1.33.0 — Inventory & Carrier Shipping
+- Back up the entire database, protected storage/config.php, media and uploads. Deploy application ZIP over existing code; preserve private data. DO NOT rerun install.php.
+- First database access upgrades schema 38→39 (per-product stock/shipping, reservation ledger and encrypted Stripe shipment destinations).
+- In each Commerce product editor, set SKU and stock, low-stock warning, shipping price (flat/free), optional free-shipping threshold, handling days and parcel measurements. Tracked stock is held during checkouts and consumed only after confirmed payment/cash receipt.
+- Stripe Checkout shipping is prepaid US-only with a configured fixed/free rate. No live USPS/UPS/FedEx quotes or label purchases. Staff record actual carrier/tracking status in Commerce > Shipping. Existing cash pickup/delivery and external-seller products remain.
+- Test Stripe TEST payment, shipping fee, taxes, address encryption, signed payment/expiry webhook, expired holds, staff parcel tracking, refunds and non-automatic restocking.
+- Verify hosted MySQL/real carrier operations independently before production shipping. See docs/RELEASE_1_33_0.txt.
+
 AZHottie Studio v1.32.0 — Product-specific cash checkout, pickup and local delivery
 - Back up the full database, site, uploads and private storage/config.php. Merge the deployment ZIP into the existing application; DO NOT rerun install.php or overwrite private media and settings.
 - First installed database access upgrades schema 37→38, creating per-product pickup/delivery settings and encrypted cash-order contacts. Existing product cash availability defaults to OFF.

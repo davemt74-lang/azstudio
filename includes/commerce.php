@@ -220,6 +220,10 @@ function az_commerce_product_save(array $user,array $body): array
     if($localInput instanceof stdClass)$localInput=get_object_vars($localInput);
     if($localInput!==null&&!is_array($localInput))throw new AzHttpError(400,'Invalid product pickup/delivery settings.','invalid_local_settings');
     $localSettings=$localInput===null?null:az_local_prepare_settings($localInput);
+    $fulfillmentInput=$body['fulfillmentSettings']??null;
+    if($fulfillmentInput instanceof stdClass)$fulfillmentInput=get_object_vars($fulfillmentInput);
+    if($fulfillmentInput!==null&&!is_array($fulfillmentInput))throw new AzHttpError(400,'Invalid shipping and inventory settings.','invalid_fulfillment_settings');
+    $fulfillmentSettings=$fulfillmentInput===null?null:az_fulfillment_prepare($fulfillmentInput);
     $cashReady=$localSettings!==null?$localSettings['available']:($id!==''&&az_valid_id($id)?az_local_options($id)['available']:false);
     if(!in_array($mode,['external','stripe'],true)||!in_array($state,['draft','active','archived'],true)
         ||($state==='active'&&$mode==='external'&&$url===''&&!$cashReady))
@@ -228,7 +232,7 @@ function az_commerce_product_save(array $user,array $body): array
         throw new AzHttpError(503,'Configure Stripe keys and a trusted public URL before activating Stripe products.','checkout_unavailable');
     if($mode==='stripe')$url='';
     $actor=(int)$user['id'];
-    return az_commerce_write(static function(PDO $db)use($id,$actor,$title,$description,$price,$commission,$url,$mode,$state,$localSettings,$body):array{
+    return az_commerce_write(static function(PDO $db)use($id,$actor,$title,$description,$price,$commission,$url,$mode,$state,$localSettings,$fulfillmentSettings,$body):array{
         $now=az_now();
         if($id===''){
             $idNew=az_id();
@@ -244,6 +248,7 @@ function az_commerce_product_save(array $user,array $body): array
             $idOut=$id;
         }
         if($localSettings!==null)az_local_save_product_settings($db,$idOut,$localSettings);
+        if($fulfillmentSettings!==null)az_fulfillment_save($db,$idOut,$fulfillmentSettings,$actor);
         az_commerce_queue('product:'.$idOut.':'.$now.':'.$state,$actor,$actor,'product_saved','Product saved: '.$title,
             'State: '.$state.'. Checkout remains on the configured hosted provider.','commerce.php',false);
         return ['id'=>$idOut,'state'=>$state];
@@ -463,7 +468,7 @@ function az_commerce_public_products(): array
         $rows[]=['id'=>$r['id'],'title'=>$r['title'],'description'=>$r['description'],
             'priceCents'=>(int)$r['price_cents'],'currency'=>$r['currency'],
             'checkoutMode'=>$r['checkout_mode'],'stripeReady'=>az_stripe_product_ready($r),
-            'localEnabled'=>$local['available'],
+            'localEnabled'=>$local['available'],'fulfillment'=>az_fulfillment_public($r),
             'checkoutUrl'=>$r['checkout_mode']==='external'?$r['checkout_url']:''];
         if(count($rows)>=48)break;
     }
@@ -485,6 +490,7 @@ function az_commerce_live_feature(): ?array
     return ['roomId'=>$room['id'],'id'=>$r['id'],'title'=>$r['title'],'description'=>$r['description'],
         'priceCents'=>(int)$r['price_cents'],'currency'=>$r['currency'],'checkoutMode'=>$r['checkout_mode'],
         'stripeReady'=>az_stripe_product_ready($r),'localEnabled'=>az_local_options($r['id'])['available'],
+        'fulfillment'=>az_fulfillment_public($r),
         'promotionId'=>$promotion,'checkoutUrl'=>$r['checkout_mode']==='external'?$r['checkout_url']:''];
 }
 function az_commerce_video_products(string $videoId): array
@@ -504,6 +510,7 @@ function az_commerce_video_products(string $videoId): array
             'promotionId'=>$r['promotion_id'],'videoId'=>$videoId,'priceCents'=>(int)$r['price_cents'],
             'currency'=>$r['currency'],'checkoutMode'=>$r['checkout_mode'],
             'stripeReady'=>az_stripe_product_ready($r),'localEnabled'=>az_local_options($r['product_id'])['available'],
+            'fulfillment'=>az_fulfillment_public(['id'=>$r['product_id']]),
             'checkoutUrl'=>$r['checkout_mode']==='external'?$r['checkout_url']:''];
     }
     return $rows;
@@ -521,11 +528,13 @@ function az_commerce_state(array $user): array
     $list=array_map(static function($r)use($admin,$user):array{
         $item=['id'=>$r['id'],'title'=>$r['title'],'description'=>$r['description'],'priceCents'=>(int)$r['price_cents'],
             'currency'=>$r['currency'],'checkoutMode'=>$r['checkout_mode'],'checkoutUrl'=>$r['checkout_mode']==='external'?$r['checkout_url']:'',
-            'localEnabled'=>az_local_options($r['id'])['available'],'stripeReady'=>az_stripe_product_ready($r),'state'=>$r['state'],
+            'localEnabled'=>az_local_options($r['id'])['available'],'stripeReady'=>az_stripe_product_ready($r),
+            'fulfillment'=>az_fulfillment_public($r),'state'=>$r['state'],
             'commissionBps'=>(int)$r['commission_bps'],'revision'=>(int)$r['revision'],
             'brief'=>($r['brief_title']===null?null:['title'=>$r['brief_title'],'instructions'=>$r['brief_instructions'],
                'state'=>$r['brief_state'],'revision'=>(int)$r['brief_revision']]),'myInterest'=>$r['my_interest']];
-        if($admin)$item['localSettings']=az_local_settings_admin($user,$r['id']);
+        if($admin){$item['localSettings']=az_local_settings_admin($user,$r['id']);
+            $item['fulfillmentSettings']=az_fulfillment_admin($user,$r['id']);}
         else unset($item['revision']);
         return $item;
     },$products);

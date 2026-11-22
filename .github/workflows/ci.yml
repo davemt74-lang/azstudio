@@ -46,6 +46,7 @@ jobs:
           php tests/commerce_integration.php
           php tests/commerce_stripe_integration.php
           php tests/commerce_local_integration.php
+          php tests/commerce_fulfillment_integration.php
 
   fixtures:
     name: SQLite permissions and migration fixtures
@@ -64,6 +65,7 @@ jobs:
           python tests/agent_publishing_sql_smoke.py
           python tests/commerce_sql_smoke.py
           python tests/commerce_local_sql_smoke.py
+          python tests/commerce_fulfillment_sql_smoke.py
 
   commerce-browser:
     name: Commerce responsive browser acceptance
@@ -79,6 +81,7 @@ jobs:
       - run: |
           python tests/commerce_browser.py
           python tests/commerce_local_browser.py
+          python tests/commerce_fulfillment_browser.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -86,6 +89,7 @@ jobs:
           path: |
             ${{ runner.temp }}/azh_commerce_browser/*.png
             ${{ runner.temp }}/azh_cash_browser/*.png
+            ${{ runner.temp }}/azh_shipping_browser/*.png
           if-no-files-found: ignore
           retention-days: 14
 

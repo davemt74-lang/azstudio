@@ -34,3 +34,12 @@
 #azh-local-private-details{white-space:pre-wrap;overflow-wrap:anywhere}
 #azh-local-admin-status[data-error=true]{color:#b1384e}
 @media(max-width:600px){.azh-commerce-product-local .azh-commerce-row{grid-template-columns:minmax(0,1fr)}}
+
+.azh-shipping-panel{display:grid;gap:12px}
+.azh-shipping-shipment-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.azh-shipping-private{white-space:pre-wrap;overflow-wrap:anywhere}
+.azh-shipping-shipment-status{font-size:12px;letter-spacing:.06em;font-weight:750;color:#78495b}
+.azh-shipping-form{display:flex;flex-wrap:wrap;align-items:end;gap:8px;margin-top:10px}
+.azh-shipping-form label{display:grid;gap:5px;font-size:12px;min-width:min(100%,140px)}
+.azh-shipping-form input,.azh-shipping-form select{border:1px solid #d3c8d0;border-radius:9px;padding:10px;min-height:42px;max-width:100%}
+@media(max-width:600px){.azh-shipping-form{display:grid;grid-template-columns:minmax(0,1fr)}.azh-shipping-form label{width:100%;min-width:0}.azh-shipping-form input,.azh-shipping-form select{width:100%;box-sizing:border-box}}
