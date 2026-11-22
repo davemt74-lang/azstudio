@@ -13,7 +13,8 @@ $admin=az_has_role($user,'admin');
 <title>Commerce &amp; Creator Briefs · AZHottie</title><meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css">
-<link rel="stylesheet" href="assets/commerce.css?v=1.35.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0"></head>
+<link rel="stylesheet" href="assets/commerce.css?v=1.36.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0">
+<link rel="stylesheet" href="assets/commerce-returns.css?v=1.36.0"></head>
 <body data-page="commerce"><?php az_render_universal_header('commerce',$user);az_render_member_layout_open('commerce',$user); ?>
 <main class="azh-commerce" id="azh-commerce" data-role="<?= $admin?'admin':'model' ?>" data-csrf="<?= az_h(az_csrf_token()) ?>">
   <header class="azh-commerce-hero"><div><p class="azh-eyebrow">AZHOTTIE · COMMERCE AGENT</p><h1>Commerce<span>.</span></h1>
@@ -25,6 +26,8 @@ $admin=az_has_role($user,'admin');
     <button type="button" role="tab" data-tab="briefs" aria-selected="false">Creator briefs</button>
     <button type="button" role="tab" data-tab="promotions" aria-selected="false">Video affiliates</button>
     <button type="button" role="tab" data-tab="orders" aria-selected="false">Orders &amp; earnings</button>
+    <?php if($admin): ?><button type="button" role="tab" data-tab="returns" aria-selected="false">Returns &amp; Exchanges</button><?php endif; ?>
+    <button type="button" role="tab" data-tab="payouts" aria-selected="false">Creator Payouts</button>
     <button type="button" role="tab" data-tab="analytics" aria-selected="false">Sales analytics</button>
     <?php if($admin): ?><button type="button" role="tab" data-tab="shipping" aria-selected="false">Shipping</button><?php endif; ?>
     <?php if($admin): ?><button type="button" role="tab" data-tab="local" aria-selected="false">Local Orders</button><?php endif; ?>
@@ -138,6 +141,66 @@ $admin=az_has_role($user,'admin');
       </form></div><?php endif; ?>
     <div id="commerce-orders-list" class="azh-commerce-list"></div>
   </section>
+
+   <?php if($admin): ?>
+   <section class="azh-commerce-panel" data-panel="returns" aria-label="Returns and exchanges" hidden>
+     <div id="azh-returns-admin" data-csrf="<?= az_h(az_csrf_token()) ?>">
+       <div class="azh-commerce-editor">
+         <h2>Returns &amp; Exchanges</h2>
+         <p>Verify customer ownership before authorizing a return. Inspected stock is restocked only after physical review. Refunding money is a separate Stripe, cash, or seller operation.</p>
+         <div class="azh-commerce-actions">
+           <button type="button" id="azh-returns-refresh" class="azh-commerce-small">Refresh returns</button>
+           <a href="returns.php" class="azh-commerce-link">Customer request page</a>
+         </div>
+         <p id="azh-return-summary" class="azh-return-payout-banner"></p>
+         <p id="azh-returns-status" role="status" aria-live="polite"></p>
+       </div>
+       <div class="azh-commerce-editor">
+         <h3>Staff return intake</h3>
+         <form class="azh-commerce-form" id="azh-return-intake">
+           <label>Paid order<select name="orderId" required><option value="">Loading paid orders…</option></select></label>
+           <div class="azh-commerce-row">
+             <label>Requested resolution<select name="kind"><option value="refund">Refund review</option><option value="exchange">Same-product exchange</option></select></label>
+             <label>Quantity<input type="number" name="quantity" min="1" max="100" step="1" value="1" required></label>
+           </div>
+           <label>Reason<textarea name="reason" rows="2" maxlength="500" minlength="8" required placeholder="Evidence and return reason. Do not enter payment card data."></textarea></label>
+           <button type="submit">Record unapproved return request</button>
+         </form>
+       </div>
+       <div class="azh-commerce-list" id="azh-returns-list"></div>
+       <div id="azh-returns-private" class="azh-commerce-editor" hidden></div>
+     </div>
+   </section>
+   <?php endif; ?>
+   <section class="azh-commerce-panel" data-panel="payouts" aria-label="Creator commission settlements" hidden>
+     <div id="azh-payout-workspace" data-admin="<?= $admin?'1':'0' ?>"
+        data-csrf="<?= az_h(az_csrf_token()) ?>">
+       <div class="azh-commerce-editor">
+         <h2>Creator Commission Settlement</h2>
+         <p>Commissions remain estimated until refundable sales, return holds, payment disputes, delivery and holding periods clear. Staff may approve and record external payouts, but AZHottie never sends funds automatically.</p>
+         <div class="azh-commerce-actions">
+           <button type="button" class="azh-commerce-small" id="azh-payout-refresh">Refresh settlement ledger</button>
+         </div>
+         <p id="azh-payout-status" role="status" aria-live="polite"></p>
+         <div id="azh-payout-summary" class="azh-return-kpi-grid"></div>
+       </div>
+       <?php if($admin): ?>
+       <div class="azh-commerce-editor">
+         <h3>New payout draft</h3>
+         <form id="azh-payout-draft" class="azh-commerce-form">
+           <label>Creator<select name="modelId" required><option value="">Loading eligible creators…</option></select></label>
+           <button type="submit">Draft eligible external commission payout</button>
+         </form>
+         <p class="azh-return-subtle">Drafts reserve the full eligible balance. Approval and verified external payment evidence are separate steps. Refund-related overpayments block new drafts.</p>
+       </div>
+       <div id="azh-payout-models" class="azh-commerce-list"></div>
+       <?php else: ?>
+       <div id="azh-payout-model-details" class="azh-commerce-list"></div>
+       <?php endif; ?>
+       <h3>Settlement history</h3>
+       <div id="azh-payout-batches" class="azh-commerce-list"></div>
+     </div>
+   </section>
   <section class="azh-commerce-panel" data-panel="analytics" aria-label="Commerce performance" hidden>
     <div id="commerce-analytics" class="azh-commerce-analytics" aria-live="polite"></div>
   </section>
@@ -187,6 +250,8 @@ $admin=az_has_role($user,'admin');
   </section><?php endif; ?>
   <p class="azh-commerce-disclaimer">External orders remain administrator-attested; Stripe orders require signed payment-provider events. Commissions remain estimated and no automatic payouts occur. The Agent cannot approve, sell, pay or refund without an authorized human action.</p>
 </main>
-<?php az_render_member_layout_close(); ?><script type="module" src="assets/commerce.js?v=1.35.0"></script><?php if($admin): ?><script type="module" src="assets/commerce-local-admin.js?v=1.32.0"></script><script type="module" src="assets/commerce-fulfillment-admin.js?v=1.33.0"></script>
+<?php az_render_member_layout_close(); ?><script type="module" src="assets/commerce.js?v=1.36.0"></script><?php if($admin): ?><script type="module" src="assets/commerce-local-admin.js?v=1.32.0"></script><script type="module" src="assets/commerce-fulfillment-admin.js?v=1.33.0"></script>
 <script type="module" src="assets/commerce-carrier-admin.js?v=1.34.0"></script><?php endif; ?>
+<?php if($admin): ?><script type="module" src="assets/commerce-returns-admin.js?v=1.36.0"></script><?php endif; ?>
+<script type="module" src="assets/commerce-settlements.js?v=1.36.0"></script>
 </body></html>
