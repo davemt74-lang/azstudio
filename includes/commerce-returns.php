@@ -262,3 +262,47 @@ function az_return_restock(PDO $db,array $row,int $quantity,int $actor): void
       ->execute([az_id(),$row['product_id'],$actor,'return_inspected',$quantity,
         'Inspected restock from return '.substr($row['id'],0,10),az_now()]);
 }
+
+/** Return reports are composed solely from role-appropriate counts; no emails. */
+function az_returns_briefing(array $user): array
+{
+    if(!az_has_role($user,'admin'))return ['cards'=>[],'counts'=>[]];
+    $q=az_db()->query("SELECT status,COUNT(*) AS n FROM commerce_returns
+        WHERE status IN ('requested','authorized','received','inspected','refund_approved','exchange_approved')
+        GROUP BY status");
+    $counts=['returnRequests'=>0,'returnAuthorized'=>0,'returnAwaitingInspection'=>0,
+        'returnRefundApproved'=>0,'returnExchangesToShip'=>0];
+    foreach($q->fetchAll(PDO::FETCH_ASSOC) as $r){
+        $n=(int)$r['n'];
+        if($r['status']==='requested')$counts['returnRequests']+=$n;
+        elseif($r['status']==='authorized')$counts['returnAuthorized']+=$n;
+        elseif(in_array($r['status'],['received','inspected'],true))$counts['returnAwaitingInspection']+=$n;
+        elseif($r['status']==='refund_approved')$counts['returnRefundApproved']+=$n;
+        elseif($r['status']==='exchange_approved')$counts['returnExchangesToShip']+=$n;
+    }
+    $cards=[];
+    if($counts['returnRequests'])$cards[]=az_agent_workspace_card('commerce','Verify new return or exchange requests',
+        $counts['returnRequests'].' customer return requests await eligibility and identity review; no refunds have been issued.','commerce.php',1);
+    if($counts['returnAwaitingInspection'])$cards[]=az_agent_workspace_card('commerce','Returned merchandise needs inspection',
+        $counts['returnAwaitingInspection'].' return cases need physical inspection or a refund/exchange decision.','commerce.php',1);
+    if($counts['returnRefundApproved'])$cards[]=az_agent_workspace_card('commerce','Refunds approved but provider evidence is pending',
+        $counts['returnRefundApproved'].' returns need a separate real refund and payment-provider reconciliation.','commerce.php',1);
+    if($counts['returnExchangesToShip'])$cards[]=az_agent_workspace_card('commerce','Exchange replacements awaiting dispatch',
+        $counts['returnExchangesToShip'].' same-product exchanges have reserved replacement stock; staff must confirm dispatch.','commerce.php',1);
+    return ['cards'=>$cards,'counts'=>$counts];
+}
+function az_returns_scan(): array
+{
+    $cutoff=gmdate('Y-m-d\TH:i:s\Z',time()-48*3600);
+    $q=az_db()->prepare("SELECT r.id,r.status,p.title,p.owner_id
+        FROM commerce_returns r JOIN commerce_orders o ON o.id=r.order_id
+        JOIN commerce_products p ON p.id=o.product_id
+        WHERE r.updated_at<=? AND r.status IN
+        ('requested','authorized','received','inspected','refund_approved','exchange_approved')
+        ORDER BY r.updated_at LIMIT 100");
+    $q->execute([$cutoff]);$rows=$q->fetchAll(PDO::FETCH_ASSOC);
+    foreach($rows as $r)az_commerce_queue_admins('return-stale:'.$r['id'].':'.$r['status'],
+        (int)$r['owner_id'],'return_followup','Return or exchange needs follow-up',
+        $r['title'].' · An unresolved return has been in the same state more than 48 hours. Review provider evidence and fulfillment. No refund was initiated.',true);
+    return ['checked'=>count($rows),'dispatch'=>az_commerce_dispatch(90)];
+}
