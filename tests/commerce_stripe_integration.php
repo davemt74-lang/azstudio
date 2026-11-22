@@ -35,6 +35,7 @@ $err=static function(callable $cb,string $code)use($ok):void{
 az_upgrade_commerce_schema($db);$ok(az_schema_version($db)===36,'v1.30 migration');
 az_upgrade_commerce_stripe_schema($db);$ok(az_schema_version($db)===37,'v1.31 migration');
 az_upgrade_commerce_stripe_schema($db);$ok(az_schema_version($db)===37,'migration replay');
+az_upgrade_commerce_local_schema($db);$ok(az_schema_version($db)===38,'per-product cash schema migrated');
 $ok(az_stripe_config()['ready']&&az_stripe_config()['mode']==='test','Stripe test configuration');
 $bad='{"id":"evt_bad","object":"event"}';
 $ok(!az_stripe_verify_signature($bad,'t=1700000000,v1='.str_repeat('0',64),'whsec_fixture_signing_secret'), 'bad signature rejected');

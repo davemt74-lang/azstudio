@@ -35,6 +35,8 @@ az_upgrade_commerce_schema($db);
 $check(az_schema_version($db)===36,'migration replay safe');
 az_upgrade_commerce_stripe_schema($db);$check(az_schema_version($db)===37,'checkout migration from 36');
 az_upgrade_commerce_stripe_schema($db);$check(az_schema_version($db)===37,'checkout migration replay safe');
+az_upgrade_commerce_local_schema($db);$check(az_schema_version($db)===38,'per-product cash schema migrated');
+az_upgrade_commerce_local_schema($db);$check(az_schema_version($db)===38,'per-product cash schema replay safe');
 $expect(static fn()=>az_commerce_product_save($model,['title'=>'Unauthorized','priceCents'=>50]),'role_required');
 $expect(static fn()=>az_commerce_url('http://example.com/checkout'),'invalid_checkout_url');
 $created=az_commerce_product_save($admin,['title'=>'Featured sample','description'=>'A model-approved product',

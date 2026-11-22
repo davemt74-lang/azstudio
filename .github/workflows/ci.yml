@@ -45,6 +45,7 @@ jobs:
           php tests/agent_publishing_integration.php
           php tests/commerce_integration.php
           php tests/commerce_stripe_integration.php
+          php tests/commerce_local_integration.php
 
   fixtures:
     name: SQLite permissions and migration fixtures
@@ -62,6 +63,7 @@ jobs:
           python tests/agent_video_sql_smoke.py
           python tests/agent_publishing_sql_smoke.py
           python tests/commerce_sql_smoke.py
+          python tests/commerce_local_sql_smoke.py
 
   commerce-browser:
     name: Commerce responsive browser acceptance
