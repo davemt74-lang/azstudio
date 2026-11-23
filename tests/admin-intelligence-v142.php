@@ -81,8 +81,8 @@ foreach($events as $event){
     check_management(!str_contains(json_encode($event),'PRIVATE_')&&!str_contains(json_encode($event),'SECRET_'),'Notification leaked sensitive data');
 }
 $escalate=az_admin_intelligence_scan(1,200,$now+48*3600,$db);
-check_management($escalate['delivered']===2,'Only 24-hour-stage casting/video cases should escalate at 72 hours');
+check_management($escalate['delivered']===3,'Two 72-hour escalations plus a newly aged 24-hour casting case should generate three reminders');
 $third=az_admin_intelligence_scan(1,200,$now+48*3600,$db);
 check_management($third['delivered']===0,'Escalated status duplicated');
-check_management((int)$db->query('SELECT COUNT(*) FROM admin_intelligence_deliveries')->fetchColumn()===7,'Durable delivery ledger count incorrect');
+check_management((int)$db->query('SELECT COUNT(*) FROM admin_intelligence_deliveries')->fetchColumn()===8,'Durable delivery ledger count incorrect');
 print "Management Intelligence rules, privacy, schema 45, unique alerts and escalation: PASS\n";
