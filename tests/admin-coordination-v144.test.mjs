@@ -13,7 +13,7 @@ test('Coordination uses verified Work and Calendar source tables only',()=>{
 });
 test('Production source is revalidated and tracked in existing Action Center',()=>{
  const actions=read('includes/admin-actions.php');
- assert.match(actions,/production','production/); // source becomes a recognized Action Center kind
+ assert.match(actions,/'queue','production'/); // source becomes a recognized Action Center kind
  assert.match(actions,/az_coordination_candidates\(\$db,\$now,100\)/);
  assert.match(actions,/az_coordination_source_active\(\$db,\$task/);
  assert.match(actions,/az_admin_action_scan/);
