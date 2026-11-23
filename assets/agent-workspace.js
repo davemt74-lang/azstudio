@@ -131,6 +131,18 @@ function mountAgentWorkspace(root=document) {
       }
       content.append(report);
     }
+    const coordination=brain.coordination;
+    if(coordination?.available && state?.role==='admin'){
+      const section=make('section','azh-aw-followthrough');
+      section.append(text('p','PRODUCTION · SCHEDULE · STAFF','azh-aw-eyebrow'),text('h3','Task Coordination'));
+      const counts=coordination.counts||{};
+      section.append(text('p',(counts.urgentProductionAlerts||0)+' urgent production follow-ups · '+
+        (counts.appointmentOverlapPairs7d||0)+' appointment overlap pairs · '+
+        (counts.actionResolutions7d||0)+' task resolutions in seven days','azh-aw-meta'));
+      section.append(text('p',coordination.nextStep||'Review the latest production coordination evidence.','azh-aw-meta'));
+      section.append(link('Open Task Coordination ↗','admin-studio.php'));
+      content.append(section);
+    }
     const actionCenter=brain.actionCenter;
     if(actionCenter && state?.role==='admin'){
       const block=make('section','azh-aw-followthrough');

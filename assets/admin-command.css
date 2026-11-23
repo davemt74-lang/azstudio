@@ -126,3 +126,40 @@
 .azd-action-history-item p{margin:5px 0;font-size:12px;overflow-wrap:anywhere;white-space:pre-wrap}
 @media(max-width:700px){.azd-action-suggest-list{grid-template-columns:1fr}.azd-action-counts{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:390px){.azd-action-head .azd-agent-tools{width:100%}.azd-action-count{padding:10px}.azd-action-controls>.azd-action-button{width:100%}}
+
+/* v1.44 Production / calendar / Action Center coordination. One natural page scroll. */
+.azd-coordination{margin:17px 0;min-width:0}.azd-coord-head{gap:13px;align-items:flex-start}
+.azd-coord-head>div{flex:1;min-width:190px}.azd-coord-head .azd-muted{margin-top:7px}
+.azd-coord-stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin:15px 0 22px}
+.azd-coord-stats>div{min-width:0;border:1px solid #eee0e7;border-radius:12px;padding:13px 10px;background:#fcf8fa;display:grid;align-content:start;gap:7px}
+.azd-coord-stats strong{font-size:clamp(19px,2.5vw,29px);color:#4e3142;font-variant-numeric:tabular-nums;line-height:1.15}
+.azd-coord-stats span{font-size:11px;line-height:1.5;color:#806775}
+.azd-coord-columns{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.85fr);gap:22px;min-width:0}
+.azd-coord-block{min-width:0}.azd-coord-side{display:grid;align-content:start;gap:22px;min-width:0}
+.azd-coord-subhead{display:flex;align-items:baseline;justify-content:space-between;gap:9px;flex-wrap:wrap;margin:0 0 11px}
+.azd-coord-subhead h3{font-size:15px;color:#493344;letter-spacing:-.02em;margin:0}
+.azd-coord-subhead span{font-size:10px;color:#917d88}
+.azd-coord-cases{display:grid;gap:10px}
+.azd-coord-case{border:1px solid #e9dfe6;border-radius:11px;padding:13px;background:#fff;display:grid;gap:6px;min-width:0}
+.azd-coord-case-top,.azd-coord-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;justify-content:space-between}
+.azd-coord-urgency{border-radius:999px;padding:4px 8px;font-size:10px;font-weight:800;background:#fff0dc;color:#8a631e}
+.azd-coord-urgency[data-priority="0"]{background:#feeae7;color:#963e2f}
+.azd-coord-due{font-size:10px;color:#846d7b}
+.azd-coord-case>strong{font-size:13px;color:#3e2838;line-height:1.4;overflow-wrap:anywhere}
+.azd-coord-case>p{font-size:11px;line-height:1.6;color:#786675;margin:0;overflow-wrap:anywhere}
+.azd-coord-actions{justify-content:flex-start;margin-top:4px}
+.azd-coord-actions>a{font-size:11px;font-weight:700;text-decoration:underline;color:#76405d;text-underline-offset:3px}
+.azd-coord-actions .azd-action-button{font-size:11px;padding:7px 9px}
+.azd-coord-staff{display:grid;gap:8px}
+.azd-coord-staff-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 9px;background:#fcf9fb;border:1px solid #eee3e9;border-radius:10px;padding:10px 12px;min-width:0}
+.azd-coord-staff-row strong{font-size:12px;color:#493244;overflow-wrap:anywhere}
+.azd-coord-staff-row span{font-size:10px;color:#806a7a;justify-self:end;text-align:right}
+.azd-coord-staff-row small{grid-column:1/-1;font-size:10px;color:#994729;font-weight:800}
+.azd-coord-schedule{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:10px}
+.azd-coord-schedule>div{display:grid;gap:5px;border-radius:10px;background:#fbf5f8;padding:13px;min-width:0}
+.azd-coord-schedule strong{font-size:24px;color:#54374b}.azd-coord-schedule span{font-size:11px;color:#816b78;line-height:1.5}
+.azd-coord-warning{font-size:11px;line-height:1.5;background:#fff6e9;color:#77542a;border-left:3px solid #ce9658;padding:10px 12px;overflow-wrap:anywhere}
+.azd-coordination .azd-link:focus-visible,.azd-coord-actions a:focus-visible,.azd-coord-actions button:focus-visible{outline:3px solid #b7678f;outline-offset:2px}
+@media(max-width:1150px){.azd-coord-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:850px){.azd-coord-columns{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:470px){.azd-coord-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.azd-coord-case{padding:11px}.azd-coord-staff-row{grid-template-columns:1fr}.azd-coord-staff-row span{justify-self:start;text-align:left}}
