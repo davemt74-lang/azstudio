@@ -10,7 +10,7 @@ try {
     $method=$_SERVER['REQUEST_METHOD']??'GET';
     $multipart=$method==='POST'&&str_starts_with(strtolower((string)($_SERVER['CONTENT_TYPE']??'')),'multipart/form-data');
     $body=$method==='POST'?($multipart?$_POST:az_json_body()):$_GET;
-    $ownerActions=['invite','devices','approve','revoke','offers','answer'];
+    $ownerActions=['invite','devices','approve','revoke','offers','answer','resetFeed'];
     if (in_array($action,$ownerActions,true)) {
         $user=az_require_auth(true);az_personal_media_role($user);$owner=(int)$user['id'];
         if ($method==='GET' && $action==='devices')$data=['devices'=>az_personal_phone_list($owner),'iceServers'=>az_live_ice_servers()];
@@ -21,6 +21,7 @@ try {
               'invite'=>az_personal_phone_invite($owner),
               'approve','revoke'=>az_personal_phone_change($owner,az_text($body['id']??'',32,'Phone ID'),$action),
               'answer'=>az_personal_phone_live_answer($owner,az_text($body['id']??'',32,'Phone ID'),az_text($body['nonce']??'',32,'Stream ID'),$body['sdp']??''),
+              'resetFeed'=>az_personal_phone_live_reset($owner,az_text($body['id']??'',32,'Phone ID'),az_text($body['nonce']??'',32,'Stream ID')),
               default=>throw new AzHttpError(405,'Unsupported request method.','method_not_allowed')
             };
         } else throw new AzHttpError(405,'Unsupported request method.','method_not_allowed');
