@@ -5,6 +5,7 @@ import {nextProgramId,switchDelay,fitCover,statusText,transitionProgress,safeOve
 import {CameraHealth,cameraStateText,cameraSummary,cameraPermissionMessage} from './live-camera-health.js';
 import {liveVideoTrack,ViewerVideoRoute,outgoingFrameSample} from './live-program-delivery.js';
 import {PhoneRepairBudget} from './live-recovery.js';
+import {recordingStartBlockReason,mixerReadiness} from './live-production-guards.js';
 import {normalizeLayout,layoutRects,compositionReady,chooseRundownSegment,safeShowText,rundownPreview} from './live-show-core.js';
 
 const root=document.getElementById('azh-director');
@@ -36,7 +37,7 @@ if (root) {
   let recorder=null,chunks=[],recordedFile=null,recordUrl=null,recordRoom=null,recordToken=null,savedMediaId=null,saving=false,connectedPhones=[],switchDeadline=0,raf=0,lastFrame=0,loop=null,phonePollBusy=false,viewerPollBusy=false,inviteUrl='',phoneIceServers=null;
   const iceServers=()=>room?.iceServers||[{urls:['stun:stun.l.google.com:19302']}];
   let usedHiddenRelay=false;
-  let cameraFaultActive=false;
+  let cameraFaultActive=false,interruptedSourceId=null,recordingStarting=false,recordingFinalizing=false,broadcastStarting=false;
   let latestDelivery={viewerCount:0,sentFps:null,stalledOutbound:0,directRelays:0},healthSending=false;
   function localHealth(){
     const healthy=sourceIds().length;
@@ -195,7 +196,7 @@ if (root) {
     }
     if(!sources.has(item.id))return;
     if(selected===item.id&&!mediaProgramActive&&activeLayout.type==='single'&&['stalled','muted','offline','blocked'].includes(state)&&!(document.hidden&&state==='stalled')){
-      cameraFaultActive=Boolean(room);selected=null;activeLayout=normalizeLayout('single',['']);transitionStart=0;routeViewerVideo();feedback('The on-air camera stopped delivering decoded video. Program is showing the holding slate until a healthy feed is taken.',true);
+      interruptedSourceId=item.id;cameraFaultActive=Boolean(room);selected=null;activeLayout=normalizeLayout('single',['']);transitionStart=0;routeViewerVideo();feedback('The on-air camera stopped delivering decoded video. Program is showing the holding slate until a healthy feed is taken.',true);
       if($('live-switch-mode').value!=='manual')queueMicrotask(()=>{const ready=sourceIds();if(!selected&&ready.length&&activeLayout.type==='single')takeSource(ready[0]);});
     }
     showSources();
@@ -316,7 +317,7 @@ if (root) {
         tile.card.classList.toggle('is-unhealthy',!ready);
         tile.inactive.hidden=ready;tile.indicator.hidden=!ready;
         tile.details.textContent=selected===id?'● ON PROGRAM':ready?`● LIVE · ${item.health.framesPerSecond()} fps`:cameraStateText(state);
-        tile.take.disabled=!ready||(!mediaProgramActive&&activeLayout.type==='single'&&selected===id);tile.take.textContent=!mediaProgramActive&&activeLayout.type==='single'&&selected===id?'● Broadcasting':'Broadcast now';
+        tile.take.disabled=!ready||(!mediaProgramActive&&activeLayout.type==='single'&&selected===id);tile.take.textContent=!mediaProgramActive&&activeLayout.type==='single'&&selected===id?'● Broadcasting':ready&&interruptedSourceId===id?'Restore to Program':'Broadcast now';
         tile.resume.hidden=state!=='blocked'&&state!=='paused';
         tile.repair.hidden=ready||!['stalled','muted','offline'].includes(state);
         tile.card.hidden=false;
@@ -369,7 +370,7 @@ if (root) {
     sourceCards.get(id)?.card.remove();sourceCards.delete(id);
     if(item.kind==='local')item.stream.getTracks().forEach(t=>t.stop());
     if(previewSelected===id)previewSelected=null;
-    if(!mediaProgramActive&&activeLayout.type==='single'&&selected===id){selected=null;activeLayout=normalizeLayout('single',['']);transitionStart=0;cameraFaultActive=Boolean(room);feedback('The on-air phone disconnected. Program returned to the holding slate.',true);}
+    if(!mediaProgramActive&&activeLayout.type==='single'&&selected===id){interruptedSourceId=id;selected=null;activeLayout=normalizeLayout('single',['']);transitionStart=0;cameraFaultActive=Boolean(room);feedback('The on-air phone disconnected. Program returned to the holding slate.',true);}
     else if(!mediaProgramActive&&activeLayout.slots.includes(id)){cameraFaultActive=Boolean(room);feedback('One camera in the multiview disconnected. Its tile will show an inactive camera slate.',true);}
     showSources();scheduleSwitch();routeViewerVideo();
   }
@@ -377,11 +378,11 @@ if (root) {
     if(mode!=='cut'){oldCtx.drawImage(stage,0,0,oldFrame.width,oldFrame.height);transitionMode=mode;transitionStart=performance.now();}
     else{transitionMode='cut';transitionStart=0;}
   }
-  function takeSlate(){pendingSceneSettings=null;programTakeEpoch++;stopMediaPlayback(false);transitionToProgram($('live-transition').value);activeLayout=normalizeLayout('single',['']);selected=null;syncCameraAudio();showSources();scheduleSwitch();routeViewerVideo();feedback('Holding slate taken to Program.');}
+  function takeSlate(){interruptedSourceId=null;cameraFaultActive=false;pendingSceneSettings=null;programTakeEpoch++;stopMediaPlayback(false);transitionToProgram($('live-transition').value);activeLayout=normalizeLayout('single',['']);selected=null;syncCameraAudio();showSources();scheduleSwitch();routeViewerVideo();feedback('Holding slate taken to Program.');}
   function takeComposition(layout){
     const requested=normalizeLayout(layout?.type,layout?.slots);
     if(!compositionReady(requested,sourceIds())){feedback('Every position needs a different healthy live phone before taking this composition to Program.',true);return false;}
-    programTakeEpoch++;stopMediaPlayback(false);transitionToProgram($('live-transition').value);
+    interruptedSourceId=null;programTakeEpoch++;stopMediaPlayback(false);transitionToProgram($('live-transition').value);
     activeLayout=requested;selected=requested.slots[0]||null;cameraFaultActive=false;syncCameraAudio();showSources();scheduleSwitch();routeViewerVideo();
     feedback('Took '+requested.type+' composition to Program. Only the composite Program canvas goes to viewers.');return true;
   }
@@ -389,7 +390,7 @@ if (root) {
     if(!sources.has(id)||(!mediaProgramActive&&activeLayout.type==='single'&&selected===id))return;
     if(!sources.get(id).health?.playable()){feedback('Camera inactive. Start recording or Share live on the phone and wait for live frames.',true);return;}
     const mode=$('live-transition').value;
-    pendingSceneSettings=null;programTakeEpoch++;stopMediaPlayback(false);transitionToProgram(mode);activeLayout=normalizeLayout('single',[id]);
+    interruptedSourceId=null;pendingSceneSettings=null;programTakeEpoch++;stopMediaPlayback(false);transitionToProgram(mode);activeLayout=normalizeLayout('single',[id]);
     selected=id;syncCameraAudio();showSources();cameraFaultActive=false;scheduleSwitch();routeViewerVideo();feedback('Broadcasting '+sources.get(id).label+' ('+mode+').');
   }
 
@@ -805,6 +806,28 @@ if (root) {
     oscillator=audioCtx.createOscillator();const silent=audioCtx.createGain();silent.gain.value=0;oscillator.connect(silent).connect(audioDestination);oscillator.start();
     await audioCtx.resume();syncCameraAudio();
   }
+  /** Mixer status is only a local capability check. It never claims remote
+   * audio can actually be heard; that requires the physical fan test.
+   */
+  function reportMixerReadiness(){
+    const label=$('live-audio-health'),resume=$('live-audio-resume');
+    if(!label||!resume)return;
+    const mic=Boolean(micStream?.getAudioTracks().some(t=>t.readyState==='live'&&!t.muted))&&!$('live-mic-mute').checked&&Number($('live-mic-volume').value)>0;
+    const camera=Boolean(sources.get(selected)?.stream?.getAudioTracks?.().some(t=>t.readyState==='live'&&!t.muted))
+      &&$('live-camera-audio').checked&&Number($('live-camera-volume').value)>0&&!mediaProgramActive;
+    const state=mixerReadiness({programTrack:Boolean(programStream?.getAudioTracks().some(t=>t.readyState==='live')),
+      contextState:audioCtx?.state||'unavailable',hostMic:mic,cameraMic:camera});
+    label.textContent=state.message;label.dataset.state=state.state;
+    resume.hidden=Boolean(audioCtx&&audioCtx.state==='running');
+  }
+  $('live-audio-resume')?.addEventListener('click',async()=>{
+    try{
+      await ensureAudio();
+      if(!audioCtx||!audioDestination)throw Error('This browser does not support a Program audio mixer.');
+      await audioCtx.resume();
+      reportMixerReadiness();
+    }catch(e){feedback('Program mixer could not resume: '+statusText(e),true);reportMixerReadiness();}
+  });
   function updateAudioGains(){
     if(micGain){const volume=$('live-mic-mute').checked?0:Number($('live-mic-volume').value)/100;micGain.gain.setTargetAtTime(volume,audioCtx.currentTime,.035);}
     const cameraVolume=$('live-camera-audio').checked?Number($('live-camera-volume').value)/100:0;
@@ -833,13 +856,14 @@ if (root) {
       }catch(e){feedback('Camera audio unavailable: '+statusText(e),true);}
     }
     for(const id of cameraAudioNodes.keys())if(!sources.has(id))detachCameraAudio(id);
-    updateAudioGains();
+    updateAudioGains();reportMixerReadiness();
   }
   function rms(analyser){
     if(!analyser)return 0;const a=new Uint8Array(analyser.fftSize);analyser.getByteTimeDomainData(a);
     let power=0;for(const x of a){const y=(x-128)/128;power+=y*y;}
     return Math.min(1,Math.sqrt(power/a.length)*3);
   }
+  const audioReadinessTimer=setInterval(reportMixerReadiness,2500);
   const audioMeterLoop=setInterval(()=>{
     $('live-mic-meter').value=rms(micAnalyser);
     $('live-camera-meter').value=$('live-camera-audio').checked?rms(cameraAudioNodes.get(selected)?.analyser):0;
@@ -856,8 +880,8 @@ if (root) {
         micNode.connect(micAnalyser);micAnalyser.connect(micGain);micGain.connect(audioDestination);updateAudioGains();
         feedback('Program microphone enabled.');
       } else {micNode?.disconnect();micGain?.disconnect();micAnalyser?.disconnect();micNode=null;micGain=null;micAnalyser=null;micStream?.getTracks().forEach(t=>t.stop());micStream=null;feedback('Program microphone off.');}
-      await enumerate();
-    } catch(e){feedback('Could not set the microphone: '+statusText(e),true);}
+      await enumerate();reportMixerReadiness();
+    } catch(e){feedback('Could not set the microphone: '+statusText(e),true);reportMixerReadiness();}
   }
   $('live-apply-mic').addEventListener('click',()=>void applyMicrophone());
   async function ensureProgram(){
@@ -867,18 +891,20 @@ if (root) {
     await ensureAudio();
     programStream=new MediaStream([...canvasStream.getVideoTracks(),...(audioDestination?.stream.getAudioTracks()||[])]);
     if(!programStream.getVideoTracks().length)throw Error('No program video track could be created.');
-    return programStream;
+    reportMixerReadiness();return programStream;
   }
   async function liveStart(){
-    if(room)return;
+    if(room||broadcastStarting)return;
+    broadcastStarting=true;$('live-go').disabled=true;
     try {
       if(!window.isSecureContext)throw Error('Use the HTTPS AZHottie site for live video.');
       if(!window.RTCPeerConnection)throw Error('This browser does not support WebRTC live streaming.');
       await ensureProgram();
       const started=await liveRequest('start',{title:$('live-title').value.trim()});room={...started.room,iceServers:started.iceServers};
-      cameraFaultActive=false;$('live-go').disabled=true;$('live-end').disabled=false;$('live-record').disabled=false;$('live-onair-pill').textContent='● ON AIR';$('live-onair-pill').classList.add('is-live');
+      cameraFaultActive=false;$('live-go').disabled=true;$('live-end').disabled=false;updateRecordControls();reportMixerReadiness();$('live-onair-pill').textContent='● ON AIR';$('live-onair-pill').classList.add('is-live');
       feedback('On air. Keep this Director tab open so members can watch.');setTimeout(()=>void reportLiveHealth(),1200);scheduleSwitch();void pollViewers();void refreshAudience();
     } catch(e){feedback(statusText(e),true);}
+    finally{broadcastStarting=false;if(!room)$('live-go').disabled=false;}
   }
   function closeViewer(id){const v=viewers.get(id);if(!v)return;viewers.delete(id);clearTimeout(v.timeout);clearTimeout(v.lossTimer);v.router?.close();v.peer.onconnectionstatechange=null;v.peer.close();}
   async function acceptViewer(offer,version){
@@ -985,7 +1011,8 @@ if (root) {
     $('live-agent-health-summary').textContent='Off air · live health monitoring paused';
     $('live-delivery-state').textContent='Off air';
     if(old)void liveRequest('stop',{roomId:old.id},{},{keepalive:quiet}).catch(e=>{if(!quiet)feedback('Could not confirm broadcast ended: '+e.message,true);});
-    if(recorder?.state==='recording')recorder.stop();
+    if(recorder?.state==='recording')finishRecording();
+    updateRecordControls();
     if(!quiet)feedback('Broadcast ended. Finalize and verify any active recording before leaving this page.');
   }
   $('live-go').addEventListener('click',()=>void liveStart());$('live-end').addEventListener('click',()=>liveEnd());
@@ -1014,9 +1041,32 @@ if (root) {
     }catch(e){feedback(statusText(e),true);}
   });
   $('live-copy-invite').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(inviteUrl);feedback('Invitation copied.');}catch{$('live-invite-url').select();feedback('Copy the selected invitation link.');}});
+  function updateRecordControls(){
+    const blocked=recordingStartBlockReason({onAir:Boolean(room),starting:recordingStarting,
+      finalizing:recordingFinalizing,saving,recorderState:recorder?.state||'inactive',
+      backupPending:Boolean(recordedFile)});
+    $('live-record').disabled=Boolean(blocked);
+    $('live-record-stop').disabled=recorder?.state!=='recording'&&recorder?.state!=='paused';
+  }
+  function finishRecording(){
+    if(!recorder||!['recording','paused'].includes(recorder.state))return;
+    recordingFinalizing=true;updateRecordControls();
+    try{recorder.stop();}
+    catch(e){recordingFinalizing=false;updateRecordControls();reportRecord('Could not finalize recording: '+statusText(e),true);}
+  }
+  function discardLocalRecording(){
+    if(saving||recordingFinalizing){reportRecord('The recording is still being finalized or saved. Discard is disabled until it finishes.',true);return;}
+    if(!recordedFile)return;
+    if(!window.confirm('Discard this unsaved local recording from the Director tab? Download a backup first if you need to keep it. This cannot be undone.'))return;
+    recordedFile=null;recordToken=null;savedMediaId=null;recordRoom=null;
+    if(recordUrl){URL.revokeObjectURL(recordUrl);recordUrl=null;}
+    $('live-record-backup').replaceChildren();
+    reportRecord('Unsaved local recording discarded at your request. You can record another Program clip.');
+    updateRecordControls();
+  }
   async function saveRecording(file,title,roomId){
     if(saving)return;saving=true;
-    $('live-record').disabled=true;reportRecord('Saving the complete program recording to your private gallery…');
+    updateRecordControls();reportRecord('Saving the complete program recording to your private gallery…');
     try {
       const saved=savedMediaId?{id:savedMediaId}:await uploadToPersonalGallery(mediaRequest,file,title,{token:recordToken,onProgress:(done,total)=>reportRecord(`Saving program recording: ${Math.round(done/total*100)}%`),onRetry:({attempt})=>reportRecord('Retrying upload attempt '+attempt+'…')});
       savedMediaId=saved.id;
@@ -1026,46 +1076,59 @@ if (root) {
       const persisted=(listing.items||[]).find(item=>item.id===saved.id);
       if(!persisted||Number(persisted.sizeBytes)!==file.size)throw Error('Saved file verification failed. Keep your local backup and retry; no recording is published.');
       if(roomId)await liveRequest('attach',{roomId,mediaId:saved.id});
-      reportRecord('✓ Recording verified and saved privately. Review it under Admin → Saved Live Productions.');
+      reportRecord('✓ Recording byte size verified in your private gallery. Open Saved Live Productions and play it to confirm video and audio.');
       $('live-record-backup').replaceChildren();if(recordUrl){URL.revokeObjectURL(recordUrl);recordUrl=null;}
       recordedFile=null;recordToken=null;savedMediaId=null;// Saved shows are managed on the dedicated live-productions.php admin page.
     }catch(e){reportRecord('Upload interrupted. Keep this page open, save a backup, or retry: '+statusText(e),true);
       $('live-record-backup').append(button('Retry save',()=>void saveRecording(file,title,roomId)));
-    }finally{saving=false;$('live-record').disabled=!room;}
+    }finally{saving=false;updateRecordControls();}
   }
   async function startRecord(){
-    if(!room||recorder?.state==='recording'||saving)return;
+    const reason=recordingStartBlockReason({onAir:Boolean(room),starting:recordingStarting,
+      finalizing:recordingFinalizing,saving,recorderState:recorder?.state||'inactive',
+      backupPending:Boolean(recordedFile)});
+    if(reason){reportRecord(reason,true);return;}
+    recordingStarting=true;updateRecordControls();
+    const startRoomId=room.id;
     try {
       const stream=await ensureProgram();
-      if(!room)throw Error('The live broadcast ended before recording started. Start a new session.');
+      if(!room||room.id!==startRoomId)throw Error('The live broadcast changed before recording started. Start a new recording in the current session.');
       recordToken=randomId();savedMediaId=null;
       if(!globalThis.MediaRecorder)throw Error('This browser does not support program recording.');
       const mime=selectRecordingMime(x=>MediaRecorder.isTypeSupported(x));
       recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);chunks=[];recordRoom=room?.id||null;
       recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data);};
       recorder.onerror=e=>{reportRecord('The browser encountered a recording error. Keep the downloadable backup, then retry: '+statusText(e.error||e),true);};
-      const startAt=Date.now();const clock=setInterval(()=>{if(recorder?.state==='recording'){$('live-record-clock').textContent=new Date(Date.now()-startAt).toISOString().slice(11,19);}},1000);
-      recorder.onstop=()=>{
-        clearInterval(clock);document.body.classList.remove('azh-is-recording');$('live-record-stop').disabled=true;$('live-record').disabled=!room;
+      const startedRecorder=recorder,startedRoom=recordRoom;
+      const startAt=Date.now();const clock=setInterval(()=>{if(startedRecorder?.state==='recording'){$('live-record-clock').textContent=new Date(Date.now()-startAt).toISOString().slice(11,19);}},1000);
+      recorder.onstop=async()=>{
+        recordingFinalizing=true;updateRecordControls();
+        try{
+        clearInterval(clock);document.body.classList.remove('azh-is-recording');$('live-record-stop').disabled=true;
         if(!chunks.length){reportRecord('No recording data was captured. Check camera and browser recording support.',true);return;}
-        const type=(recorder.mimeType||mime||'video/webm').split(';')[0];const ext=type.includes('mp4')?'mp4':'webm';
+        const type=(startedRecorder.mimeType||mime||'video/webm').split(';')[0];const ext=type.includes('mp4')?'mp4':'webm';
         const title=`${$('live-title').value.trim()||'AZHottie Live'} · ${new Date(startAt).toLocaleDateString()}`;
         const file=new File([new Blob(chunks,{type})],`azhottie-program-${startAt}.${ext}`,{type});recordedFile=file;chunks=[];
         const invalidRecording=file.size<1024;
         if(invalidRecording)reportRecord('Recording contains too few bytes to verify. Keep the local backup; it will not be uploaded automatically.',true);
         if(recordUrl)URL.revokeObjectURL(recordUrl);recordUrl=URL.createObjectURL(file);
         const area=$('live-record-backup');area.replaceChildren();const a=document.createElement('a');a.href=recordUrl;a.download=file.name;a.className='azh-live-button azh-live-secondary';a.textContent='↓ Download recording backup';area.append(a);
-        if(!invalidRecording)void saveRecording(file,title,recordRoom);
+        area.append(button('Discard local copy',discardLocalRecording,'azh-live-button azh-live-secondary'));
+        // The recording's original room ID is immutable, even if the next
+        // session starts while the previous file finishes uploading.
+        if(!invalidRecording)await saveRecording(file,title,startedRoom);
+        }finally{recordingFinalizing=false;updateRecordControls();}
       };
-      recorder.start(1000);$('live-record').disabled=true;$('live-record-stop').disabled=false;document.body.classList.add('azh-is-recording');reportRecord('● RECORDING — the complete Program output, camera switches, overlays, and mixed audio.');
+      recorder.start(1000);updateRecordControls();document.body.classList.add('azh-is-recording');reportRecord('● RECORDING — the complete Program output, camera switches, overlays, and mixed audio.');
     }catch(e){reportRecord(statusText(e),true);}
+    finally{recordingStarting=false;updateRecordControls();}
   }
   $('live-record').addEventListener('click',()=>void startRecord());
-  $('live-record-stop').addEventListener('click',()=>{if(recorder?.state==='recording')recorder.stop();});
+  $('live-record-stop').addEventListener('click',finishRecording);
   loop=setInterval(()=>{void refreshPhones();if(room)void pollViewers();},2500);void refreshPhones();
-  window.addEventListener('beforeunload',e=>{if(recorder?.state==='recording'||saving||recordedFile){e.preventDefault();e.returnValue='';}});
+  window.addEventListener('beforeunload',e=>{if(recorder?.state==='recording'||recordingStarting||recordingFinalizing||saving||recordedFile){e.preventDefault();e.returnValue='';}});
   window.addEventListener('pagehide',()=>{
-    clearInterval(loop);clearInterval(liveHealthTimer);clearInterval(cameraWatch);clearInterval(audioMeterLoop);clearInterval(hiddenRenderTimer);clearInterval(deliveryTimer);for(const id of phoneRepairTimers.keys())cancelPhoneRepair(id);cancelAnimationFrame(raf);phones.stop();for(const id of [...viewers.keys()])closeViewer(id);
+    clearInterval(loop);clearInterval(liveHealthTimer);clearInterval(cameraWatch);clearInterval(audioReadinessTimer);clearInterval(audioMeterLoop);clearInterval(hiddenRenderTimer);clearInterval(deliveryTimer);for(const id of phoneRepairTimers.keys())cancelPhoneRepair(id);cancelAnimationFrame(raf);phones.stop();for(const id of [...viewers.keys()])closeViewer(id);
     if(room)liveEnd(true);
     clearPreview();for(const id of [...sources.keys()])removeSource(id);
     micStream?.getTracks().forEach(t=>t.stop());for(const id of [...cameraAudioNodes.keys()])detachCameraAudio(id);canvasStream?.getTracks().forEach(t=>t.stop());oscillator?.stop();audioCtx?.close();

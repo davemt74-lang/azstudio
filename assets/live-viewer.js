@@ -3,6 +3,7 @@ import {fanVideoState} from './live-agent-health.js';
 import {randomId} from './personal-phone-core.js';
 import {statusText} from './live-core.js';
 import {appendLiveTrack} from './live-viewer-core.js';
+import {lateViewerJoinNeedsLeave,orderedViewerNonce} from './live-production-guards.js';
 import {FanRecoveryBudget,fanRecoveryReason} from './live-recovery.js';
 const root=document.getElementById('azh-fan-live');
 if(root){
@@ -72,7 +73,7 @@ if(root){
     const oldId=viewerId;viewerId=null;
     if(peer){const old=peer;peer=null;old.ontrack=null;old.onconnectionstatechange=null;old.close();}
     video.pause();video.srcObject=null;video.hidden=true;playRejected=false;video.muted=true;setSoundLabel();soundButton.hidden=true;$('fan-live-pill').hidden=true;
-    $('fan-live-offline').hidden=false;$('fan-live-join').hidden=!room;$('fan-live-leave').hidden=true;
+    $('fan-live-offline').hidden=false;$('fan-live-join').disabled=false;$('fan-live-join').hidden=!room;$('fan-live-leave').hidden=true;
     if(notify&&oldId)void request('leave',{viewerId:oldId}).catch(()=>{});
   }
   function scheduleRecovery(reason){
@@ -136,7 +137,11 @@ if(root){
     recovery.enterRoom(room.id);
     if(!automatic){recovery.manualJoin();recoveryExhausted=false;recoveryNotice();}
     connecting=true;joinStartedAt=performance.now();disconnectedAt=0;pollFailures=0;
-    $('fan-live-join').textContent='Join live';$('fan-live-join').disabled=true;video.muted=true;setSoundLabel();
+    // Leave must remain available during a slow signaling request so the
+    // visitor can cancel before the server grants a viewer slot.
+    $('fan-live-join').textContent='Join live';$('fan-live-join').disabled=true;
+    $('fan-live-join').hidden=true;$('fan-live-leave').hidden=false;
+    video.muted=true;setSoundLabel();
     const version=++epoch;
     try{
       if(!globalThis.RTCPeerConnection)throw Error('Your browser does not support WebRTC viewing.');
@@ -161,7 +166,14 @@ if(root){
       };
       await p.setLocalDescription(await p.createOffer());await waitForIce(p,7000);
       if(epoch!==version)return;
-      const joined=await request('join',{roomId:room.id,nonce:randomId(),sdp:p.localDescription?.sdp||''});
+      const joined=await request('join',{roomId:room.id,nonce:orderedViewerNonce(Date.now(),randomId),sdp:p.localDescription?.sdp||''});
+      // A delayed server reply may arrive AFTER Leave or an automatic retry.
+      // Release only that stale 32-hex viewer ID; never bind the old SDP/peer
+      // to a newer Program session or leave a slot consuming fan capacity.
+      if(lateViewerJoinNeedsLeave(joined,version,epoch)){
+        void request('leave',{viewerId:joined.viewerId}).catch(()=>{});
+        return;
+      }
       if(epoch!==version)return;
       viewerId=joined.viewerId;$('fan-live-join').hidden=true;$('fan-live-leave').hidden=false;
       status('Connecting to the Director…');void poll(version);
@@ -170,7 +182,10 @@ if(root){
         recovery.leave();clearPlayer();status(statusText(e),true);recoveryNotice('Unable to reconnect automatically.',true);
       }else scheduleRecovery('connection_setup_failed');
     }}
-    finally{connecting=false;$('fan-live-join').disabled=false;}
+    finally{
+      // An old join's finally block must not overwrite the new connection UI.
+      if(epoch===version){connecting=false;$('fan-live-join').disabled=false;}
+    }
   }
   $('fan-live-join').addEventListener('click',()=>void join());
   $('fan-live-leave').addEventListener('click',()=>{

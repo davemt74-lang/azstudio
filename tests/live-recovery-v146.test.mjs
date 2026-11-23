@@ -57,7 +57,7 @@ test('fan player reconnects only a viewer peer; never switches Program or restar
   assert.match(viewer,/recovery\.leave\(\);clearPlayer\(true\)/);
   assert.match(viewer,/clearPlayer\(true\);/);
   assert.match(live,/fan-live-recovery/);
-  assert.match(live,/live-viewer\.js\?v=1\.46\.0/);
+  assert.ok(live.includes('live-viewer.js?v='+JSON.parse(load('package.json')).version));
   assert.doesNotMatch(viewer,/az_commerce_order_record|purchase|refund|startRecord|takeSource/);
 });
 
@@ -70,8 +70,8 @@ test('Director restarts only stale approved phone relays; retains explicit Take 
   assert.match(director,/document\.hidden&&!manual/);
   assert.match(director,/Reconnect feed/);
   assert.match(director,/const invalidRecording=file\.size<1024/);
-  assert.match(director,/if\(!invalidRecording\)void saveRecording/);
-  assert.match(page,/live-director\.js\?v=1\.46\.0/);
+  assert.match(director,/if\(!invalidRecording\)await saveRecording\(file,title,startedRoom\)/);
+  assert.ok(page.includes('live-director.js?v='+JSON.parse(load('package.json')).version));
   assert.doesNotMatch(director,/az_admin_action_change|approveCasting|sendConnectTransfer/);
 });
 

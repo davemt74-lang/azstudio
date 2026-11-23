@@ -140,6 +140,20 @@ function az_live_signal_sdp(mixed $sdp): string
         throw new AzHttpError(400,'Invalid live connection description.','invalid_sdp');
     return $sdp;
 }
+/** v1.49 per-viewer monotonic nonce stamp; legacy random hex nonces return null.
+ * The stamp is a client-side ordering hint, not identity or authentication;
+ * current member auth and a cryptographic random suffix remain mandatory.
+ */
+function az_live_join_nonce_stamp(string $nonce,int $now): ?int
+{
+    if(!az_valid_id($nonce))return null;
+    $ms=hexdec(substr($nonce,0,12));
+    if(!is_numeric($ms))return null;
+    $stamp=(int)$ms;
+    // Treat out-of-range prefixes as legacy random nonces, not errors.
+    if($stamp<($now-86400)*1000||$stamp>($now+86400)*1000)return null;
+    return $stamp;
+}
 function az_live_join(int $viewer,string $roomId,string $nonce,mixed $sdp): array
 {
     az_live_secure();
@@ -149,7 +163,22 @@ function az_live_join(int $viewer,string $roomId,string $nonce,mixed $sdp): arra
     $db=az_db();$lock=az_community_lock();
     try {
         $q=$db->prepare('SELECT * FROM az_live_viewers WHERE room_id=? AND user_id=? AND nonce=?');$q->execute([$roomId,$viewer,$nonce]);
-        if ($prior=$q->fetch()) return ['viewerId'=>$prior['id'],'room'=>az_live_room_public($active),'iceServers'=>az_live_ice_servers()];
+        if($prior=$q->fetch()){
+            if($prior['status']==='left')throw new AzHttpError(409,'That viewer Join is no longer active.','viewer_stale_join');
+            return ['viewerId'=>$prior['id'],'room'=>az_live_room_public($active),'iceServers'=>az_live_ice_servers()];
+        }
+        // A cancelled, delayed Join may arrive after a newer Join. Reject it
+        // BEFORE altering the newer viewer session or consuming a slot.
+        $newStamp=az_live_join_nonce_stamp($nonce,time());
+        if($newStamp!==null){
+            $q=$db->prepare("SELECT nonce FROM az_live_viewers WHERE room_id=? AND user_id=? AND status IN ('waiting','connected')");
+            $q->execute([$roomId,$viewer]);
+            foreach($q->fetchAll(PDO::FETCH_COLUMN) as $currentNonce){
+                $activeStamp=az_live_join_nonce_stamp((string)$currentNonce,time());
+                if($activeStamp!==null&&$activeStamp>$newStamp)
+                    throw new AzHttpError(409,'A newer viewer connection already exists.','viewer_stale_join');
+            }
+        }
         $db->prepare("UPDATE az_live_viewers SET status='left' WHERE room_id=? AND user_id=? AND status IN ('waiting','connected')")->execute([$roomId,$viewer]);
         if (az_live_viewer_count($roomId)>=AZ_LIVE_MAX_VIEWERS) throw new AzHttpError(429,'This live room is at its current connection limit.','viewer_limit');
         $id=az_id();$db->prepare("INSERT INTO az_live_viewers(id,room_id,user_id,nonce,offer_sdp,answer_sdp,status,updated_epoch,created_epoch) VALUES(?,?,?,?,?,NULL,'waiting',?,?)")

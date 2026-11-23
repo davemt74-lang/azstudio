@@ -100,5 +100,6 @@ test('new cameras do not silently replace the public program; a lost camera retu
  const source=read('assets/live-director.js');
  assert.doesNotMatch(source,/if\(!selected\)selected=id/);
  assert.match(source,/Newly connected camera to fans without an explicit Broadcast now action|Never expose a newly/);
- assert.match(source,/if\(!mediaProgramActive&&activeLayout\.type==='single'&&selected===id\)\{selected=null;activeLayout=normalizeLayout\('single',\[''\]\)/);
+ assert.match(source,/if\(!mediaProgramActive&&activeLayout\.type==='single'&&selected===id\)\{interruptedSourceId=id;selected=null;activeLayout=normalizeLayout\('single',\[''\]\)/);
+ assert.match(source,/interruptedSourceId===id\?'Restore to Program'/);
 });
