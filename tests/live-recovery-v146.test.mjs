@@ -70,7 +70,7 @@ test('Director restarts only stale approved phone relays; retains explicit Take 
   assert.match(director,/document\.hidden&&!manual/);
   assert.match(director,/Reconnect feed/);
   assert.match(director,/const invalidRecording=file\.size<1024/);
-  assert.match(director,/if\(!invalidRecording\)void saveRecording/);
+  assert.match(director,/if\(!invalidRecording\)await saveRecording\(file,title,startedRoom\)/);
   assert.ok(page.includes('live-director.js?v='+JSON.parse(load('package.json')).version));
   assert.doesNotMatch(director,/az_admin_action_change|approveCasting|sendConnectTransfer/);
 });
