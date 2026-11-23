@@ -18,6 +18,15 @@ try {
         if ($method!=='POST') throw new AzHttpError(405,'POST required.','method_not_allowed');
         az_json(['ok'=>true,'data'=>az_live_agent_report($actor,$body)]);
     }
+    if ($action==='acceptanceStatus') {
+        if ($method!=='GET')throw new AzHttpError(405,'GET required.','method_not_allowed');
+        $roomReference=isset($_GET['roomId'])?az_text($_GET['roomId'],32,'Broadcast reference'):null;
+        az_json(['ok'=>true,'data'=>az_live_acceptance_status($actor,$roomReference)]);
+    }
+    if ($action==='acceptanceMark') {
+        if ($method!=='POST')throw new AzHttpError(405,'POST required.','method_not_allowed');
+        az_json(['ok'=>true,'data'=>az_live_acceptance_mark($actor,$body)]);
+    }
     if ($action==='healthStatus') {
         if ($method!=='GET') throw new AzHttpError(405,'GET required.','method_not_allowed');
         az_json(['ok'=>true,'data'=>az_live_agent_status($actor)]);

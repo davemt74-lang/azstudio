@@ -4,7 +4,7 @@ declare(strict_types=1);
 const AZ_ROOT = __DIR__ . '/..';
 const AZ_STORAGE = AZ_ROOT . '/storage';
 const AZ_CONFIG_FILE = AZ_STORAGE . '/config.php';
-const AZ_VERSION = '1.46.0';
+const AZ_VERSION = '1.47.0';
 
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/production.php';
@@ -25,6 +25,7 @@ require_once __DIR__ . '/agent-chat.php';
 require_once __DIR__ . '/agent-workspace.php';
 require_once __DIR__ . '/agent-followthrough.php';
 require_once __DIR__ . '/live-agent.php';
+require_once __DIR__ . '/live-acceptance.php';
 require_once __DIR__ . '/live.php';
 require_once __DIR__ . '/commerce.php';
 require_once __DIR__ . '/commerce-stripe.php';

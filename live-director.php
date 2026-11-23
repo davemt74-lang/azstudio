@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__.'/includes/bootstrap.php';
 $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robots-Tag: noindex,nofollow');
-?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Live Director · AZHottie</title><link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/live-studio.css?v=1.46.0"><link rel="stylesheet" href="assets/commerce.css?v=1.31.0"></head>
+?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Live Director · AZHottie</title><link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/live-studio.css?v=1.47.0"><link rel="stylesheet" href="assets/commerce.css?v=1.31.0"></head>
 <body class="azh-director-body" data-page="live-director">
 <main class="azh-director azh-director-app" id="azh-director" data-csrf="<?= az_h(az_csrf_token()) ?>" aria-label="Full-screen live production control room">
   <header class="azh-director-toolbar">
@@ -41,7 +41,7 @@ $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robot
           <button type="button" id="live-tab-scenes" class="azh-director-tab" data-live-tab="scenes" role="tab" aria-controls="live-panel-scenes" aria-selected="false" tabindex="-1">Scenes</button>
           <button type="button" id="live-tab-audience" class="azh-director-tab" data-live-tab="audience" role="tab" aria-controls="live-panel-audience" aria-selected="false" tabindex="-1">Audience</button>
           <?php if(az_has_role($user,'admin')): ?><button type="button" id="live-tab-shopping" class="azh-director-tab" data-live-tab="shopping" role="tab" aria-controls="live-panel-shopping" aria-selected="false" tabindex="-1">Live shopping</button><?php endif; ?>
-          <button type="button" id="live-tab-recording" class="azh-director-tab" data-live-tab="recording" role="tab" aria-controls="live-panel-recording" aria-selected="false" tabindex="-1">Recording</button>
+          <button type="button" id="live-tab-recording" class="azh-director-tab" data-live-tab="recording" role="tab" aria-controls="live-panel-recording" aria-selected="false" tabindex="-1">Recording</button><?php if(az_has_role($user,'admin')): ?><button type="button" id="live-tab-acceptance" class="azh-director-tab" data-live-tab="acceptance" role="tab" aria-controls="live-panel-acceptance" aria-selected="false" tabindex="-1">Broadcast checks</button><?php endif; ?>
         </div>
         <div class="azh-director-tabpanels">
           <div class="azh-director-tabpanel" id="live-panel-switching" role="tabpanel" aria-labelledby="live-tab-switching" >
@@ -152,11 +152,36 @@ $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robot
           <div class="azh-director-tabpanel" id="live-panel-recording" role="tabpanel" aria-labelledby="live-tab-recording" hidden>
       <div class="azh-record-controls"><button type="button" id="live-record" class="azh-live-button" disabled>● Record Program</button><button type="button" id="live-record-stop" class="azh-live-button azh-live-secondary" disabled>■ Stop recording</button><span id="live-record-clock">00:00</span><span id="live-record-message" role="status" aria-live="polite">Record and save the combined Program feed privately.</span><div id="live-record-backup"></div></div>
           </div>
+          <?php if(az_has_role($user,'admin')): ?>
+          <div class="azh-director-tabpanel" id="live-panel-acceptance" role="tabpanel" aria-labelledby="live-tab-acceptance" hidden>
+            <section id="azh-live-acceptance" class="azh-live-acceptance" aria-label="Real-device broadcast acceptance">
+              <header class="azh-acceptance-header">
+                <div><h2>Broadcast acceptance & diagnostics</h2>
+                  <p>Verify real phone → Director → Program → remote viewer → recording. Recorded telemetry is separate from the operator's test results.</p></div>
+                <button type="button" id="live-acceptance-refresh" class="azh-live-button azh-live-secondary">Refresh observations</button>
+              </header>
+              <p id="live-acceptance-status" role="status" aria-live="polite">Open this tab to inspect current test readiness.</p>
+              <div id="live-acceptance-summary" class="azh-acceptance-summary"></div>
+              <h3>Recent, browser-reported measurements</h3>
+              <div id="live-acceptance-diagnostics" class="azh-acceptance-diagnostics" aria-label="Current broadcast diagnostics"></div>
+              <p class="azh-acceptance-basis">These counters are not a live video feed or independent proof of playback. Missing/stale measurements remain unverified. Neither the checklist nor this tab takes a camera to Program.</p>
+              <div class="azh-acceptance-checkhead"><h3>Real-device test checklist</h3>
+                <a class="azh-live-button azh-live-secondary" href="live.php" target="_blank" rel="noopener noreferrer">Open fan viewer ↗</a>
+              </div>
+              <div id="live-acceptance-checks" class="azh-acceptance-checklist"></div>
+              <details class="azh-acceptance-history">
+                <summary>View checklist change history</summary>
+                <div id="live-acceptance-history"></div>
+              </details>
+              <p class="azh-acceptance-basis">Operator-attested results never enable payments, publish recordings, approve a phone, or certify that hosted networks and physical devices were independently validated. Test on a second real device and network before launch.</p>
+            </section>
+          </div>
+          <?php endif; ?>
         </div>
       </section>
     </section>
   </div>
   <p id="live-status" class="azh-live-message azh-director-toast" role="status" aria-live="polite" hidden></p>
 </main>
-<script src="assets/qr.js"></script><script type="module" src="assets/live-director.js?v=1.46.0"></script><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/commerce-director.js?v=1.41.0"></script><?php endif; ?>
+<script src="assets/qr.js"></script><script type="module" src="assets/live-director.js?v=1.46.0"></script><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/live-acceptance.js?v=1.47.0"></script><?php endif; ?><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/commerce-director.js?v=1.41.0"></script><?php endif; ?>
 </body></html>
