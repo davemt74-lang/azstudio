@@ -1,0 +1,18 @@
+/* v1.40: role-scoped Commerce Agent briefing, no nested scrolling */
+.azh-commerce-agent-heading{display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px;justify-content:space-between}
+.azh-commerce-agent-heading h2{margin-top:0}
+.azh-commerce-agent-heading .azh-commerce-actions{display:flex;flex-wrap:wrap;gap:9px;max-width:100%}
+.azh-commerce-agent-summary{background:#fcf7fa;border:1px solid #e9e0e6;border-radius:14px;padding:16px;margin:14px 0;overflow-wrap:anywhere}
+.azh-commerce-agent-eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#87415d}
+.azh-commerce-agent-basis{font-size:12px;line-height:1.55;color:#605665}
+.azh-commerce-agent-section{margin:20px 0}
+.azh-commerce-agent-section h3{font-size:16px;margin:0 0 10px;color:#392b35}
+.azh-commerce-agent-section p{line-height:1.6;font-size:13px;color:#584e58;overflow-wrap:anywhere}
+.azh-commerce-agent-list{padding-left:20px;font-size:13px;line-height:1.65;overflow-wrap:anywhere}
+.azh-commerce-agent-list li{padding:2px 0 7px}
+.azh-commerce-agent-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.azh-commerce-agent-card{padding:15px;background:#fff;border:1px solid #e8dfe5;border-radius:13px;min-width:0}
+.azh-commerce-agent-card strong{display:block;font-size:13px;line-height:1.4}
+.azh-commerce-agent-card p{margin:8px 0 12px}
+.azh-commerce-agent-link{font-size:13px;font-weight:700;color:#793d55;text-decoration:underline;text-underline-offset:3px;display:inline-flex}
+@media(max-width:400px){.azh-commerce-agent-heading .azh-commerce-actions{width:100%}.azh-commerce-agent-heading .azh-commerce-small{flex:1 1 130px;white-space:normal}}

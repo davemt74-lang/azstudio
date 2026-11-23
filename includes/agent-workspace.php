@@ -111,7 +111,7 @@ function az_agent_workspace_history(int $recipient): array
     return array_map(static fn($r):array=>[
         'id'=>$r['id'],'kind'=>$r['kind'],'title'=>$r['title'],'detail'=>$r['detail'],
         'href'=>$r['href'],'createdAt'=>$r['created_at'],'readAt'=>$r['read_at'],
-        'actor'=>(str_starts_with($r['kind'],'followthrough_')||str_starts_with($r['kind'],'casting_review_')||str_starts_with($r['kind'],'casting_new_')||str_starts_with($r['kind'],'casting_contacted_')||str_starts_with($r['kind'],'casting_screening_')||str_starts_with($r['kind'],'casting_interview_')||str_starts_with($r['kind'],'casting_onboarding_incomplete')||str_starts_with($r['kind'],'casting_invitation_missing')||str_starts_with($r['kind'],'casting_invitation_expiring')||str_starts_with($r['kind'],'video_review_due'))?'AZHottie Agent':((int)$r['actor_id']===$recipient?'You':$r['actor_name']),
+        'actor'=>(str_starts_with($r['kind'],'followthrough_')||str_starts_with($r['kind'],'casting_review_')||str_starts_with($r['kind'],'casting_new_')||str_starts_with($r['kind'],'casting_contacted_')||str_starts_with($r['kind'],'casting_screening_')||str_starts_with($r['kind'],'casting_interview_')||str_starts_with($r['kind'],'casting_onboarding_incomplete')||str_starts_with($r['kind'],'casting_invitation_missing')||str_starts_with($r['kind'],'casting_invitation_expiring')||str_starts_with($r['kind'],'video_review_due')||str_starts_with($r['kind'],'commerce_provider_followup')||str_starts_with($r['kind'],'commerce_commission_followup'))?'AZHottie Agent':((int)$r['actor_id']===$recipient?'You':$r['actor_name']),
     ],$q->fetchAll());
 }
 function az_agent_workspace_mark_read(int $recipient,array $body): void
@@ -228,6 +228,10 @@ function az_agent_workspace_brain(array $user): array
     $provider=az_provider_briefing($user);
     foreach($provider['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,$provider['counts']);
+    // One role-scoped Commerce report feeds the existing Brain, not another alert system.
+    $commerceAgent=$admin?az_commerce_agent_admin_report($summary):az_commerce_agent_report($user);
+    $cards[]=az_agent_workspace_card('commerce','Commerce Agent daily briefing',
+        $commerceAgent['nextStep'],'commerce.php?tab=agent',2);
     $schedule=az_agent_schedule_briefing($user);
     foreach($schedule['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,['upcomingSchedule'=>$schedule['counts']['upcoming'],'scheduleConflicts'=>$schedule['counts']['conflicts']]);
@@ -245,7 +249,7 @@ function az_agent_workspace_brain(array $user): array
     if ($admin) $summary['liveAlerts']=count($liveHealth['issues']??[]);
     $followthrough=['cron'=>az_agent_followthrough_status(), 'manual'=>$admin?az_agent_followthrough_status($id):null];
     return ['cards'=>array_slice($cards,0,16),'summary'=>$summary,'assignOptions'=>$assignmentChoices,'followthrough'=>$followthrough,
-      'liveHealth'=>$liveHealth,'casting'=>$casting,'video'=>$video,'publishing'=>$publishing,'commerce'=>$commerce,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, publishing, commerce, Watch engagement, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
+      'liveHealth'=>$liveHealth,'casting'=>$casting,'video'=>$video,'publishing'=>$publishing,'commerce'=>$commerce,'commerceAgent'=>$commerceAgent,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, publishing, commerce, Watch engagement, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
 }
 /** The only choices offered are owned active shots and eligible active roster members. */
 function az_agent_workspace_assign_options(array $user): array

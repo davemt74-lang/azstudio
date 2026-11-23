@@ -15,7 +15,8 @@ $admin=az_has_role($user,'admin');
 <link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css">
 <link rel="stylesheet" href="assets/commerce.css?v=1.36.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0">
 <link rel="stylesheet" href="assets/commerce-returns.css?v=1.36.0">
-<link rel="stylesheet" href="assets/commerce-providers.css?v=1.39.0"></head>
+<link rel="stylesheet" href="assets/commerce-providers.css?v=1.39.0">
+<link rel="stylesheet" href="assets/commerce-agent.css?v=1.40.0"></head>
 <body data-page="commerce"><?php az_render_universal_header('commerce',$user);az_render_member_layout_open('commerce',$user); ?>
 <main class="azh-commerce" id="azh-commerce" data-role="<?= $admin?'admin':'model' ?>" data-csrf="<?= az_h(az_csrf_token()) ?>">
   <header class="azh-commerce-hero"><div><p class="azh-eyebrow">AZHOTTIE · COMMERCE AGENT</p><h1>Commerce<span>.</span></h1>
@@ -23,6 +24,7 @@ $admin=az_has_role($user,'admin');
   <a class="azh-commerce-link" href="shop.php">View storefront ↗</a></header>
   <p class="azh-commerce-status" id="commerce-status" role="status" aria-live="polite">Loading verified commerce records…</p>
   <nav class="azh-commerce-tabs" role="tablist" aria-label="Commerce sections">
+    <button type="button" role="tab" data-tab="agent" aria-selected="false">Agent briefing</button>
     <button type="button" role="tab" data-tab="products" aria-selected="true">Products</button>
     <button type="button" role="tab" data-tab="briefs" aria-selected="false">Creator briefs</button>
     <button type="button" role="tab" data-tab="promotions" aria-selected="false">Video affiliates</button>
@@ -35,6 +37,17 @@ $admin=az_has_role($user,'admin');
     <?php if($admin): ?><button type="button" role="tab" data-tab="local" aria-selected="false">Local Orders</button><?php endif; ?>
     <?php if($admin): ?><button type="button" role="tab" data-tab="live" aria-selected="false">Live shopping</button><?php endif; ?>
   </nav>
+  <section class="azh-commerce-panel" data-panel="agent" aria-label="Commerce Agent briefing" hidden>
+    <div class="azh-commerce-editor" id="azh-commerce-agent-briefing" data-role="<?= $admin?'admin':'model' ?>">
+      <div class="azh-commerce-agent-heading"><div><h2>Commerce Agent briefing</h2>
+        <p>Recorded in-app activity, recommended next steps, and role-scoped commission status. Actions still need your approval.</p></div>
+        <div class="azh-commerce-actions"><button type="button" class="azh-commerce-small" data-agent-refresh>Refresh briefing</button>
+        <?php if($admin): ?><button type="button" class="azh-commerce-small" data-agent-scan>Check follow-ups</button><?php endif; ?></div>
+      </div>
+      <p role="status" aria-live="polite" data-agent-status>Loading Commerce briefing…</p>
+      <div data-agent-results></div>
+    </div>
+  </section>
   <section class="azh-commerce-panel" data-panel="products" aria-label="Products">
     <?php if($admin): ?><div class="azh-commerce-editor"><h2>Create or edit product</h2>
       <form id="commerce-product-form" class="azh-commerce-form">
@@ -271,4 +284,5 @@ $admin=az_has_role($user,'admin');
 <script type="module" src="assets/commerce-settlements.js?v=1.37.0"></script>
 <script type="module" src="assets/commerce-provider-actions.js?v=1.37.0"></script>
 <?php if($admin): ?><script type="module" src="assets/commerce-provider-readiness.js?v=1.39.0"></script><?php endif; ?>
+<script type="module" src="assets/commerce-agent-briefing.js?v=1.40.0"></script>
 </body></html>

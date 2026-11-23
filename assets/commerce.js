@@ -220,9 +220,11 @@ if(root){
     for(const button of root.querySelectorAll('[data-tab]'))button.setAttribute('aria-selected',String(button===tab));
     for(const panel of root.querySelectorAll('[data-panel]'))panel.hidden=panel.dataset.panel!==tab.dataset.tab;
   }));
-  // Allow safe links from the existing Agent Brain / History back to this staff tab.
-  if(admin && new URLSearchParams(window.location.search).get('tab')==='providers'){
-    root.querySelector('[data-tab="providers"]')?.click();
+  // Preserve only the explicitly supported destination tabs.
+  const deepTab=new URLSearchParams(window.location.search).get('tab');
+  if(['agent','providers','payouts','returns','shipping','orders'].includes(deepTab) &&
+     (admin || !['providers','returns','shipping'].includes(deepTab))){
+    root.querySelector('[data-tab="'+deepTab+'"]')?.click();
   }
   if(admin){
     $('commerce-product-form').addEventListener('submit',e=>{
