@@ -378,7 +378,7 @@ if (root) {
     if(mode!=='cut'){oldCtx.drawImage(stage,0,0,oldFrame.width,oldFrame.height);transitionMode=mode;transitionStart=performance.now();}
     else{transitionMode='cut';transitionStart=0;}
   }
-  function takeSlate(){interruptedSourceId=null;pendingSceneSettings=null;programTakeEpoch++;stopMediaPlayback(false);transitionToProgram($('live-transition').value);activeLayout=normalizeLayout('single',['']);selected=null;syncCameraAudio();showSources();scheduleSwitch();routeViewerVideo();feedback('Holding slate taken to Program.');}
+  function takeSlate(){interruptedSourceId=null;cameraFaultActive=false;pendingSceneSettings=null;programTakeEpoch++;stopMediaPlayback(false);transitionToProgram($('live-transition').value);activeLayout=normalizeLayout('single',['']);selected=null;syncCameraAudio();showSources();scheduleSwitch();routeViewerVideo();feedback('Holding slate taken to Program.');}
   function takeComposition(layout){
     const requested=normalizeLayout(layout?.type,layout?.slots);
     if(!compositionReady(requested,sourceIds())){feedback('Every position needs a different healthy live phone before taking this composition to Program.',true);return false;}
