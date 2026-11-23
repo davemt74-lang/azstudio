@@ -7,6 +7,7 @@ $user=az_live_require_editor();$isAdmin=az_has_role($user,'admin');
 header('Cache-Control: no-store');header('X-Robots-Tag: noindex,nofollow');
 $data=$isAdmin?az_admin_command_data($user):null;
 $management=$isAdmin?az_admin_intelligence_briefing($user,$data):null;
+$coordination=$isAdmin?az_coordination_briefing($user):null;
 $room=$isAdmin?($data['live']['onAir']??false):az_live_active_room()!==null;
 $shortcuts=[
  ['commerce.php','◆','Commerce','Orders, products & creator commissions'],
@@ -21,7 +22,7 @@ $shortcuts=[
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Studio Command Center · AZHottie</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css"><link rel="stylesheet" href="assets/live-studio.css?v=1.40.0">
-<link rel="stylesheet" href="assets/admin-command.css?v=1.43.0"></head>
+<link rel="stylesheet" href="assets/admin-command.css?v=1.44.0"></head>
 <body data-page="admin-studio"><?php az_render_universal_header('admin-studio',$user);az_render_member_layout_open('admin-studio',$user); ?>
 <main class="azd" id="azh-admin-command" data-csrf="<?= az_h(az_csrf_token()) ?>" aria-labelledby="azd-title">
   <header class="azd-hero">
@@ -81,6 +82,82 @@ $shortcuts=[
 </section>
 <?php endif; ?>
 <?php if($isAdmin): ?>
+<section class="azd-panel azd-coordination" id="azd-coordination" aria-labelledby="azd-coordination-title">
+  <header class="azd-panel-heading azd-coord-head">
+    <div><p class="azd-kicker">ASSIGNMENTS · SCHEDULE · STAFF CAPACITY</p><h2 id="azd-coordination-title">Agent Task Coordination</h2>
+      <p class="azd-muted">Production blocks and operational milestones from existing studio records. Recommendations require staff action.</p></div>
+    <a class="azd-link" href="productions.php">Production workspace ↗</a>
+  </header>
+  <?php if(!$coordination['available']): ?>
+    <p class="azd-empty">Coordination records could not be verified. Review the original Production and Calendar workspaces.</p>
+  <?php else: ?>
+  <div class="azd-coord-stats" aria-label="Coordination and completion metrics">
+    <div><strong><?= (int)$coordination['counts']['activeProductions'] ?></strong><span>Active productions</span></div>
+    <div><strong><?= (int)$coordination['counts']['urgentProductionAlerts'] ?></strong><span>Urgent work alerts</span></div>
+    <div><strong><?= (int)$coordination['counts']['unassignedShots'] ?></strong><span>Unstaffed shots due soon</span></div>
+    <div><strong><?= (int)$coordination['counts']['appointmentOverlapPairs7d'] ?></strong><span>Appointment overlap pairs</span></div>
+    <div><strong><?= (int)$coordination['counts']['assignmentsApproved7d'] ?></strong><span>Assignments approved · 7d</span></div>
+    <div><strong><?= (int)$coordination['counts']['actionResolutions7d'] ?></strong><span>Task resolution events · 7d</span></div>
+  </div>
+  <div class="azd-coord-columns">
+    <div class="azd-coord-block">
+      <div class="azd-coord-subhead"><h3>Production blockers & follow-ups</h3><span>Age and due-date based</span></div>
+      <?php if($coordination['cases']): ?>
+        <div class="azd-coord-cases">
+        <?php foreach(array_slice($coordination['cases'],0,8) as $case): ?>
+          <article class="azd-coord-case">
+            <div class="azd-coord-case-top">
+              <span class="azd-coord-urgency" data-priority="<?= (int)$case['priority'] ?>"><?= (int)$case['priority']===0?'Urgent':'Review' ?></span>
+              <?php if($case['dueAt']): ?><span class="azd-coord-due">Due <?= az_h(az_admin_command_date($case['dueAt'])) ?></span><?php endif; ?>
+            </div>
+            <strong><?= az_h($case['title']) ?></strong>
+            <p><?= az_h($case['detail']) ?></p>
+            <div class="azd-coord-actions">
+              <a href="<?= az_h($case['href']) ?>">Review source ↗</a>
+              <button class="azd-action-button" type="button" data-action-track data-kind="production"
+                data-source-id="<?= az_h($case['sourceId']) ?>"
+                data-stage="<?= az_h($case['sourceStage']) ?>">Track in Action Center</button>
+            </div>
+          </article>
+        <?php endforeach; ?>
+        </div>
+      <?php else: ?>
+        <p class="azd-empty">No production blocks crossed their follow-up thresholds. This is not confirmation that every creator is available.</p>
+      <?php endif; ?>
+      <?php if($coordination['truncated']): ?><p class="azd-disclaimer">Additional active production work exists beyond this bounded review. Inspect the production workspace.</p><?php endif; ?>
+    </div>
+    <div class="azd-coord-side">
+      <div class="azd-coord-block">
+        <div class="azd-coord-subhead"><h3>Staff workload</h3><span>Action Center ownership</span></div>
+        <?php if($coordination['staffLoad']): ?>
+          <div class="azd-coord-staff">
+          <?php foreach(array_slice($coordination['staffLoad'],0,8) as $staff): ?>
+            <div class="azd-coord-staff-row">
+              <strong><?= az_h($staff['name']) ?></strong>
+              <span><?= (int)$staff['active'] ?> active · <?= (int)$staff['due7d'] ?> due in 7d</span>
+              <?php if($staff['overdue']): ?><small><?= (int)$staff['overdue'] ?> overdue</small><?php endif; ?>
+            </div>
+          <?php endforeach; ?>
+          </div>
+        <?php else: ?><p class="azd-empty">No active administrators were available to summarize.</p><?php endif; ?>
+        <?php if($coordination['staffLimited']): ?><p class="azd-disclaimer">Showing the first 25 administrators by overdue and active workload.</p><?php endif; ?>
+      </div>
+      <div class="azd-coord-block">
+        <div class="azd-coord-subhead"><h3>Scheduling pressure · next 7d</h3><span>Confirmed records</span></div>
+        <div class="azd-coord-schedule">
+          <div><strong><?= (int)$coordination['counts']['upcomingAppointments7d'] ?></strong><span>Confirmed appointments</span></div>
+          <div><strong><?= (int)$coordination['counts']['upcomingEvents7d'] ?></strong><span>Published events</span></div>
+        </div>
+        <?php if($coordination['counts']['appointmentOverlapPairs7d']): ?>
+          <p class="azd-coord-warning">Potential overlapping appointments for the same professional require a calendar check. No booking is being changed.</p>
+        <?php endif; ?>
+        <a class="azd-link" href="calendar.php">Review Calendar ↗</a>
+      </div>
+    </div>
+  </div>
+  <p class="azd-disclaimer"><?= az_h($coordination['basis']) ?></p>
+  <?php endif; ?>
+</section>
 <section class="azd-panel azd-action-center" id="azd-action-center" aria-labelledby="azd-action-title">
   <div class="azd-panel-heading azd-action-head">
     <div><p class="azd-kicker">OWNER · DUE DATE · FOLLOW-THROUGH</p><h2 id="azd-action-title">Agent Action Center</h2>

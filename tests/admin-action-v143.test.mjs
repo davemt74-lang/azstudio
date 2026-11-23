@@ -33,7 +33,7 @@ test('Task UI never makes financial or casting/moderation execution calls',()=>{
   }
 });
 test('Version, migration, dashboard, Brain and cron point to same Action Center',()=>{
-  assert.match(read('includes/bootstrap.php'),/AZ_VERSION = '1\.43\.0'/);
+  assert.ok(read('includes/bootstrap.php').includes("AZ_VERSION = '"+JSON.parse(read('package.json')).version+"'"));
   assert.match(read('includes/database.php'),/az_upgrade_admin_action_schema/);
   assert.match(read('includes/agent-followthrough-cron.php'),/az_admin_action_scan/);
   assert.match(read('includes/agent-workspace.php'),/'actionCenter'=>\$actionCenter/);
