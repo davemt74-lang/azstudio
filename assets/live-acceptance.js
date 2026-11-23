@@ -38,7 +38,7 @@ if(acceptanceRoot){
     }
     const response=await fetch(url,opts);
     const payload=await response.json().catch(()=>null);
-    if(!response.ok||!payload?.ok)throw new Error(payload?.error?.message||'Could not read broadcast acceptance.');
+    if(!response.ok||!payload?.ok){const error=new Error(payload?.error?.message||'Could not read broadcast acceptance.');error.status=response.status;throw error;}
     return payload.data;
   }
   function renderSummary(snapshot){
@@ -64,7 +64,7 @@ if(acceptanceRoot){
     const d=snapshot.diagnostics;
     if(!d){add(diagnostics,'p','Start a broadcast to obtain live measurements. No healthy camera or viewer is assumed.','azh-acceptance-basis');return;}
     const live=snapshot.room?.status==='live';
-    valueCard('Approved phones',String(count(d.phoneApproved)),'Approval alone does not confirm moving frames');
+    valueCard('Approved phones',live?String(count(d.phoneApproved)):'—','Current device approval; not a decoded preview or a historical result');
     valueCard('Recent phone offers',live?String(count(d.phoneOffering)):'—','Recent signaling offer, not a decoded preview');
     valueCard('Director camera previews',live&&d.directorFresh&&d.healthyCameras!==null
       ?String(count(d.healthyCameras)):'Unverified','Based on the Director browser health report');
