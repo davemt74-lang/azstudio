@@ -112,8 +112,8 @@ function az_live_triage_analyze(?array $room,?array $d,array $checks=[]):array
     }
     usort($issues,static fn(array $a,array $b):int=>$a['priority']<=>$b['priority']?:
         strcmp($a['code'],$b['code']));
-    $activeIssues=count(array_filter($issues,static fn(array $i):bool=>$i['priority']===0));
-    $warnings=count(array_filter($issues,static fn(array $i):bool=>$i['priority']===1));
+    $activeIssues=count(array_filter($issues,static fn(array $i):bool=>$i['severity']==='critical'));
+    $warnings=count(array_filter($issues,static fn(array $i):bool=>$i['severity']==='warning'));
     $first=$issues[0]??null;
     return [
         'state'=>$room===null?'no_session':(!$live?'ended':($activeIssues?'urgent':($warnings?'attention':'not_confirmed'))),
