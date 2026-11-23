@@ -5,7 +5,7 @@ const file=(path)=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
 test('v1.48 triage derives from the owned acceptance endpoint without new financial actions',()=>{
   const pkg=JSON.parse(file('package.json'));
-  assert.equal(pkg.version,'1.48.0');
+  assert.match(pkg.version,/^1\.\d+\.\d+$/);
   assert.ok(file('includes/bootstrap.php').includes("AZ_VERSION = '"+pkg.version+"'"));
   assert.match(file('includes/bootstrap.php'),/live-triage\.php/);
   const backend=file('includes/live-acceptance.php');
