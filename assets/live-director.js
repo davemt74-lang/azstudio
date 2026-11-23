@@ -209,8 +209,8 @@ if (root) {
       else cancelPhoneRepair(item.id);
     }
     if(!sources.has(item.id))return;
-    if(selected===item.id&&!mediaProgramActive&&activeLayout.type==='single'&&['stalled','muted','offline','blocked'].includes(state)
-      &&!(state==='stalled'&&deferForegroundPhoneRepair({visible:!document.hidden,foregroundAgeMs:performance.now()-foregroundResumeAt}))){
+    if(selected===item.id&&!mediaProgramActive&&activeLayout.type==='single'&&['stalled','muted','offline','blocked'].includes(state)&&!(document.hidden&&state==='stalled')){
+      if(state==='stalled'&&deferForegroundPhoneRepair({visible:!document.hidden,foregroundAgeMs:performance.now()-foregroundResumeAt})){showSources();return;}
       interruptedSourceId=item.id;cameraFaultActive=Boolean(room);selected=null;activeLayout=normalizeLayout('single',['']);transitionStart=0;routeViewerVideo();feedback('The on-air camera stopped delivering decoded video. Program is showing the holding slate until a healthy feed is taken.',true);
       if($('live-switch-mode').value!=='manual')queueMicrotask(()=>{const ready=sourceIds();if(!selected&&ready.length&&activeLayout.type==='single')takeSource(ready[0]);});
     }
