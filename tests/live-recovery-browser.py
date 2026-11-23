@@ -30,7 +30,7 @@ HTML='''<!doctype html><html lang="en"><head><meta name="viewport" content="widt
 def bundled_viewer():
  root=(ROOT/'assets/live-viewer.js').read_text(encoding='utf-8')
  for name in ('phone-live.js','live-agent-health.js','personal-phone-core.js',
-              'live-core.js','live-viewer-core.js','live-recovery.js'):
+              'live-core.js','live-viewer-core.js','live-recovery.js','live-production-guards.js'):
   contents=(ROOT/'assets'/name).read_bytes()
   uri='data:text/javascript;base64,'+b64encode(contents).decode('ascii')
   old="from './"+name+"'"
