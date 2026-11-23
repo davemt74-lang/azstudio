@@ -737,3 +737,7 @@ AZHOTTIE STUDIO 1.17.0 — FULL SCREEN DIRECTOR + PUBLIC LIVE SHOWS
 - Use live-productions.php to manage recordings and covers. Publish to members,
   then explicitly Make public if the entire show should appear on live-shows.php.
 - Check docs/RELEASE_1_17.txt for privacy and acceptance checklist.
+
+AZHottie Studio v1.42.0 — Management Agent operational intelligence
+Back up database and private storage before deploying. First database boot upgrades schema 44 to 45 with admin-only deduplicated casting/video follow-up delivery records.
+The Studio Command Center adds workflow-aged priorities, commerce and engagement watchpoints, and a staff-confirmed Check follow-ups action. Agent Chat, Brain, History, bell, and private cron reuse these records. No applicant suitability screening, video approval, financial execution, or change to live-financial switches is introduced.
