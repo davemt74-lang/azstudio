@@ -27,7 +27,7 @@ header('X-Content-Type-Options: nosniff');
   <section class="azh-stats-hero" aria-labelledby="azh-stats-title">
     <div class="azh-stats-hero-top">
       <div><p class="azh-kicker">YOUR AZHOTTIE DASHBOARD</p><h1 id="azh-stats-title"><?= az_h($firstName) ?>'s <em>studio overview.</em></h1><p>Track what you've published, see what needs your attention, and pick up where you left off.</p></div>
-      <div class="azh-dash-actions"><a class="azh-dash-button azh-dash-button-light" href="user.php">View my profile ↗</a><?php if ($model): ?><a class="azh-dash-button azh-dash-button-dark" href="my-videos.php">Manage My Videos ↗</a><?php elseif ($creator): ?><a class="azh-dash-button azh-dash-button-dark" href="my-work.php">View my work ↗</a><?php endif; ?></div>
+      <div class="azh-dash-actions"><a class="azh-dash-button azh-dash-button-light" href="user.php">View my profile ↗</a><?php if($creator): ?><a class="azh-dash-button azh-dash-button-light" href="creator-analytics.php">Video performance ↗</a><?php endif; ?><?php if ($model): ?><a class="azh-dash-button azh-dash-button-dark" href="my-videos.php">Manage My Videos ↗</a><?php elseif ($creator): ?><a class="azh-dash-button azh-dash-button-dark" href="my-work.php">View my work ↗</a><?php endif; ?></div>
     </div>
     <div class="azh-stat-grid" aria-label="Your activity statistics">
       <article class="azh-stat-card"><span class="azh-stat-icon" aria-hidden="true">◉</span><p>Profile views</p><strong><?= number_format($metrics['profileViews']) ?></strong><small><?= number_format($metrics['profileViews30d']) ?> in the last 30 days</small></article>

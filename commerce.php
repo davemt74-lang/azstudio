@@ -21,7 +21,7 @@ $admin=az_has_role($user,'admin');
 <main class="azh-commerce" id="azh-commerce" data-role="<?= $admin?'admin':'model' ?>" data-csrf="<?= az_h(az_csrf_token()) ?>">
   <header class="azh-commerce-hero"><div><p class="azh-eyebrow">AZHOTTIE · COMMERCE AGENT</p><h1>Commerce<span>.</span></h1>
   <p>Products, creator opportunities, approved video promotions, and attributed commissions in one workspace.</p></div>
-  <a class="azh-commerce-link" href="shop.php">View storefront ↗</a></header>
+  <a class="azh-commerce-link" href="creator-analytics.php?kind=creator">Creator sales analytics ↗</a> <a class="azh-commerce-link" href="shop.php">View storefront ↗</a></header>
   <p class="azh-commerce-status" id="commerce-status" role="status" aria-live="polite">Loading verified commerce records…</p>
   <nav class="azh-commerce-tabs" role="tablist" aria-label="Commerce sections">
     <button type="button" role="tab" data-tab="agent" aria-selected="false">Agent briefing</button>

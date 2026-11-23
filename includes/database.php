@@ -158,6 +158,7 @@ function az_create_schema(PDO $db): void
     if (function_exists('az_upgrade_admin_intelligence_schema') && az_schema_version($db) >= 44) { az_upgrade_admin_intelligence_schema($db); }
     if (function_exists('az_upgrade_admin_action_schema') && az_schema_version($db) >= 45) { az_upgrade_admin_action_schema($db); }
     if (function_exists('az_upgrade_live_acceptance_schema') && az_schema_version($db) >= 46) { az_upgrade_live_acceptance_schema($db); }
+    if (function_exists('az_upgrade_creator_analytics_schema') && az_schema_version($db) >= 47) { az_upgrade_creator_analytics_schema($db); }
 }
 
 
