@@ -12,7 +12,6 @@
 .azh-provider-card button:disabled{opacity:.5;cursor:not-allowed}
 #azh-provider-status[data-error=true]{color:#b32c55}
 @media(max-width:620px){.azh-provider-parcel{grid-template-columns:minmax(0,1fr)}.azh-provider-rate button{width:100%}}
-
 /* v1.38 staff-only operational readiness; avoid nested scrolling at 320px. */
 .azh-readiness-intro{border:1px solid #e9d9df;background:#fcf8fa;border-radius:14px;padding:clamp(14px,2vw,20px);margin:12px 0 18px}
 .azh-readiness-intro h3,.azh-readiness-section h3{font-size:18px;margin:0 0 10px;color:#48323d}
