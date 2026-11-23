@@ -478,3 +478,12 @@ body.azh-director-body .azh-director-app{
 .azh-live-agent-monitor .azh-live-button{font-size:11px;min-height:37px;padding:8px 11px}
 .azh-live-agent-footnote{font-size:10px;color:#7c6b76;line-height:1.4;margin:0}
 @media(max-width:640px){.azh-live-agent-monitor{padding:13px}.azh-live-agent-actions{width:100%}.azh-live-agent-actions button{flex:1 1 auto;min-width:0}}
+
+/* v1.46: explicit fan playback recovery feedback; no separate scrolling container */
+.azh-fan-recovery{font-size:12px;line-height:1.45;color:#5d3d55;max-width:260px;overflow-wrap:anywhere}
+.azh-fan-recovery.is-error{color:#a53754;font-weight:700}
+.azh-fan-recovery[hidden]{display:none}
+@media(max-width:650px){.azh-fan-recovery{max-width:100%}}
+/* Explicit hidden controls: button display declarations must not defeat the DOM
+   hidden property during Join, Leave, repair, or offline transitions. */
+#azh-fan-live [hidden]{display:none !important}
