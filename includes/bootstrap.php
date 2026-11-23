@@ -4,7 +4,7 @@ declare(strict_types=1);
 const AZ_ROOT = __DIR__ . '/..';
 const AZ_STORAGE = AZ_ROOT . '/storage';
 const AZ_CONFIG_FILE = AZ_STORAGE . '/config.php';
-const AZ_VERSION = '1.44.0';
+const AZ_VERSION = '1.45.0';
 
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/production.php';
@@ -34,6 +34,7 @@ require_once __DIR__ . '/admin-dashboard.php';
 require_once __DIR__ . '/admin-intelligence.php';
 require_once __DIR__ . '/admin-actions.php';
 require_once __DIR__ . '/admin-coordination.php';
+require_once __DIR__ . '/admin-ops-learning.php';
 require_once __DIR__ . '/commerce-local.php';
 require_once __DIR__ . '/commerce-local-orders.php';
 require_once __DIR__ . '/commerce-fulfillment.php';

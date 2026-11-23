@@ -22,7 +22,7 @@ $shortcuts=[
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Studio Command Center · AZHottie</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css"><link rel="stylesheet" href="assets/live-studio.css?v=1.40.0">
-<link rel="stylesheet" href="assets/admin-command.css?v=1.44.0"></head>
+<link rel="stylesheet" href="assets/admin-command.css?v=1.44.0"><link rel="stylesheet" href="assets/admin-ops-learning.css?v=1.45.0"></head>
 <body data-page="admin-studio"><?php az_render_universal_header('admin-studio',$user);az_render_member_layout_open('admin-studio',$user); ?>
 <main class="azd" id="azh-admin-command" data-csrf="<?= az_h(az_csrf_token()) ?>" aria-labelledby="azd-title">
   <header class="azd-hero">
@@ -158,6 +158,27 @@ $shortcuts=[
   <p class="azd-disclaimer"><?= az_h($coordination['basis']) ?></p>
   <?php endif; ?>
 </section>
+<section class="azd-panel azd-ops-learning" id="azd-ops-learning" aria-labelledby="azd-ops-learning-title">
+  <div class="azd-panel-heading azd-ops-heading">
+    <div>
+      <p class="azd-kicker">TASK HISTORY · OUTCOMES · RECURRING BOTTLENECKS</p>
+      <h2 id="azd-ops-learning-title">Agent Operations & Performance Learning</h2>
+      <p class="azd-muted">Trends and recommendations grounded in recorded staff follow-ups, not individual performance scores or automated decisions.</p>
+    </div>
+    <div class="azd-ops-tools">
+      <label>Reporting period
+        <select data-ops-period aria-label="Operations reporting period">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </label>
+      <button type="button" data-ops-refresh>Refresh analysis</button>
+    </div>
+  </div>
+  <p data-ops-status class="azd-ops-status" role="status" aria-live="polite">Loading recorded operations history…</p>
+  <div data-ops-results></div>
+</section>
 <section class="azd-panel azd-action-center" id="azd-action-center" aria-labelledby="azd-action-title">
   <div class="azd-panel-heading azd-action-head">
     <div><p class="azd-kicker">OWNER · DUE DATE · FOLLOW-THROUGH</p><h2 id="azd-action-title">Agent Action Center</h2>
@@ -292,4 +313,4 @@ $shortcuts=[
     <?php foreach([['live-director.php','◉','Live Director','Broadcast cameras and program'],['live-productions.php','▣','Saved shows','Recorded productions']] as [$href,$icon,$title,$description]): ?><a href="<?= az_h($href) ?>" class="azd-shortcut"><span class="azd-shortcut-icon"><?= az_h($icon) ?></span><strong><?= az_h($title) ?></strong><small><?= az_h($description) ?></small></a><?php endforeach; ?></div>
   </section>
 <?php endif; ?>
-</main><?php az_render_member_layout_close(); ?><script type="module" src="assets/admin-intelligence.js?v=1.42.0"></script><script type="module" src="assets/admin-action-center.js?v=1.43.0"></script></body></html>
+</main><?php az_render_member_layout_close(); ?><script type="module" src="assets/admin-intelligence.js?v=1.42.0"></script><script type="module" src="assets/admin-action-center.js?v=1.43.0"></script><script type="module" src="assets/admin-ops-learning.js?v=1.45.0"></script></body></html>

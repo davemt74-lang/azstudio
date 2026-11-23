@@ -753,3 +753,9 @@ AZHottie Studio v1.44.0 — Agent Task Coordination
 No schema change (remains version 46). Back up code, configuration, media and database before updating. Deploy new files without running the installer.
 The Admin Command Center now consolidates active production assignment deadlines, pending reviews, unstaffed shots due within seven days, professional appointment overlap warnings, staff Action Center workloads, and seven-day completion reporting. Production follow-ups use the original Action Center and Agent Chat/Brain; hourly scans add eligible due tasks idempotently. No production, calendar, creator, or payment status is modified by the coordination specialist.
 Verify the new panel and production tracking controls in hosted PHP/MySQL and manually confirm actual camera/workflow and calendar availability. Live financial provider operations remain disabled pending independent TEST acceptance.
+
+
+AZHottie Studio v1.45.0 — Agent Operations & Performance Learning
+No database migration: schema stays at 46. Back up code, database, configuration and private uploads/media first; deploy application files without rerunning install.php.
+The administrator-only Command Center now provides read-only 7/30/90-day creation and resolution-event trends, reopened task counts, overdue backlog, resolution-time samples, recurring source-category patterns, and evidence-backed next-step recommendations. The same restricted aggregated insights appear in Agent Brain and Chat. All reporting is based on current Action Center task state and immutable audit history, not individual performance scoring, AI model retraining, paid transaction verification or autonomous workflow changes.
+Verify the dashboard and Agent activity after deployment on hosted PHP/MySQL. Existing external provider TEST requirements, production camera acceptance and LIVE financial protections remain unchanged.

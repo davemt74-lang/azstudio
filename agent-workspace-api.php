@@ -18,6 +18,14 @@ try {
         session_write_close();
         az_json(['ok'=>true,'data'=>az_agent_casting_briefing($user,az_has_role($user,'admin')?az_agent_workspace_assign_options($user):[])]);
     }
+    if($method==='GET'&&$action==='operationsLearning'){
+        az_admin_action_assert($user);
+        $days=(string)($_GET['days']??'30');
+        if(!in_array($days,['7','30','90'],true))
+            throw new AzHttpError(400,'Choose 7, 30 or 90 days.','invalid_period');
+        session_write_close();
+        az_json(['ok'=>true,'data'=>az_ops_learning_report($user,(int)$days)]);
+    }
     if($method==='GET'&&$action==='actionCenter') {
         if(!az_has_role($user,'admin'))throw new AzHttpError(403,'Admin access required.','role_required');
         session_write_close();
