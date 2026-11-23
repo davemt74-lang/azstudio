@@ -46,7 +46,7 @@ $db->prepare('INSERT INTO production_projects VALUES(?,?,?,?)')->execute([$pid,'
 $pid2=str_repeat('d',32);
 $db->prepare('INSERT INTO production_projects VALUES(?,?,?,?)')->execute([$pid2,'archived',1,'Archived']);
 $shots=[
- [$sid,$pid,'Shot A','active','assigned',$at(12*3600)],
+ [$sid,$pid,'Shot A','active','assigned',$at(-3600)],
  [str_repeat('e',32),$pid,'Shot B','active','assigned',$at(2*86400)],
  [str_repeat('f',32),$pid,'Shot C','active','assigned',$at(5*86400)],
  [str_repeat('0',32),$pid,'Shot D','active','assigned',$at(6*86400)],
