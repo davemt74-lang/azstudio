@@ -86,6 +86,7 @@ window.fetch=async(input,options={})=>{
     {status:200,headers:{'Content-Type':'application/json'}});
  throw Error('Unexpected streaming action '+action);
 };
+void 0; // Keep Playwright from treating the assigned async fetch function as the return value.
 """
 def run():
     src=viewer_source()
