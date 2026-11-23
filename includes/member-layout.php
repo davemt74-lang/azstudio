@@ -76,7 +76,7 @@ function az_render_member_nav_links(string $page, array $user): void
         <?php $render([['dashboard.php','Member workspace','dashboard','←']]); ?>
       <?php else: ?>
         <p class="azh-side-label">MEMBERSHIP</p><?php $render($links); ?>
-        <?php if ($contributor): ?><p class="azh-side-label">CREATOR WORK</p><?php $render($admin || az_has_role($user, 'model') ? $teamLinks : array_values(array_filter($teamLinks, static fn(array $entry): bool => $entry[2] !== 'my-videos'))); ?><?php endif; ?>
+        <?php if ($contributor): ?><p class="azh-side-label">CREATOR WORK</p><?php $render($admin || az_has_role($user, 'model') ? $teamLinks : array_values(array_filter($teamLinks, static fn(array $entry): bool => !in_array($entry[2], ['my-videos','creator-analytics'], true)))); ?><?php endif; ?>
         <?php if ($liveEditor): ?><p class="azh-side-label">STUDIO ACCESS</p><?php $render([['admin-studio.php','Admin Studio','admin-studio','▥']]); ?><?php endif; ?>
       <?php endif; ?>
       <p class="azh-side-label">DISCOVER</p>
