@@ -3,12 +3,20 @@ import {fanVideoState} from './live-agent-health.js';
 import {randomId} from './personal-phone-core.js';
 import {statusText} from './live-core.js';
 import {appendLiveTrack} from './live-viewer-core.js';
+import {FanRecoveryBudget,fanRecoveryReason} from './live-recovery.js';
 const root=document.getElementById('azh-fan-live');
 if(root){
   const $=id=>document.getElementById(id),csrf=root.dataset.csrf,endpoint=new URL('live-api.php',document.baseURI);
   let room=null,viewerId=null,peer=null,pollTimer=null,checking=false,connecting=false,iceServers=[{urls:['stun:stun.l.google.com:19302']}],epoch=0;
   let playerStream=null,receivedVideo=false,frameMonitorTimer=null,frameCallbackId=null,lastDecodedAt=0,frameObserved=false,frameCount=0,visibilityResetAt=0,playRejected=false;
   let healthPreviousFrames=0,healthPreviousTime=performance.now(),healthPending=false;
+  const recovery=new FanRecoveryBudget();
+  let recoveryTimer=null,recoveryPending=false,recoveryExhausted=false,joinStartedAt=0,disconnectedAt=0,pollFailures=0;
+  const recoveryBadge=$('fan-live-recovery');
+  function recoveryNotice(message='',bad=false){
+    if(!recoveryBadge)return;
+    recoveryBadge.hidden=!message;recoveryBadge.textContent=message;recoveryBadge.classList.toggle('is-error',bad);
+  }
   const video=$('fan-live-video'),soundButton=$('fan-live-sound');
   // A delayed WebRTC ontrack callback is outside the Join button's gesture.
   // The Program always has an audio track, so unmuted autoplay can be blocked.
@@ -30,7 +38,7 @@ if(root){
   function beginFrameMonitor(version){
     clearFrameMonitor();lastDecodedAt=performance.now();visibilityResetAt=lastDecodedAt;
     if(typeof video.requestVideoFrameCallback==='function'){
-      frameObserved=true;const tick=()=>{if(epoch!==version)return;lastDecodedAt=performance.now();frameCount++;frameCallbackId=video.requestVideoFrameCallback(tick);};
+      frameObserved=true;const tick=()=>{if(epoch!==version)return;lastDecodedAt=performance.now();frameCount++;recovery.observeHealthy(true);if(frameCount===2)recoveryNotice('● Video frames moving · live connection healthy');frameCallbackId=video.requestVideoFrameCallback(tick);};
       frameCallbackId=video.requestVideoFrameCallback(tick);
     }else if(typeof video.getVideoPlaybackQuality==='function'){
       frameObserved=true;frameCount=video.getVideoPlaybackQuality().totalVideoFrames||0;
@@ -40,11 +48,13 @@ if(root){
       if(epoch!==version||!peer||document.hidden||video.hidden||peer.connectionState!=='connected')return;
       if(!video.requestVideoFrameCallback&&video.getVideoPlaybackQuality){
         const frames=video.getVideoPlaybackQuality().totalVideoFrames||0;
-        if(frames!==frameCount){frameCount=frames;lastDecodedAt=performance.now();}
+        if(frames!==frameCount){frameCount=frames;lastDecodedAt=performance.now();recovery.observeHealthy(true);if(frameCount>=2)recoveryNotice('● Video frames moving · live connection healthy');}
       }
-      if(performance.now()-Math.max(lastDecodedAt,visibilityResetAt)<8000)return;
+      const age=performance.now()-Math.max(lastDecodedAt,visibilityResetAt);
+      if(age<8000)return;
       if(video.paused){video.muted=true;setSoundLabel();void video.play().catch(()=>{playRejected=true;});}
       status('Live connection is connected but no new video frames are arriving. Keep Director open and visible; check its camera and Program output.',true);
+      if(age>=12000&&!video.paused&&!playRejected)scheduleRecovery('frozen_video');
     },3000);
   }
   const status=(s,bad=false)=>{$('fan-live-status').textContent=s;$('fan-live-status').classList.toggle('is-error',bad);};
@@ -57,21 +67,48 @@ if(root){
     return data.data;
   }
   function clearPlayer(notify=false){
-    epoch++;clearTimeout(pollTimer);pollTimer=null;connecting=false;clearFrameMonitor();playerStream=null;receivedVideo=false;
+    epoch++;clearTimeout(pollTimer);pollTimer=null;clearTimeout(recoveryTimer);recoveryTimer=null;recoveryPending=false;
+    connecting=false;joinStartedAt=0;disconnectedAt=0;pollFailures=0;clearFrameMonitor();playerStream=null;receivedVideo=false;
     const oldId=viewerId;viewerId=null;
     if(peer){const old=peer;peer=null;old.ontrack=null;old.onconnectionstatechange=null;old.close();}
     video.pause();video.srcObject=null;video.hidden=true;playRejected=false;video.muted=true;setSoundLabel();soundButton.hidden=true;$('fan-live-pill').hidden=true;
     $('fan-live-offline').hidden=false;$('fan-live-join').hidden=!room;$('fan-live-leave').hidden=true;
     if(notify&&oldId)void request('leave',{viewerId:oldId}).catch(()=>{});
   }
+  function scheduleRecovery(reason){
+    if(!room||recoveryPending||recovery.stopped)return;
+    if(document.hidden){recoveryNotice('Playback paused in the background. Return to this tab to check the connection.');return;}
+    const activeRoom=room.id;
+    const attempt=recovery.next();
+    clearPlayer(true);
+    if(!attempt){
+      recoveryExhausted=true;
+      recoveryNotice('Automatic recovery limit reached. Check the Director camera, Program output and TURN relay, then choose Retry live.',true);
+      $('fan-live-join').textContent='Retry live';
+      status('The program could not recover after three attempts. Tap Retry live to try again.',true);
+      return;
+    }
+    recoveryPending=true;
+    $('fan-live-join').hidden=true;
+    recoveryNotice(`Live video interrupted (${reason.replaceAll('_',' ')}). Reconnecting ${attempt.attempt}/${attempt.maxAttempts}…`,true);
+    status('Attempting a fresh live connection without changing your account or the Director broadcast.');
+    recoveryTimer=setTimeout(()=>{
+      recoveryTimer=null;
+      if(!room||room.id!==activeRoom||recovery.stopped){recoveryPending=false;return;}
+      if(document.hidden){recoveryPending=false;$('fan-live-join').hidden=false;
+        recoveryNotice('Return to this tab and select Join live to resume.');return;}
+      recoveryPending=false;
+      void join({automatic:true});
+    },attempt.delayMs);
+  }
   async function check(){
     if(checking)return;checking=true;
     try{
       const data=await request('status');const previous=room?.id;room=data.room||null;iceServers=data.iceServers||iceServers;
       $('fan-live-title').textContent=room?.title||'AZHottie Live';
-      if(!room){if(viewerId)clearPlayer(true);$('fan-live-join').hidden=true;status('The studio is offline. Live programs appear when the Director starts broadcasting.');}
-      else if(previous!==room.id){if(viewerId)clearPlayer(true);$('fan-live-join').hidden=false;status('The live program is on air. Select Join live to watch.');}
-      else if(!viewerId&&!connecting){$('fan-live-join').hidden=false;status('On air · tap Join live to watch.');}
+      if(!room){recovery.enterRoom(null);recoveryExhausted=false;if(viewerId||recoveryPending)clearPlayer(true);recoveryNotice();$('fan-live-join').hidden=true;status('The studio is offline. Live programs appear when the Director starts broadcasting.');}
+      else if(previous!==room.id){if(viewerId||recoveryPending)clearPlayer(true);recovery.enterRoom(room.id);recoveryExhausted=false;recoveryNotice();$('fan-live-join').textContent='Join live';$('fan-live-join').hidden=false;status('The live program is on air. Select Join live to watch.');}
+      else if(!viewerId&&!connecting&&!recoveryPending){$('fan-live-join').hidden=false;if(!recovery.stopped&&!recoveryExhausted)status('On air · tap Join live to watch.');}
     }catch(e){status(statusText(e),true);}
     finally{checking=false;}
   }
@@ -82,12 +119,24 @@ if(root){
       const data=await request('poll',null,{viewerId});
       if(epoch!==version||!peer)return;
       if(data.answer&&!peer.currentRemoteDescription)await peer.setRemoteDescription({type:'answer',sdp:data.answer});
+      pollFailures=0;
       schedulePoll(version);
-    }catch(e){if(epoch!==version)return;clearPlayer();status('Live connection ended: '+statusText(e)+' You may rejoin if the broadcast is still active.',true);}
+    }catch(e){
+      if(epoch!==version)return;
+      if([401,403,409,429].includes(e.status)){
+        recovery.leave();clearPlayer();recoveryNotice('Broadcast unavailable or access ended.',true);
+        status('Live connection ended: '+statusText(e),true);return;
+      }
+      if(++pollFailures<3){status('Checking live connection again after a signaling delay…');schedulePoll(version);return;}
+      scheduleRecovery('signaling_interrupted');
+    }
   }
-  async function join(){
-    if(!room||connecting||viewerId)return;
-    connecting=true;$('fan-live-join').disabled=true;video.muted=true;setSoundLabel();
+  async function join({automatic=false}={}){
+    if(!room||connecting||viewerId||recoveryPending)return;
+    recovery.enterRoom(room.id);
+    if(!automatic){recovery.manualJoin();recoveryExhausted=false;recoveryNotice();}
+    connecting=true;joinStartedAt=performance.now();disconnectedAt=0;pollFailures=0;
+    $('fan-live-join').textContent='Join live';$('fan-live-join').disabled=true;video.muted=true;setSoundLabel();
     const version=++epoch;
     try{
       if(!globalThis.RTCPeerConnection)throw Error('Your browser does not support WebRTC viewing.');
@@ -98,14 +147,17 @@ if(root){
         playerStream=appendLiveTrack(video,e,playerStream);
         if(e.track.kind!=='video'&&!receivedVideo)return;
         video.hidden=false;soundButton.hidden=false;$('fan-live-offline').hidden=true;$('fan-live-pill').hidden=false;
-        if(e.track.kind==='video'&&!receivedVideo){receivedVideo=true;beginFrameMonitor(version);}
-        if(video.paused)void video.play().then(played).catch(()=>{playRejected=true;status('The live video is connected. Tap Play to start viewing.',true);});
+        if(e.track.kind==='video'&&!receivedVideo){receivedVideo=true;beginFrameMonitor(version);recoveryNotice('Video connected · checking decoded frames');}
+        if(video.paused)void video.play().then(()=>{if(epoch===version)played();}).catch(()=>{if(epoch===version){playRejected=true;status('The live video is connected. Tap Play to start viewing.',true);}});
       };
       p.onconnectionstatechange=()=>{
         if(epoch!==version||peer!==p)return;
-        if(p.connectionState==='connected')status('● Live program connected');
-        else if(['failed','closed'].includes(p.connectionState)){clearPlayer();status('Viewer connection lost. Choose Join live to reconnect.',true);}
-        else if(p.connectionState==='disconnected')status('Reconnecting to the Director…');
+        if(p.connectionState==='connected'){disconnectedAt=0;status('● Live program connected');}
+        else if(['failed','closed'].includes(p.connectionState))scheduleRecovery('peer_failed');
+        else if(p.connectionState==='disconnected'){
+          if(!disconnectedAt)disconnectedAt=performance.now();
+          status('Reconnecting to the Director…');
+        }
       };
       await p.setLocalDescription(await p.createOffer());await waitForIce(p,7000);
       if(epoch!==version)return;
@@ -113,18 +165,25 @@ if(root){
       if(epoch!==version)return;
       viewerId=joined.viewerId;$('fan-live-join').hidden=true;$('fan-live-leave').hidden=false;
       status('Connecting to the Director…');void poll(version);
-    }catch(e){if(epoch===version){clearPlayer();status(statusText(e),true);}}
+    }catch(e){if(epoch===version){
+      if([401,403,409,429].includes(e.status)||!globalThis.RTCPeerConnection){
+        recovery.leave();clearPlayer();status(statusText(e),true);recoveryNotice('Unable to reconnect automatically.',true);
+      }else scheduleRecovery('connection_setup_failed');
+    }}
     finally{connecting=false;$('fan-live-join').disabled=false;}
   }
   $('fan-live-join').addEventListener('click',()=>void join());
-  $('fan-live-leave').addEventListener('click',()=>{clearPlayer(true);status('You left the live presentation. You can rejoin while it remains on air.');});
+  $('fan-live-leave').addEventListener('click',()=>{
+    recovery.leave();clearPlayer(true);recoveryNotice();
+    status('You left the live presentation. You can rejoin manually while it remains on air.');
+  });
   async function reportViewerHealth(){
     if(!viewerId||!room||!peer||peer.connectionState!=='connected'||healthPending)return;
     const version=epoch,roomId=room.id,viewerSession=viewerId;
     const now=performance.now();
     if(!video.requestVideoFrameCallback && video.getVideoPlaybackQuality && frameObserved){
       const frames=video.getVideoPlaybackQuality().totalVideoFrames||0;
-      if(frames!==frameCount){frameCount=frames;lastDecodedAt=now;}
+      if(frames!==frameCount){frameCount=frames;lastDecodedAt=now;recovery.observeHealthy(true);if(frameCount>=2)recoveryNotice('● Video frames moving · live connection healthy');}
     }
     const state=fanVideoState({connected:true,visible:!document.hidden,hasVideo:receivedVideo&&!video.hidden,
       canMeasure:frameObserved,secondsSinceFrame:(now-Math.max(lastDecodedAt,visibilityResetAt))/1000,
@@ -137,9 +196,22 @@ if(root){
     catch{/* Diagnostics must never interrupt fan playback. */}
     finally{healthPending=false;}
   }
+  const recoveryMonitor=setInterval(()=>{
+    if(!room||!viewerId||!peer||connecting||recoveryPending||document.hidden)return;
+    const time=performance.now();
+    const reason=fanRecoveryReason({visible:!document.hidden,connection:peer.connectionState,
+      elapsedMs:joinStartedAt?time-joinStartedAt:0,
+      disconnectedMs:disconnectedAt?time-disconnectedAt:0,
+      hasVideo:receivedVideo,canMeasure:frameObserved,
+      frameAgeMs:time-Math.max(lastDecodedAt,visibilityResetAt),
+      paused:receivedVideo&&video.paused,autoplayBlocked:playRejected});
+    if(reason)scheduleRecovery(reason);
+  },2500);
   const healthTimer=setInterval(()=>void reportViewerHealth(),12000);
   const timer=setInterval(()=>void check(),4500);void check();
-  window.addEventListener('pagehide',()=>{clearInterval(timer);clearInterval(healthTimer);clearPlayer(true);});
+  window.addEventListener('pagehide',()=>{
+    recovery.leave();clearInterval(timer);clearInterval(healthTimer);clearInterval(recoveryMonitor);clearPlayer(true);
+  });
 }
 
 /* Member-only archive: video files are only streamed by the server after access checks. */
