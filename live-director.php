@@ -2,7 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__.'/includes/bootstrap.php';
 $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robots-Tag: noindex,nofollow');
-?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Live Director · AZHottie</title><link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/live-studio.css?v=1.49.0"><link rel="stylesheet" href="assets/commerce.css?v=1.31.0"></head>
+?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Live Director · AZHottie</title><link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/live-studio.css?v=1.50.0"><link rel="stylesheet" href="assets/commerce.css?v=1.31.0"></head>
 <body class="azh-director-body" data-page="live-director">
 <main class="azh-director azh-director-app" id="azh-director" data-csrf="<?= az_h(az_csrf_token()) ?>" aria-label="Full-screen live production control room">
   <header class="azh-director-toolbar">
@@ -199,5 +199,5 @@ $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robot
   </div>
   <p id="live-status" class="azh-live-message azh-director-toast" role="status" aria-live="polite" hidden></p>
 </main>
-<script src="assets/qr.js"></script><script type="module" src="assets/live-director.js?v=1.49.0"></script><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/live-acceptance.js?v=1.48.0"></script><?php endif; ?><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/commerce-director.js?v=1.41.0"></script><?php endif; ?>
+<script src="assets/qr.js"></script><script type="module" src="assets/live-director.js?v=1.50.0"></script><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/live-acceptance.js?v=1.48.0"></script><?php endif; ?><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/commerce-director.js?v=1.41.0"></script><?php endif; ?>
 </body></html>
