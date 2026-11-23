@@ -8,14 +8,16 @@ const read=path=>readFileSync(resolve(root,path),'utf8');
 const page=read('live-director.php'),client=read('assets/live-director.js'),css=read('assets/live-studio.css'),admin=read('admin-studio.php'),layout=read('includes/member-layout.php');
 const header=page.match(/<header class="azh-director-toolbar">([\s\S]*?)<\/header>/)?.[1]||'';
 
-test('v1.22.1: admin studio has exactly one shared breadcrumb and one heading',()=>{
+test('v1.41: Studio Command Center preserves one shared canvas and one accessible heading',()=>{
   assert.match(admin,/az_render_member_layout_open\('admin-studio',\$user\)/);
   assert.match(layout,/azh-canvas-topline/);
   assert.doesNotMatch(admin,/AZHOTTIE \/ CONTROL ROOM/);
   assert.equal((admin.match(/<h1\b/g)||[]).length,1);
-  assert.match(admin,/<h1 id="admin-title">Admin Studio/);
-  assert.match(admin,/azh-admin-status/);
-  assert.match(admin,/azh-admin-grid/);
+  assert.match(admin,/<h1 id="azd-title">Your studio/);
+  assert.match(admin,/id="azh-admin-command"/);
+  assert.match(admin,/class="azd-kpis"/);
+  assert.match(admin,/azd-broadcast/);
+  assert.match(admin,/\$data=\$isAdmin\?az_admin_command_data\(\$user\):null/);
 });
 
 test('v1.22.1: Director title is in former search position, once, before broadcast controls',()=>{
