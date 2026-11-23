@@ -82,7 +82,6 @@ $shortcuts=[
 </section>
 <?php endif; ?>
 <?php if($isAdmin): ?>
-<?php if($isAdmin): ?>
 <section class="azd-panel azd-coordination" id="azd-coordination" aria-labelledby="azd-coordination-title">
   <header class="azd-panel-heading azd-coord-head">
     <div><p class="azd-kicker">ASSIGNMENTS · SCHEDULE · STAFF CAPACITY</p><h2 id="azd-coordination-title">Agent Task Coordination</h2>
