@@ -228,6 +228,10 @@ function az_agent_workspace_brain(array $user): array
     $provider=az_provider_briefing($user);
     foreach($provider['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,$provider['counts']);
+    // One role-scoped Commerce report feeds the existing Brain, not another alert system.
+    $commerceAgent=$admin?az_commerce_agent_admin_report($summary):az_commerce_agent_report($user);
+    $cards[]=az_agent_workspace_card('commerce','Commerce Agent daily briefing',
+        $commerceAgent['nextStep'],'commerce.php?tab=agent',2);
     $schedule=az_agent_schedule_briefing($user);
     foreach($schedule['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,['upcomingSchedule'=>$schedule['counts']['upcoming'],'scheduleConflicts'=>$schedule['counts']['conflicts']]);
@@ -245,7 +249,7 @@ function az_agent_workspace_brain(array $user): array
     if ($admin) $summary['liveAlerts']=count($liveHealth['issues']??[]);
     $followthrough=['cron'=>az_agent_followthrough_status(), 'manual'=>$admin?az_agent_followthrough_status($id):null];
     return ['cards'=>array_slice($cards,0,16),'summary'=>$summary,'assignOptions'=>$assignmentChoices,'followthrough'=>$followthrough,
-      'liveHealth'=>$liveHealth,'casting'=>$casting,'video'=>$video,'publishing'=>$publishing,'commerce'=>$commerce,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, publishing, commerce, Watch engagement, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
+      'liveHealth'=>$liveHealth,'casting'=>$casting,'video'=>$video,'publishing'=>$publishing,'commerce'=>$commerce,'commerceAgent'=>$commerceAgent,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, publishing, commerce, Watch engagement, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
 }
 /** The only choices offered are owned active shots and eligible active roster members. */
 function az_agent_workspace_assign_options(array $user): array

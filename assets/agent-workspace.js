@@ -5,7 +5,7 @@ export function badgeLabel(count) {
 }
 export function safeAgentHref(href) {
   // Keep all activity and suggestion destinations on known, same-site workspace pages.
-  return typeof href==='string' && /^(?:my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments|my-editor)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?$/.test(href)?href:null;
+  return typeof href==='string' && /^(?:commerce|my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments|my-editor)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?$/.test(href)?href:null;
 }
 export function validWorkAction(action) {
   if(!action || typeof action!=='object')return false;
@@ -130,6 +130,22 @@ function mountAgentWorkspace(root=document) {
         report.append(block);
       }
       content.append(report);
+    }
+    const commerceAgent=brain.commerceAgent;
+    if(commerceAgent){
+      const section=make('section','azh-aw-followthrough');
+      section.append(text('p','COMMERCE SPECIALIST · RECORDED ACTIVITY','azh-aw-eyebrow'),text('h3','Commerce Agent briefing'));
+      for(const [field,label] of [['keyFindings','Key findings'],['actionsFollowups','Actions & follow-ups'],['openQuestions','Open questions'],['nextStep','Next step'],['questionsForYou','Questions for you']]){
+        const value=commerceAgent[field];if(!value||(Array.isArray(value)&&!value.length))continue;
+        section.append(text('strong',label));
+        if(Array.isArray(value))for(const item of value.slice(0,4))section.append(text('p',typeof item==='string'?item:item.title+' — '+item.detail,'azh-aw-meta'));
+        else section.append(text('p',value,'azh-aw-meta'));
+      }
+      section.append(link('Open Commerce briefing ↗','commerce.php?tab=agent'),link('Discuss Commerce with Agent Chat ↗','agent-chat.php?topic=commerce'));
+      if(state.role==='admin')section.append(button('Check Commerce follow-ups now','azh-aw-outline',()=>{
+        if(window.confirm('Scan current Commerce records for deduplicated in-app follow-ups? No refunds, purchases or transfers will be initiated.'))void executeAgentAction('checkCommerce',{});
+      }));
+      content.append(section);
     }
     if(brain.video){
       const video=brain.video,section=make('section','azh-aw-followthrough');

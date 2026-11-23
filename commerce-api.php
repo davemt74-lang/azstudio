@@ -17,6 +17,10 @@ try {
     }
     $user=az_require_auth(true);
     az_agent_workspace_assert($user);
+    if($method==='GET' && $action==='agentBriefing'){
+        session_write_close();
+        az_json(['ok'=>true,'data'=>az_commerce_agent_report($user)]);
+    }
     if($method==='GET' && $action==='analytics'){
         $user=az_require_auth(true);az_agent_workspace_assert($user);session_write_close();
         az_json(['ok'=>true,'data'=>az_commerce_analytics($user)]);
