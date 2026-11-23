@@ -524,3 +524,23 @@ body.azh-director-body .azh-director-app{
 .azh-live-acceptance :is(button,select,input):focus-visible{outline:3px solid #ae6b8d;outline-offset:2px}
 @media(max-width:750px){.azh-acceptance-diagnostics{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:490px){.azh-acceptance-step .azh-acceptance-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.azh-acceptance-fields label:nth-child(2){grid-column:1/-1;grid-row:2}.azh-acceptance-fields button{grid-column:2;grid-row:1}.azh-acceptance-diagnostics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* v1.48 stage-by-stage read-only broadcast triage */
+.azh-live-triage{min-width:0;display:grid;gap:9px;padding:12px;border:1px solid #eadce5;border-radius:12px;background:#fffdfa}
+.azh-live-triage .azh-live-subhead{margin:0;align-items:baseline;gap:8px;flex-wrap:wrap}
+.azh-live-triage .azh-live-subhead h3{font-size:14px}
+.azh-live-triage .azh-live-subhead span{font-size:10px;color:#816f7a}
+.azh-live-triage-status{font-size:12px!important;color:#6a465f;line-height:1.6!important;overflow-wrap:anywhere}
+.azh-live-triage-findings{display:grid;gap:8px}
+.azh-live-triage-item{display:grid;gap:6px;border:1px solid #efe5eb;background:#fff;border-radius:10px;padding:11px;min-width:0}
+.azh-live-triage-item[data-severity=critical]{border-left:4px solid #b83c53}
+.azh-live-triage-item[data-severity=warning]{border-left:4px solid #c99547}
+.azh-live-triage-item[data-severity=info]{border-left:4px solid #b6a2b2}
+.azh-live-triage-item strong{font-size:12px;color:#483141;overflow-wrap:anywhere}
+.azh-live-triage-item p{font-size:11px;line-height:1.5;color:#7a6572;margin:0;overflow-wrap:anywhere}
+.azh-live-triage-item .azh-live-button{justify-self:start;font-size:11px;padding:8px 10px}
+.azh-live-support{border:1px solid #eadfe6;border-radius:10px;padding:11px 12px;min-width:0}
+.azh-live-support summary{cursor:pointer;font-size:12px;font-weight:750}
+.azh-live-support textarea{background:#faf7f9;display:block;box-sizing:border-box;width:100%;min-width:0;margin:9px 0;resize:vertical;font-size:11px;line-height:1.5;border:1px solid #dfd0d9;border-radius:8px;padding:10px;color:#5c4b59}
+.azh-live-support button:focus-visible,.azh-live-triage-item button:focus-visible{outline:3px solid #b47296;outline-offset:2px}
+@media(max-width:430px){.azh-live-triage{padding:10px}.azh-live-triage-item{padding:10px}}
