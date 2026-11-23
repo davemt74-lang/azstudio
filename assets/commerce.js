@@ -220,6 +220,10 @@ if(root){
     for(const button of root.querySelectorAll('[data-tab]'))button.setAttribute('aria-selected',String(button===tab));
     for(const panel of root.querySelectorAll('[data-panel]'))panel.hidden=panel.dataset.panel!==tab.dataset.tab;
   }));
+  // Allow safe links from the existing Agent Brain / History back to this staff tab.
+  if(admin && new URLSearchParams(window.location.search).get('tab')==='providers'){
+    root.querySelector('[data-tab="providers"]')?.click();
+  }
   if(admin){
     $('commerce-product-form').addEventListener('submit',e=>{
       e.preventDefault();const d=formData('commerce-product-form');

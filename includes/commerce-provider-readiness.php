@@ -69,5 +69,12 @@ function az_provider_readiness_report(array $user):array
     ];
     $counts=[];
     foreach($queries as $name=>$sql)$counts[$name]=(int)$db->query($sql)->fetchColumn();
-    return az_provider_readiness_snapshot(az_stripe_config(),az_carrier_config(),az_provider_action_config(),$counts);
+    $actions=az_provider_action_config();
+    // The return-postage switch is independent of Stripe refund/transfer switches.
+    // Derive it from the same feature policy used by the actual provider action UI.
+    $actions['returnLabelPurchasesEnabled']=az_provider_features()['returnLabelPurchasesEnabled'];
+    $report=az_provider_readiness_snapshot(az_stripe_config(),az_carrier_config(),$actions,$counts);
+    $report['triage']=az_provider_triage_snapshot($db);
+    $report['testEvidence']=az_provider_test_evidence($db);
+    return $report;
 }
