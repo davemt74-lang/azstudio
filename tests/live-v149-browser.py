@@ -31,7 +31,7 @@ HTML='''<!doctype html><html><head><meta name="viewport" content="width=device-w
 def viewer_source():
     root=(ROOT/'assets/live-viewer.js').read_text(encoding='utf-8')
     for name in ('phone-live.js','live-agent-health.js','personal-phone-core.js',
-                 'live-core.js','live-viewer-core.js','live-recovery.js','live-production-guards.js'):
+                 'live-core.js','live-viewer-core.js','live-recovery.js','live-production-guards.js','live-v151-guards.js'):
         content=(ROOT/'assets'/name).read_bytes()
         url='data:text/javascript;base64,'+b64encode(content).decode('ascii')
         anchor="from './"+name+"'"

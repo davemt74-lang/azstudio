@@ -6,6 +6,9 @@ import {CameraHealth,cameraStateText,cameraSummary,cameraPermissionMessage} from
 import {liveVideoTrack,ViewerVideoRoute,outgoingFrameSample} from './live-program-delivery.js';
 import {PhoneRepairBudget} from './live-recovery.js';
 import {recordingStartBlockReason,mixerReadiness} from './live-production-guards.js';
+import {deferForegroundPhoneRepair,recordingAutoSaveAllowed} from './live-v151-guards.js';
+import {verifyRecordedVideo} from './live-record-verify.js';
+import {wireMobileDirectorShortcuts} from './live-mobile-controls.js';
 import {normalizeLayout,layoutRects,compositionReady,chooseRundownSegment,safeShowText,rundownPreview} from './live-show-core.js';
 
 const root=document.getElementById('azh-director');
@@ -38,6 +41,7 @@ if (root) {
   const iceServers=()=>room?.iceServers||[{urls:['stun:stun.l.google.com:19302']}];
   let usedHiddenRelay=false;
   let cameraFaultActive=false,interruptedSourceId=null,recordingStarting=false,recordingFinalizing=false,broadcastStarting=false;
+  let foregroundResumeAt=-Infinity,mobileControls=null;
   let latestDelivery={viewerCount:0,sentFps:null,stalledOutbound:0,directRelays:0},healthSending=false;
   function localHealth(){
     const healthy=sourceIds().length;
@@ -73,7 +77,13 @@ if (root) {
       usedHiddenRelay=false;
       feedback('Full Program compositing resumed. While the Director was in the background, viewers received direct phone video (without canvas overlays). Keep this tab visible for overlays and recordings.');
     }
-    if(!document.hidden)renderProgram(performance.now());
+    if(!document.hidden){
+      foregroundResumeAt=performance.now();
+      for(const source of sources.values())if(source.video.paused&&source.stream?.getVideoTracks()?.some(t=>t.readyState==='live')){
+        void source.video.play().catch(()=>{if(sources.get(source.id)===source){source.health?.playRejected();showSources();}});
+      }
+      renderProgram(performance.now());
+    }
   });
   const feedback=(message,bad=false)=>{const status=$('live-status');status.textContent=message;status.hidden=!message;status.classList.toggle('is-error',bad);};
   const reportRecord=(message,bad=false)=>{$('live-record-message').textContent=message;$('live-record-message').classList.toggle('is-error',bad);};
@@ -152,6 +162,7 @@ if (root) {
       feedback('This phone is not actively sharing. Open Camera Studio on the phone and select Share live.',true);return;
     }
     if(document.hidden&&!manual)return;
+    if(!manual&&deferForegroundPhoneRepair({visible:!document.hidden,foregroundAgeMs:performance.now()-foregroundResumeAt}))return;
     if(!manual&&item.health?.update()!=='stalled')return;
     const peer=phones.peers.get(phoneId);
     if(!peer){
@@ -184,7 +195,10 @@ if (root) {
     if(item.kind!=='phone'||document.hidden||phoneRepairTimers.has(item.id))return;
     const timer=setTimeout(()=>{
       phoneRepairTimers.delete(item.id);
-      if(sources.get(item.id)===item&&!document.hidden&&item.health?.update()==='stalled')requestPhoneRepair(item);
+      if(sources.get(item.id)===item&&!document.hidden&&item.health?.update()==='stalled'){
+        if(deferForegroundPhoneRepair({foregroundAgeMs:performance.now()-foregroundResumeAt}))queuePhoneRepair(item);
+        else requestPhoneRepair(item);
+      }
     },1500);
     phoneRepairTimers.set(item.id,timer);
   }
@@ -195,7 +209,8 @@ if (root) {
       else cancelPhoneRepair(item.id);
     }
     if(!sources.has(item.id))return;
-    if(selected===item.id&&!mediaProgramActive&&activeLayout.type==='single'&&['stalled','muted','offline','blocked'].includes(state)&&!(document.hidden&&state==='stalled')){
+    if(selected===item.id&&!mediaProgramActive&&activeLayout.type==='single'&&['stalled','muted','offline','blocked'].includes(state)
+      &&!(state==='stalled'&&deferForegroundPhoneRepair({visible:!document.hidden,foregroundAgeMs:performance.now()-foregroundResumeAt}))){
       interruptedSourceId=item.id;cameraFaultActive=Boolean(room);selected=null;activeLayout=normalizeLayout('single',['']);transitionStart=0;routeViewerVideo();feedback('The on-air camera stopped delivering decoded video. Program is showing the holding slate until a healthy feed is taken.',true);
       if($('live-switch-mode').value!=='manual')queueMicrotask(()=>{const ready=sourceIds();if(!selected&&ready.length&&activeLayout.type==='single')takeSource(ready[0]);});
     }
@@ -344,6 +359,7 @@ if (root) {
     for(const [id,tile] of idleCards)if(!valid.has(id)){tile.card.remove();idleCards.delete(id);phoneRepair.clear(id);}
     for(const [id,tile] of sourceCards)if(!sources.has(id)){tile.card.remove();sourceCards.delete(id);}
     cameraCounts();
+    mobileControls?.refresh();
     refreshCompositionOptions();
   }
   function previewSource(id){
@@ -1047,6 +1063,7 @@ if (root) {
       backupPending:Boolean(recordedFile)});
     $('live-record').disabled=Boolean(blocked);
     $('live-record-stop').disabled=recorder?.state!=='recording'&&recorder?.state!=='paused';
+    mobileControls?.refresh();
   }
   function finishRecording(){
     if(!recorder||!['recording','paused'].includes(recorder.state))return;
@@ -1075,8 +1092,12 @@ if (root) {
       const listing=await mediaRequest('list');
       const persisted=(listing.items||[]).find(item=>item.id===saved.id);
       if(!persisted||Number(persisted.sizeBytes)!==file.size)throw Error('Saved file verification failed. Keep your local backup and retry; no recording is published.');
+      // Byte counts alone cannot prove that saved media can be decoded. Probe
+      // the authenticated SERVER URL before attaching it to a live production.
+      const verified=await verifyRecordedVideo(persisted.videoUrl,{timeoutMs:16000});
+      if(!verified.ok)throw Error('Saved bytes match, but served video playback is unverified: '+verified.reason+' Keep the local backup and retry.');
       if(roomId)await liveRequest('attach',{roomId,mediaId:saved.id});
-      reportRecord('✓ Recording byte size verified in your private gallery. Open Saved Live Productions and play it to confirm video and audio.');
+      reportRecord('✓ Saved video decoded its first frame from the private gallery in this browser. Play the full file with sound on a second device to certify the recording.');
       $('live-record-backup').replaceChildren();if(recordUrl){URL.revokeObjectURL(recordUrl);recordUrl=null;}
       recordedFile=null;recordToken=null;savedMediaId=null;// Saved shows are managed on the dedicated live-productions.php admin page.
     }catch(e){reportRecord('Upload interrupted. Keep this page open, save a backup, or retry: '+statusText(e),true);
@@ -1097,8 +1118,9 @@ if (root) {
       if(!globalThis.MediaRecorder)throw Error('This browser does not support program recording.');
       const mime=selectRecordingMime(x=>MediaRecorder.isTypeSupported(x));
       recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);chunks=[];recordRoom=room?.id||null;
+      let recorderFailed=false;
       recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data);};
-      recorder.onerror=e=>{reportRecord('The browser encountered a recording error. Keep the downloadable backup, then retry: '+statusText(e.error||e),true);};
+      recorder.onerror=e=>{recorderFailed=true;reportRecord('The browser encountered a recording error. Partial footage will be retained locally and never uploaded automatically: '+statusText(e.error||e),true);};
       const startedRecorder=recorder,startedRoom=recordRoom;
       const startAt=Date.now();const clock=setInterval(()=>{if(startedRecorder?.state==='recording'){$('live-record-clock').textContent=new Date(Date.now()-startAt).toISOString().slice(11,19);}},1000);
       recorder.onstop=async()=>{
@@ -1109,26 +1131,51 @@ if (root) {
         const type=(startedRecorder.mimeType||mime||'video/webm').split(';')[0];const ext=type.includes('mp4')?'mp4':'webm';
         const title=`${$('live-title').value.trim()||'AZHottie Live'} · ${new Date(startAt).toLocaleDateString()}`;
         const file=new File([new Blob(chunks,{type})],`azhottie-program-${startAt}.${ext}`,{type});recordedFile=file;chunks=[];
-        const invalidRecording=file.size<1024;
-        if(invalidRecording)reportRecord('Recording contains too few bytes to verify. Keep the local backup; it will not be uploaded automatically.',true);
+        let invalidRecording=file.size<1024||recorderFailed;
+        if(invalidRecording)reportRecord(recorderFailed?'Recorder reported an error. Keep and review the partial backup; it will not be uploaded automatically.':'Recording contains too few bytes to verify. Keep the local backup; it will not be uploaded automatically.',true);
         if(recordUrl)URL.revokeObjectURL(recordUrl);recordUrl=URL.createObjectURL(file);
         const area=$('live-record-backup');area.replaceChildren();const a=document.createElement('a');a.href=recordUrl;a.download=file.name;a.className='azh-live-button azh-live-secondary';a.textContent='↓ Download recording backup';area.append(a);
         area.append(button('Discard local copy',discardLocalRecording,'azh-live-button azh-live-secondary'));
+        const preview=document.createElement('video');preview.className='azh-record-local-preview';preview.controls=true;preview.playsInline=true;preview.preload='metadata';preview.src=recordUrl;preview.setAttribute('aria-label','Review unsaved local recording before discarding');area.append(preview);
+        // Decode the FIRST local frame before attempting automatic upload.
+        // A failed probe is not a reason to destroy the original recording.
+        let localPlaybackVerified=false;
+        if(!invalidRecording){
+          reportRecord('Checking local recording video playback before upload…');
+          const check=await verifyRecordedVideo(recordUrl,{timeoutMs:12000});
+          localPlaybackVerified=check.ok;
+          if(!check.ok)reportRecord('Local recording video playback is unverified: '+check.reason+' Keep the backup and review it manually.',true);
+        }
+        invalidRecording=!recordingAutoSaveAllowed({bytes:file.size,recorderError:recorderFailed,localPlaybackVerified});
         // The recording's original room ID is immutable, even if the next
         // session starts while the previous file finishes uploading.
         if(!invalidRecording)await saveRecording(file,title,startedRoom);
-        }finally{recordingFinalizing=false;updateRecordControls();}
+        else if(!recorderFailed&&file.size>=1024){
+          area.append(button('Retry playback check & save',async()=>{
+            if(saving||recordingFinalizing)return;
+            const check=await verifyRecordedVideo(recordUrl,{timeoutMs:16000});
+            if(!check.ok){reportRecord('Playback remains unverified: '+check.reason+' Download and keep the backup.',true);return;}
+            await saveRecording(file,title,startedRoom);
+          }));
+        }
+        }catch(error){reportRecord('Recording finalization failed. Keep your local backup if available: '+statusText(error),true);}
+        finally{recordingFinalizing=false;updateRecordControls();}
       };
       recorder.start(1000);updateRecordControls();document.body.classList.add('azh-is-recording');reportRecord('● RECORDING — the complete Program output, camera switches, overlays, and mixed audio.');
     }catch(e){reportRecord(statusText(e),true);}
     finally{recordingStarting=false;updateRecordControls();}
   }
+  mobileControls=wireMobileDirectorShortcuts({root,sourcePanel:document.querySelector('.azh-director-sources'),
+    nextCamera:()=>nextCamera(),startRecord:()=>void startRecord(),stopRecord:finishRecording,
+    showAudio:()=>setDirectorTab('audio'),showRecording:()=>setDirectorTab('recording'),
+    canTake:()=>sourceIds().length>0,
+    recordStatus:()=>({canStart:!$('live-record').disabled,canStop:!$('live-record-stop').disabled,backupPending:Boolean(recordedFile)})});
   $('live-record').addEventListener('click',()=>void startRecord());
   $('live-record-stop').addEventListener('click',finishRecording);
   loop=setInterval(()=>{void refreshPhones();if(room)void pollViewers();},2500);void refreshPhones();
   window.addEventListener('beforeunload',e=>{if(recorder?.state==='recording'||recordingStarting||recordingFinalizing||saving||recordedFile){e.preventDefault();e.returnValue='';}});
   window.addEventListener('pagehide',()=>{
-    clearInterval(loop);clearInterval(liveHealthTimer);clearInterval(cameraWatch);clearInterval(audioReadinessTimer);clearInterval(audioMeterLoop);clearInterval(hiddenRenderTimer);clearInterval(deliveryTimer);for(const id of phoneRepairTimers.keys())cancelPhoneRepair(id);cancelAnimationFrame(raf);phones.stop();for(const id of [...viewers.keys()])closeViewer(id);
+    mobileControls?.();clearInterval(loop);clearInterval(liveHealthTimer);clearInterval(cameraWatch);clearInterval(audioReadinessTimer);clearInterval(audioMeterLoop);clearInterval(hiddenRenderTimer);clearInterval(deliveryTimer);for(const id of phoneRepairTimers.keys())cancelPhoneRepair(id);cancelAnimationFrame(raf);phones.stop();for(const id of [...viewers.keys()])closeViewer(id);
     if(room)liveEnd(true);
     clearPreview();for(const id of [...sources.keys()])removeSource(id);
     micStream?.getTracks().forEach(t=>t.stop());for(const id of [...cameraAudioNodes.keys()])detachCameraAudio(id);canvasStream?.getTracks().forEach(t=>t.stop());oscillator?.stop();audioCtx?.close();

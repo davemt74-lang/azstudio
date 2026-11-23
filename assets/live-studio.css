@@ -552,3 +552,15 @@ body.azh-director-body .azh-director-app{
 .azh-program-audio-status p[data-state="attention"]{color:#965426}
 .azh-program-audio-status .azh-live-button{flex:0 0 auto}
 .azh-program-audio-status [hidden]{display:none!important}
+
+/* v1.51 Mobile Director: one reachable, non-overlay bottom control strip. */
+.azh-mobile-director-bar{display:none}
+.azh-record-local-preview{display:block;width:min(100%,420px);max-height:240px;aspect-ratio:16/9;object-fit:contain;border-radius:10px;background:#120e13;margin-top:8px}
+@media(max-width:850px){
+  body.azh-director-body .azh-director-app{grid-template-rows:minmax(0,auto) minmax(0,1fr) auto}
+  .azh-mobile-director-bar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;padding:8px 10px max(8px,env(safe-area-inset-bottom));background:#fff;border-top:1px solid #ead9e2;z-index:20;min-width:0}
+  .azh-mobile-director-bar .azh-live-button{min-height:45px;min-width:0;padding:7px 3px;font-size:clamp(10px,2.6vw,13px);font-weight:800;white-space:normal;line-height:1.18;touch-action:manipulation}
+  .azh-mobile-director-bar .azh-live-button:focus-visible{outline:3px solid #b62761;outline-offset:2px}
+  .azh-director-toast{bottom:calc(67px + env(safe-area-inset-bottom));left:8px;right:8px;max-width:none}
+}
+@media(max-width:360px){.azh-mobile-director-bar{gap:4px;padding-left:6px;padding-right:6px}}

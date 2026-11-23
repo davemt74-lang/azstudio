@@ -5,12 +5,13 @@ import {statusText} from './live-core.js';
 import {appendLiveTrack} from './live-viewer-core.js';
 import {lateViewerJoinNeedsLeave,orderedViewerNonce} from './live-production-guards.js';
 import {FanRecoveryBudget,fanRecoveryReason} from './live-recovery.js';
+import {resetViewerForRoomChange} from './live-v151-guards.js';
 const root=document.getElementById('azh-fan-live');
 if(root){
   const $=id=>document.getElementById(id),csrf=root.dataset.csrf,endpoint=new URL('live-api.php',document.baseURI);
   let room=null,viewerId=null,peer=null,pollTimer=null,checking=false,connecting=false,iceServers=[{urls:['stun:stun.l.google.com:19302']}],epoch=0;
   let playerStream=null,receivedVideo=false,frameMonitorTimer=null,frameCallbackId=null,lastDecodedAt=0,frameObserved=false,frameCount=0,visibilityResetAt=0,playRejected=false;
-  let healthPreviousFrames=0,healthPreviousTime=performance.now(),healthPending=false;
+  let healthPreviousFrames=0,healthPreviousTime=performance.now(),healthPending=false,wasPlayingWhenHidden=false;
   const recovery=new FanRecoveryBudget();
   let recoveryTimer=null,recoveryPending=false,recoveryExhausted=false,joinStartedAt=0,disconnectedAt=0,pollFailures=0;
   const recoveryBadge=$('fan-live-recovery');
@@ -30,7 +31,14 @@ if(root){
   });
   const played=()=>{playRejected=false;if(!video.hidden)status('● Live program playing'+(video.muted?' · sound muted':' · sound on'));};
   video.addEventListener('playing',played);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)visibilityResetAt=performance.now();});
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){wasPlayingWhenHidden=Boolean(viewerId&&!video.paused);return;}
+    visibilityResetAt=performance.now();
+    if(wasPlayingWhenHidden&&viewerId&&video.paused){
+      void video.play().catch(()=>{playRejected=true;status('Playback paused in the background. Tap Play to resume.',true);});
+    }
+    wasPlayingWhenHidden=false;
+  });
   function clearFrameMonitor(){
     clearInterval(frameMonitorTimer);frameMonitorTimer=null;
     if(frameCallbackId!==null&&video.cancelVideoFrameCallback)video.cancelVideoFrameCallback(frameCallbackId);
@@ -70,6 +78,7 @@ if(root){
   function clearPlayer(notify=false){
     epoch++;clearTimeout(pollTimer);pollTimer=null;clearTimeout(recoveryTimer);recoveryTimer=null;recoveryPending=false;
     connecting=false;joinStartedAt=0;disconnectedAt=0;pollFailures=0;clearFrameMonitor();playerStream=null;receivedVideo=false;
+    healthPreviousFrames=0;healthPreviousTime=performance.now();wasPlayingWhenHidden=false;
     const oldId=viewerId;viewerId=null;
     if(peer){const old=peer;peer=null;old.ontrack=null;old.onconnectionstatechange=null;old.close();}
     video.pause();video.srcObject=null;video.hidden=true;playRejected=false;video.muted=true;setSoundLabel();soundButton.hidden=true;$('fan-live-pill').hidden=true;
@@ -107,8 +116,10 @@ if(root){
     try{
       const data=await request('status');const previous=room?.id;room=data.room||null;iceServers=data.iceServers||iceServers;
       $('fan-live-title').textContent=room?.title||'AZHottie Live';
-      if(!room){recovery.enterRoom(null);recoveryExhausted=false;if(viewerId||recoveryPending)clearPlayer(true);recoveryNotice();$('fan-live-join').hidden=true;status('The studio is offline. Live programs appear when the Director starts broadcasting.');}
-      else if(previous!==room.id){if(viewerId||recoveryPending)clearPlayer(true);recovery.enterRoom(room.id);recoveryExhausted=false;recoveryNotice();$('fan-live-join').textContent='Join live';$('fan-live-join').hidden=false;status('The live program is on air. Select Join live to watch.');}
+      if(!room){recovery.enterRoom(null);recoveryExhausted=false;
+        if(resetViewerForRoomChange({roomChanged:true,connecting,hasViewer:Boolean(viewerId),recovering:recoveryPending,hasPeer:Boolean(peer)}))clearPlayer(true);recoveryNotice();$('fan-live-join').hidden=true;status('The studio is offline. Live programs appear when the Director starts broadcasting.');}
+      else if(previous!==room.id){
+        if(resetViewerForRoomChange({roomChanged:true,connecting,hasViewer:Boolean(viewerId),recovering:recoveryPending,hasPeer:Boolean(peer)}))clearPlayer(true);recovery.enterRoom(room.id);recoveryExhausted=false;recoveryNotice();$('fan-live-join').textContent='Join live';$('fan-live-join').hidden=false;status('The live program is on air. Select Join live to watch.');}
       else if(!viewerId&&!connecting&&!recoveryPending){$('fan-live-join').hidden=false;if(!recovery.stopped&&!recoveryExhausted)status('On air · tap Join live to watch.');}
     }catch(e){status(statusText(e),true);}
     finally{checking=false;}
