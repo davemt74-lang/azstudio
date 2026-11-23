@@ -166,9 +166,7 @@ function az_live_acceptance_status(array $actor,?string $roomId=null,?PDO $db=nu
          'startedAt'=>gmdate('Y-m-d\TH:i:s\Z',(int)$room['started_epoch'])],
       'steps'=>$steps,'checks'=>$checks,
       'completion'=>$completion,
-      'diagnostics'=>az_live_acceptance_overview($director,$viewers,
-          $live?(int)($p['approved']??0):0,$live?(int)($p['offering']??0):0,
-          (int)($recordings['n']??0),(int)($recordings['bytes']??0),$now),
+      'diagnostics'=>$diag,
       'triage'=>$triage,'supportSummary'=>az_live_triage_support_summary($roomStatus,$diag,$triage,$completion),
       'history'=>$history,'checkedAt'=>gmdate('Y-m-d\TH:i:s\Z',$now),
       'note'=>'Read-only live measurements plus separate operator attestations. Neither alone establishes independently verified real-device acceptance.'];
