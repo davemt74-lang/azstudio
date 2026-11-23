@@ -125,7 +125,7 @@ def run():
    page.locator('#live-panel-acceptance').evaluate('(node)=>node.hidden=false')
    page.get_by_role('button',name='Broadcast checks').click()
    page.wait_for_function("document.querySelectorAll('.azh-live-triage-item').length===1",timeout=8000)
-   assert page.get_by_text('Approved phone has no recent camera offer').count()==1
+   assert page.locator('.azh-live-triage-item strong').get_by_text('Approved phone has no recent camera offer',exact=True).count()==1
    assert requests==[('GET','a'*32)],requests
    assert page.get_by_text('0 / 7 operator-attested passes').count()==1
    page.get_by_role('button',name='Go to Moving phone preview').click()
