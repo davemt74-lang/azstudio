@@ -34,3 +34,13 @@
 .azh-readiness-warning{border-left:3px solid #9c6377;padding:12px 14px;background:#fcf7f9;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
 @media(max-width:410px){.azh-readiness-queue-row{display:grid}.azh-readiness-queue-row button{justify-self:start}}
 .azh-readiness-intro[data-risk=live]{background:#fff1e8;border-color:#cf7955}
+
+/* v1.39 provider exception triage / observed TEST evidence */
+.azh-readiness-triage{display:grid;gap:10px}
+.azh-readiness-case{border:1px solid #e9e1e6;border-radius:12px;padding:14px;background:#fff;min-width:0}
+.azh-readiness-case .azh-readiness-meta{font-size:12px;color:#7b6070;font-weight:600;text-transform:capitalize;overflow-wrap:anywhere}
+.azh-readiness-case p{overflow-wrap:anywhere;line-height:1.55}
+.azh-readiness-case button{margin-top:8px}
+.azh-readiness-chip[data-state=watch]{background:#f1f0f5;color:#5d526a}
+.azh-readiness-chip[data-state=overdue]{background:#fff0e7;color:#91450e}
+@media(max-width:410px){.azh-readiness-case button{max-width:100%;white-space:normal}}

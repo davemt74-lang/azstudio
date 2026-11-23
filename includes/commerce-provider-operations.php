@@ -119,7 +119,14 @@ function az_provider_briefing(array $user):array{
  'connectTransfersNeedReconciliation'=>"SELECT COUNT(*) FROM commerce_connect_transfers WHERE status IN ('pending','needs_review')"] as $key=>$sql)
  $counts[$key]=(int)$db->query($sql)->fetchColumn();
  $cards=[];
- if(array_sum($counts)>0)$cards[]=az_agent_workspace_card('commerce','Provider operations need reconciliation',
-  array_sum($counts).' refund, return-label or Connect transfer records require provider verification before any repeat action.','commerce.php',1);
+ if(array_sum($counts)>0){
+  $triage=az_provider_triage_snapshot($db,24);
+  $overdue=count(array_filter($triage['items'],static fn(array $item):bool=>$item['urgency']==='overdue'));
+  $summary=array_sum($counts).' refund, return-label or Connect transfer records need verification.';
+  if($overdue>0)$summary.=' At least '.$overdue.' are overdue.';
+  $summary.=' Reconcile the original provider record; do not repeat the money movement.';
+  $cards[]=az_agent_workspace_card('commerce','Provider operations need reconciliation',
+    $summary,'commerce.php?tab=providers',$overdue>0?0:1);
+ }
  return ['cards'=>$cards,'counts'=>$counts];
 }

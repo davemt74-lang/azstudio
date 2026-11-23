@@ -9,7 +9,6 @@ if(readinessRoot){
     if(cls)el.className=cls;return el;
   };
   const add=(parent,tag,value,cls='')=>{const el=make(tag,value,cls);parent.append(el);return el;};
-  const money=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(cents||0)/100);
   let loading=false;
   function openTab(tab){
     if(!['returns','payouts'].includes(tab))return;
@@ -49,6 +48,40 @@ if(readinessRoot){
       const nav=add(item,'button','Open '+row.tab,'azh-commerce-small');
       nav.type='button';nav.addEventListener('click',()=>openTab(row.tab));
     }
+    const evidence=add(output,'section','','azh-readiness-section');
+    add(evidence,'h3','Observed TEST-mode provider records');
+    add(evidence,'p','Records below are local ledger evidence only. They do not prove the hosted TEST checklist was completed or authorize live money movement.');
+    const evidenceGrid=add(evidence,'div','','azh-readiness-grid');
+    for(const entry of data.testEvidence||[]){
+      const card=add(evidenceGrid,'div','','azh-readiness-item');
+      const header=add(card,'div','','azh-readiness-heading');
+      add(header,'strong',entry.label);
+      const count=Number(entry.observedCount||0);
+      const chip=add(header,'span',count+' observed','azh-readiness-chip');
+      chip.dataset.state=count>0?'configured':'attention';
+      add(card,'p',entry.limitation);
+      if(entry.latestAt)add(card,'p','Latest recorded: '+entry.latestAt,'azh-readiness-meta');
+      add(card,'p','Hosted acceptance: not verified','azh-readiness-meta');
+    }
+    const triage=data.triage||{};
+    const review=add(output,'section','','azh-readiness-section');
+    add(review,'h3','Provider exception triage');
+    add(review,'p','Oldest and highest urgency appear first. Do not repeat an uncertain charge, label purchase, refund or transfer.');
+    const reviewItems=add(review,'div','','azh-readiness-triage');
+    for(const record of triage.items||[]){
+      const item=add(reviewItems,'article','','azh-readiness-case');
+      const header=add(item,'div','','azh-readiness-heading');
+      add(header,'strong',(record.kind||'Operation').replaceAll('_',' ')+' · '+record.reference);
+      const chip=add(header,'span',record.urgency||'watch','azh-readiness-chip');
+      chip.dataset.state=record.urgency==='overdue'?'attention':record.urgency;
+      add(item,'p',(record.environment||'unknown')+' · '+(record.status||'pending')+' · '+
+        (record.ageMinutes===null?'age unknown':record.ageMinutes+' minutes since update'),'azh-readiness-meta');
+      add(item,'p',record.nextAction||'Review original provider request.');
+      const link=add(item,'button','Review in '+(record.tab==='payouts'?'Payouts':'Returns'),'azh-commerce-small');
+      link.type='button';link.addEventListener('click',()=>openTab(record.tab));
+    }
+    if(!(triage.items||[]).length)add(reviewItems,'p','No pending provider exceptions found.');
+    if(triage.truncated)add(review,'p','Additional exceptions exist. Review the original staff Returns and Payouts lists.','azh-readiness-warning');
     const tests=add(output,'section','','azh-readiness-section');
     add(tests,'h3','Required hosted TEST acceptance');
     const steps=add(tests,'ol','','azh-readiness-tests');
