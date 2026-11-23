@@ -61,6 +61,7 @@ test('fan viewer allows cancel during slow Join and independently cleans late vi
  assert.match(src,/if\(epoch===version\)\{connecting=false;\$\('fan-live-join'\)\.disabled=false;\}/);
  assert.match(src,/\$\('fan-live-join'\)\.hidden=true;\$\('fan-live-leave'\)\.hidden=false;/);
  assert.match(src,/recovery\.leave\(\);clearPlayer\(true\)/);
+ assert.match(src,/\$\('fan-live-join'\)\.disabled=false;\$\('fan-live-join'\)\.hidden=!room/);
  assert.doesNotMatch(src,/takeSource\(|startRecord\(|liveRequest\('stop'/);
 });
 test('Director finalizes and verifies original recording before permitting another',()=>{

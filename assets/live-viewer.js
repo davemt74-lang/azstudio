@@ -73,7 +73,7 @@ if(root){
     const oldId=viewerId;viewerId=null;
     if(peer){const old=peer;peer=null;old.ontrack=null;old.onconnectionstatechange=null;old.close();}
     video.pause();video.srcObject=null;video.hidden=true;playRejected=false;video.muted=true;setSoundLabel();soundButton.hidden=true;$('fan-live-pill').hidden=true;
-    $('fan-live-offline').hidden=false;$('fan-live-join').hidden=!room;$('fan-live-leave').hidden=true;
+    $('fan-live-offline').hidden=false;$('fan-live-join').disabled=false;$('fan-live-join').hidden=!room;$('fan-live-leave').hidden=true;
     if(notify&&oldId)void request('leave',{viewerId:oldId}).catch(()=>{});
   }
   function scheduleRecovery(reason){
