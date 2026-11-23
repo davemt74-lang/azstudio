@@ -122,7 +122,10 @@ function az_live_acceptance_status(array $actor,?string $roomId=null,?PDO $db=nu
     $steps=az_live_acceptance_steps();
     if(!$room){
         return ['room'=>null,'steps'=>$steps,'checks'=>[],'completion'=>az_live_acceptance_completion([]),
-          'diagnostics'=>null,'history'=>[],'checkedAt'=>gmdate('Y-m-d\TH:i:s\Z',$now),
+          'diagnostics'=>null,'history'=>[],
+          'triage'=>az_live_triage_analyze(null,null,[]),
+          'supportSummary'=>az_live_triage_support_summary(null,null,az_live_triage_analyze(null,null,[]),az_live_acceptance_completion([])),
+          'checkedAt'=>gmdate('Y-m-d\TH:i:s\Z',$now),
           'note'=>'Start a live broadcast to create an operator acceptance checklist. No camera or viewer measurements are available.'];
     }
     $roomId=(string)$room['id'];
@@ -152,14 +155,19 @@ function az_live_acceptance_status(array $actor,?string $roomId=null,?PDO $db=nu
     $saved=$db->prepare('SELECT COUNT(*) AS n,COALESCE(MAX(m.size_bytes),0) AS bytes
       FROM az_live_recordings r JOIN personal_media m ON m.id=r.media_id AND m.user_id=r.owner_id WHERE r.room_id=?');
     $saved->execute([$roomId]);$recordings=$saved->fetch(PDO::FETCH_ASSOC)?:[];
+    $diag=az_live_acceptance_overview($director,$viewers,
+          $live?(int)($p['approved']??0):0,$live?(int)($p['offering']??0):0,
+          (int)($recordings['n']??0),(int)($recordings['bytes']??0),$now);
+    $roomStatus=['status'=>$live?'live':'ended'];
+    $completion=az_live_acceptance_completion($checks);
+    $triage=az_live_triage_analyze($roomStatus,$diag,$checks);
     return [
       'room'=>['id'=>$roomId,'title'=>$room['title'],'status'=>$live?'live':'ended',
          'startedAt'=>gmdate('Y-m-d\TH:i:s\Z',(int)$room['started_epoch'])],
       'steps'=>$steps,'checks'=>$checks,
-      'completion'=>az_live_acceptance_completion($checks),
-      'diagnostics'=>az_live_acceptance_overview($director,$viewers,
-          $live?(int)($p['approved']??0):0,$live?(int)($p['offering']??0):0,
-          (int)($recordings['n']??0),(int)($recordings['bytes']??0),$now),
+      'completion'=>$completion,
+      'diagnostics'=>$diag,
+      'triage'=>$triage,'supportSummary'=>az_live_triage_support_summary($roomStatus,$diag,$triage,$completion),
       'history'=>$history,'checkedAt'=>gmdate('Y-m-d\TH:i:s\Z',$now),
       'note'=>'Read-only live measurements plus separate operator attestations. Neither alone establishes independently verified real-device acceptance.'];
 }
