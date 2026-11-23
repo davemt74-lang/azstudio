@@ -34,8 +34,9 @@ test('Management briefing is staff-only and uses existing Agent Brain and Chat',
  assert.match(page,/assets\/admin-command\.css\?v=1\.44\.0/);
 });
 test('No schema change and no new external money movement',()=>{
- assert.match(read('includes/bootstrap.php'),/AZ_VERSION = '1\.44\.0'/);
- assert.match(read('package.json'),/"version": "1\.44\.0"/);
+ const version=JSON.parse(read('package.json')).version;
+ assert.match(version,/^1\.\d+\.\d+$/);
+ assert.ok(read('includes/bootstrap.php').includes("AZ_VERSION = '"+version+"'"));
  const tracker=read('assets/admin-action-center.js');
  assert.match(tracker,/request\('actionTrack'/);
  for(const bad of ['initiateRefund','buyReturnLabel','sendConnectTransfer','reassignShot','changeBooking']){
