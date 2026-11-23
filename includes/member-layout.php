@@ -8,7 +8,7 @@ function az_render_member_nav_links(string $page, array $user): void
 {
     $admin = az_has_role($user, 'admin');
     $liveEditor = $admin || az_has_role($user, 'editor');
-    $adminPage = in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','commerce','accounts','admin'], true);
+    $adminPage = in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','commerce','accounts','admin'], true) || ($admin && $page==='creator-analytics');
     $contributor = $admin || az_has_role($user, 'editor') || az_has_role($user, 'model') || az_has_role($user, 'professional');
     $links = [
         ['dashboard.php', 'Overview', 'dashboard', '⌂'],
@@ -27,6 +27,7 @@ function az_render_member_nav_links(string $page, array $user): void
         ['my-media.php', 'My media gallery', 'my-media', '▣'],
         ['my-videos.php', 'My Videos', 'my-videos', '▷'],
         ['commerce.php', 'Creator Commerce', 'commerce', '◈'],
+        ['creator-analytics.php', 'Video performance', 'creator-analytics', '▥'],
         ['my-editor.php', 'Video editor', 'my-editor', '✂'],
         ['my-camera.php', 'Phone camera', 'my-camera', '◎'],
     ];
@@ -41,6 +42,7 @@ function az_render_member_nav_links(string $page, array $user): void
         ['questionnaires.php', 'Questionnaires', 'questionnaires', '☷'],
         ['videos.php', 'Video library', 'videos', '▸'],
         ['user-submissions.php', 'User Submissions', 'user-submissions', '▤'],
+        ['creator-analytics.php', 'Creator analytics', 'creator-analytics', '▥'],
         ['publishing.php', 'Publishing & Growth', 'publishing', '◈'],
         ['commerce.php', 'Commerce & Affiliates', 'commerce', '◆'],
         ['accounts.php', 'Manage accounts', 'accounts', '◈'],
@@ -52,7 +54,7 @@ function az_render_member_nav_links(string $page, array $user): void
         'my-camera'=>'Phone camera','productions'=>'Productions','director'=>'Production Director','library'=>'Interviews','my-media'=>'My media gallery','my-editor'=>'Video editor',
         'interview'=>'Recording room','editor'=>'Video editor','profiles'=>'Models',
         'questionnaires'=>'Questionnaires','casting'=>'Casting CRM','videos'=>'Finished videos','user-submissions'=>'User Submissions','publishing'=>'Publishing & Growth','commerce'=>'Commerce & Affiliates','accounts'=>'Manage accounts',
-        'admin'=>'AI settings',
+        'creator-analytics'=>'Video performance','admin'=>'AI settings',
     ][$page] ?? 'My workspace';
     // Details and nested routes retain the corresponding navigation highlight.
     $highlight = ['director'=>'productions','interview'=>'library','editor'=>'library'][$page] ?? $page;
@@ -74,7 +76,7 @@ function az_render_member_nav_links(string $page, array $user): void
         <?php $render([['dashboard.php','Member workspace','dashboard','←']]); ?>
       <?php else: ?>
         <p class="azh-side-label">MEMBERSHIP</p><?php $render($links); ?>
-        <?php if ($contributor): ?><p class="azh-side-label">CREATOR WORK</p><?php $render($admin || az_has_role($user, 'model') ? $teamLinks : array_values(array_filter($teamLinks, static fn(array $entry): bool => $entry[2] !== 'my-videos'))); ?><?php endif; ?>
+        <?php if ($contributor): ?><p class="azh-side-label">CREATOR WORK</p><?php $render($admin || az_has_role($user, 'model') ? $teamLinks : array_values(array_filter($teamLinks, static fn(array $entry): bool => !in_array($entry[2], ['my-videos','creator-analytics'], true)))); ?><?php endif; ?>
         <?php if ($liveEditor): ?><p class="azh-side-label">STUDIO ACCESS</p><?php $render([['admin-studio.php','Admin Studio','admin-studio','▥']]); ?><?php endif; ?>
       <?php endif; ?>
       <p class="azh-side-label">DISCOVER</p>

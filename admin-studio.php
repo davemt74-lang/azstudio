@@ -268,7 +268,7 @@ $shortcuts=[
     </section>
   </div>
 
-  <section class="azd-panel azd-audience" aria-labelledby="azd-audience-title"><div class="azd-panel-heading"><div><p class="azd-kicker">ACTIVITY & ENGAGEMENT</p><h2 id="azd-audience-title">Audience and views tracking</h2></div><span class="azd-basis">14-day trend · 30-day totals</span></div>
+  <section class="azd-panel azd-audience" aria-labelledby="azd-audience-title"><div class="azd-panel-heading"><div><p class="azd-kicker">ACTIVITY & ENGAGEMENT</p><h2 id="azd-audience-title">Audience and views tracking</h2></div><a class="azd-link" href="creator-analytics.php">Video &amp; creator reports ↗</a><span class="azd-basis">14-day trend · 30-day totals</span></div>
     <div class="azd-audience-summary">
       <div><strong><?= number_format($data['audience']['profileViews30d']) ?></strong><span>Profile page views</span></div>
       <div><strong><?= number_format($data['audience']['playStarts30d']) ?></strong><span>Video play starts</span></div>
