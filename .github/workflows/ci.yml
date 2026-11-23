@@ -58,6 +58,7 @@ jobs:
           php tests/commerce_provider_integration.php
           php tests/admin-command-v141.php
           php tests/admin-intelligence-v142.php
+          php tests/admin-action-v143.php
 
   fixtures:
     name: SQLite permissions and migration fixtures
@@ -106,6 +107,7 @@ jobs:
           python tests/commerce_agent_browser.py
           python tests/admin-command-browser.py
           python tests/admin-intelligence-browser.py
+          python tests/admin-action-browser.py
           python tests/live-shopping-v141-browser.py
       - uses: actions/upload-artifact@v4
         if: always()
@@ -124,6 +126,7 @@ jobs:
             ${{ runner.temp }}/azh_commerce_agent_browser/*.png
             ${{ runner.temp }}/azh_admin_command_browser/*.png
             ${{ runner.temp }}/azh_admin_intelligence_browser/*.png
+            ${{ runner.temp }}/azh_admin_action_browser/*.png
             ${{ runner.temp }}/azh_live_shop_v141/*.png
           if-no-files-found: ignore
           retention-days: 14
