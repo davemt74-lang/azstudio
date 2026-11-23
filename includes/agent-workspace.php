@@ -234,6 +234,10 @@ function az_agent_workspace_brain(array $user): array
         $commerceAgent['nextStep'],'commerce.php?tab=agent',2);
     $management=$admin?az_admin_intelligence_briefing($user):null;
     $actionCenter=$admin?az_admin_action_chat_summary($user):null;
+    $coordination=$admin?az_coordination_briefing($user):null;
+    if($coordination&&($coordination['counts']['urgentProductionAlerts']??0)>0)$cards[]=az_agent_workspace_card('production_coordination',
+        'Production coordination requires attention',
+        $coordination['counts']['urgentProductionAlerts'].' urgent production assignments or missing contributors need review.','admin-studio.php',0);
     if($actionCenter&&$actionCenter['counts']['overdue']>0)$cards[]=az_agent_workspace_card('action_center',
         $actionCenter['counts']['overdue'].' overdue studio follow-ups','Assign an owner, review due dates, or record a resolution in the Action Center.','admin-studio.php',0);
     if($management)$cards[]=az_agent_workspace_card('management','Studio management briefing',
@@ -255,7 +259,7 @@ function az_agent_workspace_brain(array $user): array
     if ($admin) $summary['liveAlerts']=count($liveHealth['issues']??[]);
     $followthrough=['cron'=>az_agent_followthrough_status(), 'manual'=>$admin?az_agent_followthrough_status($id):null];
     return ['cards'=>array_slice($cards,0,16),'summary'=>$summary,'assignOptions'=>$assignmentChoices,'followthrough'=>$followthrough,
-      'liveHealth'=>$liveHealth,'casting'=>$casting,'video'=>$video,'publishing'=>$publishing,'commerce'=>$commerce,'commerceAgent'=>$commerceAgent,'management'=>$management,'actionCenter'=>$actionCenter,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, publishing, commerce, Watch engagement, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
+      'liveHealth'=>$liveHealth,'casting'=>$casting,'video'=>$video,'publishing'=>$publishing,'commerce'=>$commerce,'commerceAgent'=>$commerceAgent,'management'=>$management,'actionCenter'=>$actionCenter,'coordination'=>$coordination,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, publishing, commerce, Watch engagement, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
 }
 /** The only choices offered are owned active shots and eligible active roster members. */
 function az_agent_workspace_assign_options(array $user): array

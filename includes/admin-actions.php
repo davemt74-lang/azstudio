@@ -92,7 +92,7 @@ function az_admin_action_is_duplicate(PDOException $e,PDO $db):bool
 function az_admin_action_create(PDO $db,array $source,int $actor,int $now,string $origin):array
 {
     $kind=(string)($source['sourceKind']??'');$id=(string)($source['sourceId']??'');
-    if(!in_array($kind,['casting','video','queue'],true)||!az_valid_id($id))
+    if(!in_array($kind,['casting','video','queue','production'],true)||!az_valid_id($id))
         throw new AzHttpError(400,'Unsupported management source.','invalid_source');
     $q=$db->prepare('SELECT id FROM admin_action_tasks WHERE source_kind=? AND source_id=?');
     $q->execute([$kind,$id]);$existing=$q->fetchColumn();
@@ -132,12 +132,16 @@ function az_admin_action_track(array $user,array $input,?PDO $db=null,?int $now=
     az_admin_action_assert($user);$db??=az_db();$now??=time();
     $kind=(string)($input['sourceKind']??'');$source=(string)($input['sourceId']??'');
     $stage=(string)($input['sourceStage']??'');
-    if(!in_array($kind,['casting','video','queue'],true)||!az_valid_id($source)||
+    if(!in_array($kind,['casting','video','queue','production'],true)||!az_valid_id($source)||
        !preg_match('/\A[a-z0-9_]{1,40}\z/D',$stage))
         throw new AzHttpError(400,'Invalid management recommendation.','invalid_source');
-    $brief=az_admin_intelligence_briefing($user,null,$db,$now);
+    // Production cases are independently revalidated against current Work/Calendar tables.
+    // Browser-supplied descriptions, roles and destinations are never authoritative.
+    $recommendations=$kind==='production'
+        ?az_coordination_candidates($db,$now,100)['items']
+        :az_admin_intelligence_briefing($user,null,$db,$now)['actionsFollowups'];
     $eligible=null;
-    foreach($brief['actionsFollowups'] as $rec){
+    foreach($recommendations as $rec){
         if(($rec['sourceKind']??'')===$kind&&($rec['sourceId']??'')===$source&&
            ($rec['sourceStage']??'')===$stage){$eligible=$rec;break;}
     }
@@ -205,6 +209,7 @@ function az_admin_action_change(array $user,array $body,?PDO $db=null,?int $now=
 function az_admin_action_source_active(PDO $db,array $task):bool
 {
     $kind=$task['source_kind'];
+    if($kind==='production')return az_coordination_source_active($db,$task,time());
     if($kind==='casting'||$kind==='video'){
         $table=$kind==='casting'?'casting_leads':'model_videos';
         $q=$db->prepare("SELECT status FROM $table WHERE id=?");$q->execute([$task['source_id']]);
@@ -287,16 +292,21 @@ function az_admin_action_scan(?int $recipient=null,?PDO $db=null,?int $now=null)
     $created=0;$reminded=0;$checked=0;
     try{
         $sample=az_admin_intelligence_candidates($db,$now,100);
+        $production=az_coordination_candidates($db,$now,80);
         $db->beginTransaction();
         foreach($sample['items'] as $candidate){
             $result=az_admin_action_create_candidate($db,$candidate,$actor,$now);
+            if($result['created'])$created++;
+        }
+        foreach($production['items'] as $candidate){
+            $result=az_admin_action_create($db,$candidate,$actor,$now,'automatic');
             if($result['created'])$created++;
         }
         $limit=150;$cutoff=gmdate('Y-m-d\TH:i:s\Z',$now);
         $q=$db->prepare("SELECT * FROM admin_action_tasks WHERE state IN ('open','acknowledged')
              AND due_at<=? ORDER BY due_at ASC,id ASC LIMIT ".($limit+1));
         $q->execute([$cutoff]);$dueRows=$q->fetchAll(PDO::FETCH_ASSOC);
-        $truncated=$sample['truncated']||count($dueRows)>$limit;
+        $truncated=$sample['truncated']||$production['truncated']||count($dueRows)>$limit;
         foreach(array_slice($dueRows,0,$limit) as $task){
             $checked++;
             if(!az_admin_action_source_active($db,$task))continue;
