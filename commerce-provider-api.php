@@ -15,6 +15,10 @@ try{
         az_commerce_admin($user);session_write_close();
         az_json(['ok'=>true,'data'=>az_provider_features()]);
     }
+    if($method==='GET'&&$action==='readiness'){
+        az_commerce_admin($user);session_write_close();
+        az_json(['ok'=>true,'data'=>az_provider_readiness_report($user)]);
+    }
     if($method==='GET'&&$action==='connectAccount'){
         $model=az_integer($_GET['modelId']??($user['id']??0),1,PHP_INT_MAX,'Creator');
         session_write_close();az_json(['ok'=>true,'data'=>az_connect_account_state($user,$model)]);

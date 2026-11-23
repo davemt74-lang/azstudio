@@ -15,7 +15,7 @@ $admin=az_has_role($user,'admin');
 <link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css">
 <link rel="stylesheet" href="assets/commerce.css?v=1.36.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0">
 <link rel="stylesheet" href="assets/commerce-returns.css?v=1.36.0">
-<link rel="stylesheet" href="assets/commerce-providers.css?v=1.37.0"></head>
+<link rel="stylesheet" href="assets/commerce-providers.css?v=1.38.0"></head>
 <body data-page="commerce"><?php az_render_universal_header('commerce',$user);az_render_member_layout_open('commerce',$user); ?>
 <main class="azh-commerce" id="azh-commerce" data-role="<?= $admin?'admin':'model' ?>" data-csrf="<?= az_h(az_csrf_token()) ?>">
   <header class="azh-commerce-hero"><div><p class="azh-eyebrow">AZHOTTIE · COMMERCE AGENT</p><h1>Commerce<span>.</span></h1>
@@ -29,6 +29,7 @@ $admin=az_has_role($user,'admin');
     <button type="button" role="tab" data-tab="orders" aria-selected="false">Orders &amp; earnings</button>
     <?php if($admin): ?><button type="button" role="tab" data-tab="returns" aria-selected="false">Returns &amp; Exchanges</button><?php endif; ?>
     <button type="button" role="tab" data-tab="payouts" aria-selected="false">Creator Payouts</button>
+    <?php if($admin): ?><button type="button" role="tab" data-tab="providers" aria-selected="false">Provider readiness</button><?php endif; ?>
     <button type="button" role="tab" data-tab="analytics" aria-selected="false">Sales analytics</button>
     <?php if($admin): ?><button type="button" role="tab" data-tab="shipping" aria-selected="false">Shipping</button><?php endif; ?>
     <?php if($admin): ?><button type="button" role="tab" data-tab="local" aria-selected="false">Local Orders</button><?php endif; ?>
@@ -202,6 +203,19 @@ $admin=az_has_role($user,'admin');
        <div id="azh-payout-batches" class="azh-commerce-list"></div>
      </div>
    </section>
+  <?php if($admin): ?>
+  <section class="azh-commerce-panel" data-panel="providers" aria-label="Provider readiness" hidden>
+    <div class="azh-commerce-editor" id="azh-provider-readiness">
+      <h2>Provider Production Readiness</h2>
+      <p>Staff-only, read-only configuration checks and reconciliation queue. No refunds, label purchases or creator transfers are initiated here.</p>
+      <div class="azh-commerce-actions">
+        <button type="button" class="azh-commerce-small" data-readiness-refresh>Refresh readiness</button>
+      </div>
+      <p data-readiness-status role="status" aria-live="polite">Loading provider readiness…</p>
+      <div data-readiness-results></div>
+    </div>
+  </section>
+  <?php endif; ?>
   <section class="azh-commerce-panel" data-panel="analytics" aria-label="Commerce performance" hidden>
     <div id="commerce-analytics" class="azh-commerce-analytics" aria-live="polite"></div>
   </section>
@@ -256,4 +270,5 @@ $admin=az_has_role($user,'admin');
 <?php if($admin): ?><script type="module" src="assets/commerce-returns-admin.js?v=1.37.0"></script><?php endif; ?>
 <script type="module" src="assets/commerce-settlements.js?v=1.37.0"></script>
 <script type="module" src="assets/commerce-provider-actions.js?v=1.37.0"></script>
+<?php if($admin): ?><script type="module" src="assets/commerce-provider-readiness.js?v=1.38.0"></script><?php endif; ?>
 </body></html>
