@@ -6,6 +6,19 @@
 export function validViewerSessionId(id){
   return typeof id==='string'&&/^[a-f0-9]{32}$/.test(id);
 }
+let lastIssuedJoinMs=0;
+/** Embed a monotonic start timestamp in the first 12 hex digits of a 32-byte
+ * viewer nonce. The remaining 20 hex digits are random (80 bits). This permits
+ * PHP to reject an older in-flight Join that arrives after a newer session.
+ * Existing random nonces remain supported by the server.
+ */
+export function orderedViewerNonce(now=Date.now(),newRandom=()=>globalThis.crypto?.randomUUID?.().replaceAll('-','')){
+  const millis=Math.max(Math.floor(now),lastIssuedJoinMs+1);
+  lastIssuedJoinMs=millis;
+  const suffix=(newRandom()||'').replaceAll('-','').toLowerCase();
+  if(!/^[a-f0-9]{32}$/.test(suffix))throw Error('Secure random viewer nonce is required.');
+  return millis.toString(16).padStart(12,'0').slice(-12)+suffix.slice(12);
+}
 export function lateViewerJoinNeedsLeave(joined,version,currentEpoch){
   return version!==currentEpoch&&validViewerSessionId(joined?.viewerId);
 }

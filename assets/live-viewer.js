@@ -3,7 +3,7 @@ import {fanVideoState} from './live-agent-health.js';
 import {randomId} from './personal-phone-core.js';
 import {statusText} from './live-core.js';
 import {appendLiveTrack} from './live-viewer-core.js';
-import {lateViewerJoinNeedsLeave} from './live-production-guards.js';
+import {lateViewerJoinNeedsLeave,orderedViewerNonce} from './live-production-guards.js';
 import {FanRecoveryBudget,fanRecoveryReason} from './live-recovery.js';
 const root=document.getElementById('azh-fan-live');
 if(root){
@@ -166,7 +166,7 @@ if(root){
       };
       await p.setLocalDescription(await p.createOffer());await waitForIce(p,7000);
       if(epoch!==version)return;
-      const joined=await request('join',{roomId:room.id,nonce:randomId(),sdp:p.localDescription?.sdp||''});
+      const joined=await request('join',{roomId:room.id,nonce:orderedViewerNonce(Date.now(),randomId),sdp:p.localDescription?.sdp||''});
       // A delayed server reply may arrive AFTER Leave or an automatic retry.
       // Release only that stale 32-hex viewer ID; never bind the old SDP/peer
       // to a newer Program session or leave a slot consuming fan capacity.
