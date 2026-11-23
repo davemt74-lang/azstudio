@@ -37,7 +37,7 @@ if (root) {
   let recorder=null,chunks=[],recordedFile=null,recordUrl=null,recordRoom=null,recordToken=null,savedMediaId=null,saving=false,connectedPhones=[],switchDeadline=0,raf=0,lastFrame=0,loop=null,phonePollBusy=false,viewerPollBusy=false,inviteUrl='',phoneIceServers=null;
   const iceServers=()=>room?.iceServers||[{urls:['stun:stun.l.google.com:19302']}];
   let usedHiddenRelay=false;
-  let cameraFaultActive=false,interruptedSourceId=null,recordingStarting=false,recordingFinalizing=false;
+  let cameraFaultActive=false,interruptedSourceId=null,recordingStarting=false,recordingFinalizing=false,broadcastStarting=false;
   let latestDelivery={viewerCount:0,sentFps:null,stalledOutbound:0,directRelays:0},healthSending=false;
   function localHealth(){
     const healthy=sourceIds().length;
@@ -894,7 +894,8 @@ if (root) {
     reportMixerReadiness();return programStream;
   }
   async function liveStart(){
-    if(room)return;
+    if(room||broadcastStarting)return;
+    broadcastStarting=true;$('live-go').disabled=true;
     try {
       if(!window.isSecureContext)throw Error('Use the HTTPS AZHottie site for live video.');
       if(!window.RTCPeerConnection)throw Error('This browser does not support WebRTC live streaming.');
@@ -903,6 +904,7 @@ if (root) {
       cameraFaultActive=false;$('live-go').disabled=true;$('live-end').disabled=false;updateRecordControls();reportMixerReadiness();$('live-onair-pill').textContent='● ON AIR';$('live-onair-pill').classList.add('is-live');
       feedback('On air. Keep this Director tab open so members can watch.');setTimeout(()=>void reportLiveHealth(),1200);scheduleSwitch();void pollViewers();void refreshAudience();
     } catch(e){feedback(statusText(e),true);}
+    finally{broadcastStarting=false;if(!room)$('live-go').disabled=false;}
   }
   function closeViewer(id){const v=viewers.get(id);if(!v)return;viewers.delete(id);clearTimeout(v.timeout);clearTimeout(v.lossTimer);v.router?.close();v.peer.onconnectionstatechange=null;v.peer.close();}
   async function acceptViewer(offer,version){
@@ -1087,9 +1089,10 @@ if (root) {
       backupPending:Boolean(recordedFile)});
     if(reason){reportRecord(reason,true);return;}
     recordingStarting=true;updateRecordControls();
+    const startRoomId=room.id;
     try {
       const stream=await ensureProgram();
-      if(!room)throw Error('The live broadcast ended before recording started. Start a new session.');
+      if(!room||room.id!==startRoomId)throw Error('The live broadcast changed before recording started. Start a new recording in the current session.');
       recordToken=randomId();savedMediaId=null;
       if(!globalThis.MediaRecorder)throw Error('This browser does not support program recording.');
       const mime=selectRecordingMime(x=>MediaRecorder.isTypeSupported(x));
