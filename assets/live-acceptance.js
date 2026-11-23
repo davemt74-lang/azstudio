@@ -12,6 +12,10 @@ if(acceptanceRoot){
   const checklist=document.getElementById('live-acceptance-checks');
   const history=document.getElementById('live-acceptance-history');
   const refreshButton=document.getElementById('live-acceptance-refresh');
+  const triageStatus=document.getElementById('live-triage-status');
+  const triageFindings=document.getElementById('live-triage-findings');
+  const supportTextarea=document.getElementById('live-support-summary');
+  const supportCopy=document.getElementById('live-support-copy');
   let currentRoom=null,loading=false,saving=false,lastSnapshot=null,refreshTimer=null;
   const make=(tag,value='',cls='')=>{
     const el=document.createElement(tag);
@@ -58,6 +62,71 @@ if(acceptanceRoot){
     add(box,'strong',value);
     add(box,'span',label);
     if(detail)add(box,'small',detail);
+  }
+  /** A diagnostic hint never asserts that a camera/network test is verified.
+   * Clicks only navigate to the existing operator checklist, never to a
+   * camera/program/recording mutation endpoint.
+   */
+  function renderTriage(snapshot){
+    if(!triageStatus||!triageFindings)return;
+    const report=snapshot.triage;
+    triageFindings.replaceChildren();
+    if(!report){
+      triageStatus.textContent='Automated troubleshooting is not available for this broadcast. Follow the real-device checklist below.';
+      return;
+    }
+    triageStatus.textContent=report.nextStep||
+      'Review the camera and Program measurements and run the operator checks on real devices.';
+    const findings=Array.isArray(report.findings)?report.findings.slice(0,12):[];
+    for(const finding of findings){
+      const item=add(triageFindings,'article','','azh-live-triage-item');
+      item.dataset.severity=['critical','warning','info'].includes(finding.severity)?finding.severity:'info';
+      add(item,'strong',finding.title||'Review broadcast evidence');
+      add(item,'p',finding.evidence||'A test observation needs review.');
+      add(item,'p',finding.nextCheck||'Confirm the original source state.');
+      const step=String(finding.stage||'');
+      if(snapshot.room&&snapshot.steps&&Object.hasOwn(snapshot.steps,step)){
+        const button=add(item,'button','Go to '+snapshot.steps[step].title,'azh-live-button azh-live-secondary');
+        button.type='button';
+        button.addEventListener('click',()=>{
+          const target=[...checklist.querySelectorAll('.azh-acceptance-step')].find(el=>el.dataset.step===step);
+          if(!target){status.textContent='Open the checklist and refresh observations first.';return;}
+          target.scrollIntoView({behavior:'smooth',block:'nearest'});
+          target.querySelector('select')?.focus({preventScroll:true});
+        });
+      }
+    }
+    if(!findings.length){
+      const good=add(triageFindings,'p','','azh-acceptance-basis');
+      good.textContent='No automated exception threshold was crossed. Physical-device acceptance still requires actual phone, fan, audio, and recording tests.';
+    }
+  }
+  /** Only a backend allowlisted support object is copied. The original room
+   * reference, test notes, identities, IPs, URLs and SDP are never included.
+   */
+  function renderSupport(snapshot){
+    if(!supportTextarea)return;
+    const safe=snapshot.supportSummary;
+    if(!safe||safe.format!=='azhottie-live-support-v1'){
+      supportTextarea.value='A redacted support report is not available for this broadcast.';
+      if(supportCopy)supportCopy.disabled=true;
+      return;
+    }
+    supportTextarea.value=JSON.stringify(safe,null,2);
+    if(supportCopy)supportCopy.disabled=false;
+  }
+  if(supportCopy&&supportTextarea){
+    supportCopy.addEventListener('click',async()=>{
+      if(supportCopy.disabled||!supportTextarea.value)return;
+      try{
+        if(!navigator.clipboard?.writeText)throw new Error('Clipboard permission unavailable');
+        await navigator.clipboard.writeText(supportTextarea.value);
+        status.textContent='Copied the redacted diagnostic summary. It contains no room IDs, private notes, viewer names, or stream tokens.';
+      }catch(error){
+        supportTextarea.focus();supportTextarea.select();
+        status.textContent='Select and copy the highlighted redacted summary manually. No diagnostic information was sent to a server.';
+      }
+    });
   }
   function renderDiagnostics(snapshot){
     diagnostics.replaceChildren();
@@ -148,19 +217,15 @@ if(acceptanceRoot){
     if(loading||saving&&!rerender)return;
     loading=true;refreshButton.disabled=true;
     try{
-      const query=currentRoom?{roomId:currentRoom}:{};
-      let data;
-      try{data=await request('acceptanceStatus',null,query);}
-      catch(error){
-        // If a previous room became unavailable, fall back to the latest owned one.
-        if(!currentRoom||![404,409].includes(error.status))throw error;
-        currentRoom=null;data=await request('acceptanceStatus');
-      }
+      // Follow the newest owned show, not the previous room's cached ID.
+      // A new show must automatically receive its own test checklist and
+      // transport telemetry even if the previous session ended moments ago.
+      const data=await request('acceptanceStatus');
       const priorRoom=lastSnapshot?.room?.id||null;
       const roomChanged=(data.room?.id||null)!==priorRoom;
       currentRoom=data.room?.id||null;
       lastSnapshot=data;
-      renderSummary(data);renderDiagnostics(data);
+      renderSummary(data);renderDiagnostics(data);renderTriage(data);renderSupport(data);
       if(rerender||roomChanged){renderChecks(data);renderHistory(data.history||[]);}
       status.textContent=data.room?.status==='live'
         ?'Live measurements refreshed. Operator checks are separate from transport telemetry.'
