@@ -40,7 +40,7 @@ $admin=az_has_role($user,'admin');
   <section class="azh-commerce-panel" data-panel="agent" aria-label="Commerce Agent briefing" hidden>
     <div class="azh-commerce-editor" id="azh-commerce-agent-briefing" data-role="<?= $admin?'admin':'model' ?>">
       <div class="azh-commerce-agent-heading"><div><h2>Commerce Agent briefing</h2>
-        <p>Verified in-app activity, recommended next steps, and role-scoped commission status. Actions still need your approval.</p></div>
+        <p>Recorded in-app activity, recommended next steps, and role-scoped commission status. Actions still need your approval.</p></div>
         <div class="azh-commerce-actions"><button type="button" class="azh-commerce-small" data-agent-refresh>Refresh briefing</button>
         <?php if($admin): ?><button type="button" class="azh-commerce-small" data-agent-scan>Check follow-ups</button><?php endif; ?></div>
       </div>
