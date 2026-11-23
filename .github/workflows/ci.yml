@@ -51,6 +51,7 @@ jobs:
           php tests/commerce_smart_shipping_integration.php
           php tests/commerce_returns_settlement_integration.php
           php tests/commerce_provider_pure.php
+          php tests/commerce_provider_readiness.php
           php tests/commerce_provider_integration.php
 
   fixtures:
@@ -95,6 +96,7 @@ jobs:
           python tests/commerce_smart_shipping_browser.py
           python tests/commerce_returns_browser.py
           python tests/commerce_provider_browser.py
+          python tests/commerce_readiness_browser.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -107,6 +109,7 @@ jobs:
             ${{ runner.temp }}/azh_smart_shipping_browser/*.png
             ${{ runner.temp }}/azh_returns_browser/*.png
             ${{ runner.temp }}/azh_provider_browser/*.png
+            ${{ runner.temp }}/azh_readiness_browser/*.png
           if-no-files-found: ignore
           retention-days: 14
 
