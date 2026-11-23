@@ -123,7 +123,7 @@ def run():
       page.wait_for_function("document.querySelectorAll('.azd-action-task').length===1")
       page.locator('.azd-action-history summary').click()
       assert page.locator('.azd-action-history-list li').count()==5,('audit trail',width)
-      page.get_by_role('button',name='Track').click()
+      page.get_by_role('button',name='Track',exact=True).click()
       page.wait_for_function("document.querySelector('[data-actions-status]').textContent.includes('already tracked')",timeout=10000)
       page.get_by_role('button',name='Check & track open issues').click()
       page.wait_for_function("document.querySelector('[data-actions-status]').textContent.includes('0 new tasks tracked')",timeout=10000)
