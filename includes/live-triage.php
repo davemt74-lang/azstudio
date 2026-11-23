@@ -156,5 +156,5 @@ function az_live_triage_support_summary(?array $room,?array $d,array $triage,arr
       'operatorFailed'=>max(0,(int)($completion['operatorFailed']??0)),
       'operatorUntested'=>max(0,(int)($completion['unverifiedSteps']??0)),
       'hostedIndependentlyVerified'=>false,
-      'disclosure'=>'No names, room identifiers, SDP, tokens, IP addresses, media, attendee data or operator notes. Browser reports and operator checks are not independent hosted acceptance.'];
+      'disclosure'=>'No names, room references, signaling payloads, tokens, network addresses, media, attendees or operator notes. Browser reports and operator checks are not independent hosted acceptance.'];
 }
