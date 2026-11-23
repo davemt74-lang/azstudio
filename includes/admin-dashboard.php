@@ -114,6 +114,14 @@ function az_admin_command_data(array $user):array
         'scorecards'=>az_admin_command_scorecards($commerce,$casting,$submissions,$audience,['verifiedNetCents30d'=>$liveNet]),
         'trackingBasis'=>'Profile page views, video play starts/completions, and live product impressions are session-limited events, not unique visitors. Stripe results reflect signed provider payments; cash and manual orders remain distinct.'];
 }
+/** Safe single-character avatar label when shared hosting omits the mbstring extension. */
+function az_admin_command_initial(string $name):string
+{
+    $name=trim($name);
+    if($name==='')return '?';
+    $first=mb_safe_trim($name,1);
+    return function_exists('mb_strtoupper')?mb_strtoupper($first,'UTF-8'):strtoupper($first);
+}
 function az_admin_command_money(int $cents):string{return '$'.number_format($cents/100,2);}
 function az_admin_command_date(string $utc):string
 {

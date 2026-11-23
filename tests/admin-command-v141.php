@@ -5,6 +5,9 @@ function must(bool $ok,string $message):void{if(!$ok)throw new RuntimeException(
 try {az_admin_command_assert(['id'=>3,'status'=>'active','roles'=>['editor']]);throw new RuntimeException('Editor accessed private admin dashboard');}
 catch(AzHttpError $e){must($e->status===403,'Incorrect access rejection');}
 az_admin_command_assert(['id'=>1,'status'=>'active','roles'=>['admin']]);
+must(az_admin_command_initial('alice')==='A','Applicant avatar initial incorrect');
+must(az_admin_command_initial('  ')==='?','Missing applicant avatar fallback incorrect');
+must(az_admin_command_initial('Jules')==='J','ASCII initial failed without depending on mbstring');
 $cards=az_admin_command_scorecards([
     'verified'=>['netCents'=>13999],'cash'=>['netCents'=>4500],'manual'=>['netCents'=>2200]
 ],['new'=>2],['pending'=>3],['playStarts30d'=>19],['verifiedNetCents30d'=>7500]);
