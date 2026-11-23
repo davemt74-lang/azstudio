@@ -64,6 +64,7 @@ jobs:
           php tests/live-phone-reset-v146.php
           php tests/live-acceptance-v147.php
           php tests/live-triage-v148.php
+          php tests/live-viewer-order-v149.php
 
   fixtures:
     name: SQLite permissions and migration fixtures

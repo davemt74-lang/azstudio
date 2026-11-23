@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {
-  validViewerSessionId,lateViewerJoinNeedsLeave,recordingStartBlockReason,mixerReadiness
+  validViewerSessionId,lateViewerJoinNeedsLeave,orderedViewerNonce,recordingStartBlockReason,mixerReadiness
 } from '../assets/live-production-guards.js';
 const read=(p)=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 
@@ -14,6 +14,21 @@ test('late fan Join replies only release their own well-formed viewer ID',()=>{
  assert.equal(lateViewerJoinNeedsLeave({viewerId:'bad-id'},11,12),false);
  assert.equal(lateViewerJoinNeedsLeave(null,11,12),false);
  assert.equal(validViewerSessionId('A'.repeat(32)),false);
+});
+test('new WebRTC nonce ordering is monotonic while retaining 80 random bits',()=>{
+ const all='a'.repeat(32);
+ const first=orderedViewerNonce(1800000000000,()=>all);
+ const second=orderedViewerNonce(1800000000000,()=> 'b'.repeat(32));
+ assert.match(first,/^[a-f0-9]{32}$/);
+ assert.match(second,/^[a-f0-9]{32}$/);
+ assert.ok(parseInt(first.slice(0,12),16)<parseInt(second.slice(0,12),16),
+  'Two Join attempts in the same millisecond must have distinct timestamps');
+ assert.equal(first.slice(12),'a'.repeat(20));
+ assert.equal(second.slice(12),'b'.repeat(20));
+ const php=read('includes/live.php');
+ assert.match(php,/function az_live_join_nonce_stamp/);
+ assert.match(php,/if\(\$activeStamp!==null&&\$activeStamp>\$newStamp\)/);
+ assert.match(php,/viewer_stale_join/);
 });
 test('recording safety refuses overlap while initial setup, stopping, upload, or unsaved backup exists',()=>{
  const fresh={onAir:true,recorderState:'inactive'};

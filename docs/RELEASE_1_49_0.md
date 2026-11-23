@@ -4,7 +4,7 @@ This release stabilizes actual high-risk state transitions in the existing Live 
 
 ## Changes
 
-**Fan viewer session safety.** A slow WebRTC Join now exposes Leave immediately. If the visitor leaves or retries before the server's reply arrives, the stale returned viewer ID is explicitly released through the existing authorized Leave endpoint. The old request may not bind its peer, SDP or media to the new viewer session, and its finally block cannot override the new session's buttons or connecting state. Session IDs are validated before any cleanup request. This helps prevent temporarily stranded slots in the existing **six-viewer P2P broadcast limit**; it does not expand audience capacity.
+**Fan viewer session safety.** A slow WebRTC Join now exposes Leave immediately. New viewer requests include a monotonic timestamp-prefixed nonce with 80 random bits; PHP checks ordering under its existing per-community Join lock and rejects stale earlier requests before they can evict a newer active viewer. Older clients with random nonces remain supported, and no new database column is introduced. If the visitor leaves or retries before the server's reply arrives, the stale returned viewer ID is explicitly released through the existing authorized Leave endpoint. The old request may not bind its peer, SDP or media to the new viewer session, and its finally block cannot override the new session's buttons or connecting state. Session IDs are validated before any cleanup request. This helps prevent temporarily stranded slots in the existing **six-viewer P2P broadcast limit**; it does not expand audience capacity.
 
 **Director camera restoration and switching.** A source failure continues to take a single-camera Program to the holding slate. Once that same approved camera has genuinely recovered usable decoded frames, its existing Broadcast button changes to **Restore to Program**. Only a human click takes it back on-air. Other connected camera streams and Program outputs are not reset; explicit holding-slate and other-camera takes clear the interrupted source hint. Concurrent Go Live clicks are guarded.
 
@@ -14,7 +14,7 @@ This release stabilizes actual high-risk state transitions in the existing Live 
 
 ## Quality gates
 
-- Node tests: viewer lease freshness, bounded recording start, multi-phone isolated peers, local mixer readiness, explicit camera restore and no financial/broadcast auto-takes.
+- Node and PHP tests: viewer lease freshness and out-of-order server rejection, bounded recording start, multi-phone isolated peers, local mixer readiness, explicit camera restore and no financial/broadcast auto-takes.
 - Real Chrome: 1440, 768, 390 and 320 pixel screens; actual viewer JavaScript tested against delayed and reordered mock server Join responses; explicit Leave and stale slot cleanup without disrupting a new session.
 - Existing PHP/SQLite, Commerce, Live Director, Live Agent, recording, fan recovery and browser acceptance regression suites remain required.
 - All five GitHub CI jobs must pass on the final PR head and merged main; deployment ZIP comes only from the successful post-merge package job.
