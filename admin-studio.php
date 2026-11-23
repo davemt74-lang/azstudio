@@ -158,7 +158,6 @@ $shortcuts=[
   <p class="azd-disclaimer"><?= az_h($coordination['basis']) ?></p>
   <?php endif; ?>
 </section>
-<?php endif; ?>
 <section class="azd-panel azd-action-center" id="azd-action-center" aria-labelledby="azd-action-title">
   <div class="azd-panel-heading azd-action-head">
     <div><p class="azd-kicker">OWNER · DUE DATE · FOLLOW-THROUGH</p><h2 id="azd-action-title">Agent Action Center</h2>
