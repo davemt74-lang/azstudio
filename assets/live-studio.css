@@ -544,3 +544,11 @@ body.azh-director-body .azh-director-app{
 .azh-live-support textarea{background:#faf7f9;display:block;box-sizing:border-box;width:100%;min-width:0;margin:9px 0;resize:vertical;font-size:11px;line-height:1.5;border:1px solid #dfd0d9;border-radius:8px;padding:10px;color:#5c4b59}
 .azh-live-support button:focus-visible,.azh-live-triage-item button:focus-visible{outline:3px solid #b47296;outline-offset:2px}
 @media(max-width:430px){.azh-live-triage{padding:10px}.azh-live-triage-item{padding:10px}}
+
+/* v1.49: operator-controlled Program mixer readiness, without claiming remote audio validation */
+.azh-program-audio-status{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0 0;padding:11px 13px;border:1px solid #ded1db;border-radius:10px;background:#fbf5f9;min-width:0}
+.azh-program-audio-status p{margin:0;flex:1 1 210px;min-width:0;font-size:12px;line-height:1.5;overflow-wrap:anywhere;color:#684e62}
+.azh-program-audio-status p[data-state="ready"]{color:#356a4a}
+.azh-program-audio-status p[data-state="attention"]{color:#965426}
+.azh-program-audio-status .azh-live-button{flex:0 0 auto}
+.azh-program-audio-status [hidden]{display:none!important}
