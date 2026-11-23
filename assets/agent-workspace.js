@@ -131,6 +131,23 @@ function mountAgentWorkspace(root=document) {
       }
       content.append(report);
     }
+    const operationsLearning=brain.operationsLearning;
+    if(operationsLearning && state?.role==='admin'){
+      const section=make('section','azh-aw-followthrough');
+      section.append(text('p','OPERATIONS · RECORDED OUTCOMES','azh-aw-eyebrow'),text('h3','Performance Learning'));
+      const total=operationsLearning.totals||{};
+      section.append(text('p',(total.created||0)+' tasks created · '+
+        (total.resolvedTasks||0)+' tasks with resolution events · '+(total.reopenedTasks||0)+
+        ' reopened tasks in '+(operationsLearning.periodDays||30)+' days.','azh-aw-meta'));
+      for(const rec of (operationsLearning.recommendations||[]).slice(0,2)){
+        const line=make('p','azh-aw-meta');
+        line.append(text('strong',rec.title+' — '),text('span',rec.evidence+' '),link('Review ↗',rec.href));
+        section.append(line);
+      }
+      section.append(text('p','Recommendations summarize recorded workflow events; they do not score staff or make decisions.','azh-aw-meta'));
+      section.append(link('Open Operations Learning ↗','admin-studio.php'));
+      content.append(section);
+    }
     const coordination=brain.coordination;
     if(coordination?.available && state?.role==='admin'){
       const section=make('section','azh-aw-followthrough');
