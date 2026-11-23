@@ -131,6 +131,20 @@ function mountAgentWorkspace(root=document) {
       }
       content.append(report);
     }
+    const actionCenter=brain.actionCenter;
+    if(actionCenter && state?.role==='admin'){
+      const block=make('section','azh-aw-followthrough');
+      block.append(text('p','STUDIO FOLLOW-UPS · OWNER & DUE DATES','azh-aw-eyebrow'),text('h3','Agent Action Center'));
+      const c=actionCenter.counts||{};
+      block.append(text('p',(c.open||0)+' open · '+(c.acknowledged||0)+' acknowledged · '+(c.overdue||0)+' past due · '+(c.resolved||0)+' resolved','azh-aw-meta'));
+      for(const task of (actionCenter.topTasks||[]).slice(0,3)){
+        const line=make('p','azh-aw-meta');
+        line.append(text('strong',task.title+' — '),text('span',task.state+' · due '+task.dueAt+' '),link('Review ↗',task.href));
+        block.append(line);
+      }
+      block.append(link('Open Admin Action Center ↗','admin-studio.php'));
+      content.append(block);
+    }
     const management=brain.management;
     if(management && state?.role==='admin'){
       const section=make('section','azh-aw-followthrough');

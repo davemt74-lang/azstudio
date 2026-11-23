@@ -21,7 +21,7 @@ $shortcuts=[
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Studio Command Center · AZHottie</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css"><link rel="stylesheet" href="assets/live-studio.css?v=1.40.0">
-<link rel="stylesheet" href="assets/admin-command.css?v=1.42.0"></head>
+<link rel="stylesheet" href="assets/admin-command.css?v=1.43.0"></head>
 <body data-page="admin-studio"><?php az_render_universal_header('admin-studio',$user);az_render_member_layout_open('admin-studio',$user); ?>
 <main class="azd" id="azh-admin-command" data-csrf="<?= az_h(az_csrf_token()) ?>" aria-labelledby="azd-title">
   <header class="azd-hero">
@@ -78,6 +78,45 @@ $shortcuts=[
   </div>
   <p id="azd-management-status" class="azd-agent-status" role="status" aria-live="polite">Recommendations reflect current database records. No automated decisions or financial actions have been performed.</p>
   <?php if($management['truncated']): ?><p class="azd-disclaimer">Large workflow queue: a bounded sample was assessed. Review Casting and Video Submissions for remaining items.</p><?php endif; ?>
+</section>
+<?php endif; ?>
+<?php if($isAdmin): ?>
+<section class="azd-panel azd-action-center" id="azd-action-center" aria-labelledby="azd-action-title">
+  <div class="azd-panel-heading azd-action-head">
+    <div><p class="azd-kicker">OWNER · DUE DATE · FOLLOW-THROUGH</p><h2 id="azd-action-title">Agent Action Center</h2>
+      <p class="azd-muted">Track management recommendations, assign a staff owner and record a resolution. Source workflows remain separate.</p></div>
+    <div class="azd-agent-tools">
+      <button type="button" class="azd-agent-check" data-actions-sync>Check & track open issues</button>
+      <button type="button" class="azd-action-button" data-actions-refresh>Refresh tasks</button>
+    </div>
+  </div>
+  <div class="azd-action-counts" data-actions-counts aria-label="Task status totals"></div>
+  <div class="azd-action-suggest">
+    <h3>Track a current management recommendation</h3>
+    <div class="azd-action-suggest-list">
+    <?php foreach(array_slice($management['actionsFollowups'],0,6) as $suggestion): ?>
+      <div class="azd-action-suggest-item">
+        <span><?= az_h($suggestion['title']) ?></span>
+        <button type="button" class="azd-action-button" data-action-track
+          data-kind="<?= az_h($suggestion['sourceKind']) ?>"
+          data-source-id="<?= az_h($suggestion['sourceId']) ?>"
+          data-stage="<?= az_h($suggestion['sourceStage']) ?>">Track</button>
+      </div>
+    <?php endforeach; ?>
+    </div>
+  </div>
+  <div class="azd-action-list-head">
+    <h3>Staff-owned tasks</h3>
+    <label>Show
+      <select data-actions-filter aria-label="Filter tasks">
+        <option value="active">Open & acknowledged</option><option value="all">All tasks</option>
+        <option value="open">Open</option><option value="acknowledged">Acknowledged</option><option value="resolved">Resolved</option>
+      </select>
+    </label>
+  </div>
+  <p class="azd-action-summary" data-actions-status role="status" aria-live="polite">Loading the Action Center…</p>
+  <div class="azd-action-list" data-actions-list></div>
+  <p class="azd-disclaimer">Closing a follow-up never approves an applicant, publishes a video, changes an order or verifies a payout. Overdue reminders use the existing Agent bell, Brain and History.</p>
 </section>
 <?php endif; ?>
 <?php if($isAdmin): ?>
@@ -176,4 +215,4 @@ $shortcuts=[
     <?php foreach([['live-director.php','◉','Live Director','Broadcast cameras and program'],['live-productions.php','▣','Saved shows','Recorded productions']] as [$href,$icon,$title,$description]): ?><a href="<?= az_h($href) ?>" class="azd-shortcut"><span class="azd-shortcut-icon"><?= az_h($icon) ?></span><strong><?= az_h($title) ?></strong><small><?= az_h($description) ?></small></a><?php endforeach; ?></div>
   </section>
 <?php endif; ?>
-</main><?php az_render_member_layout_close(); ?><script type="module" src="assets/admin-intelligence.js?v=1.42.0"></script></body></html>
+</main><?php az_render_member_layout_close(); ?><script type="module" src="assets/admin-intelligence.js?v=1.42.0"></script><script type="module" src="assets/admin-action-center.js?v=1.43.0"></script></body></html>
