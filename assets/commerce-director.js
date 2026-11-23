@@ -19,9 +19,26 @@ if(root){
     preview.hidden=!item;
     if(item){title.textContent=item.title;description.textContent=item.description||'';price.textContent=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(item.priceCents/100);}
   }
+  const pulseStatus=document.getElementById('director-commerce-pulse-status');
+  const pulseText=(id,value)=>{const node=document.getElementById(id);if(node)node.textContent=value;};
+  const formatMoney=cents=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(Number(cents||0)/100);
+  async function refreshPulse(){
+    try{
+      const data=await api('livePulse');
+      const counts=data.onAir?data:null;
+      pulseText('director-commerce-impressions',counts?.impressions??'—');
+      pulseText('director-commerce-clicks',counts?.clicks??'—');
+      pulseText('director-commerce-checkouts',counts?.checkoutStarts??'—');
+      pulseText('director-commerce-paid',counts?.paidCheckoutSessions??'—');
+      pulseText('director-commerce-net',counts?formatMoney(counts.verifiedNetCents):'—');
+      pulseStatus.textContent=counts?(counts.featuredProduct||'Live room')+' · '+(counts.featuredCreator?'Creator: '+counts.featuredCreator+' · ':'')+'Source: live broadcast':'No active broadcast for live shopping metrics.';
+    }catch{
+      pulseStatus.textContent='Live commerce performance is unavailable. Try refreshing.';
+    }
+  }
   async function refresh(){
     try{
-      const data=await api('state');promotions=data.promotions.filter(p=>p.state==='approved');products=data.products.filter(p=>p.state==='active'&&p.fulfillment?.inStock&&(p.stripeReady||p.checkoutUrl||p.localEnabled));
+      const data=await api('state');void refreshPulse();promotions=data.promotions.filter(p=>p.state==='approved');products=data.products.filter(p=>p.state==='active'&&p.fulfillment?.inStock&&(p.stripeReady||p.checkoutUrl||p.localEnabled));
       const saved=select.value;select.replaceChildren();
       select.add(new Option(products.length?'Select a product':'No active products',''));
       for(const p of products)select.add(new Option(p.title+' · '+new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(p.priceCents/100),p.id));
@@ -51,6 +68,7 @@ if(root){
   });
   void refresh();
   const tab=document.getElementById('live-tab-shopping');
+  setInterval(()=>{if(document.visibilityState==='visible'&&!document.getElementById('live-panel-shopping').hidden)void refreshPulse();},30000);
   tab?.addEventListener('click',()=>void refresh());
   setInterval(()=>{if(document.visibilityState==='visible'&&!document.getElementById('live-panel-shopping').hidden)void refresh();},20000);
 }

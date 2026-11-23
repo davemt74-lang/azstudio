@@ -132,6 +132,16 @@ $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robot
                 <a class="azh-live-button azh-live-secondary" href="commerce.php">Manage products &amp; briefs ↗</a>
               </form>
               <p id="director-commerce-status" role="status" aria-live="polite">Go live to feature a product.</p>
+              <div class="azh-live-pulse" id="director-commerce-pulse" aria-label="Live shopping performance" aria-live="polite">
+                <h3>Live shopping performance</h3><p id="director-commerce-pulse-status" role="status">Loading the current broadcast metrics…</p>
+                <div class="azh-live-pulse-metrics">
+                  <div><strong id="director-commerce-impressions">—</strong><span>Product impressions</span></div>
+                  <div><strong id="director-commerce-clicks">—</strong><span>Checkout CTA taps</span></div>
+                  <div><strong id="director-commerce-checkouts">—</strong><span>Stripe checkouts started</span></div>
+                  <div><strong id="director-commerce-paid">—</strong><span>Stripe-paid orders</span></div>
+                  <div><strong id="director-commerce-net">—</strong><span>Stripe verified net</span></div>
+                </div><p class="azh-live-pulse-notice">Session-bounded counts, not unique viewers. Cash sales and estimated commissions are shown separately in Commerce. No automatic payments.</p>
+              </div>
               <div id="director-commerce-preview" class="azh-commerce-card" hidden>
                 <p class="azh-commerce-eyebrow">VIEWER PRODUCT PREVIEW</p><h3 id="director-commerce-title"></h3>
                 <p id="director-commerce-description"></p><strong id="director-commerce-price"></strong>
@@ -148,5 +158,5 @@ $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robot
   </div>
   <p id="live-status" class="azh-live-message azh-director-toast" role="status" aria-live="polite" hidden></p>
 </main>
-<script src="assets/qr.js"></script><script type="module" src="assets/live-director.js?v=1.25.0"></script><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/commerce-director.js?v=1.31.0"></script><?php endif; ?>
+<script src="assets/qr.js"></script><script type="module" src="assets/live-director.js?v=1.25.0"></script><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/commerce-director.js?v=1.41.0"></script><?php endif; ?>
 </body></html>
