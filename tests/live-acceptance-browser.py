@@ -12,7 +12,7 @@ OUT.mkdir(parents=True,exist_ok=True)
 SOURCE=(ROOT/'live-director.php').read_text(encoding='utf-8')
 assert 'id="live-tab-acceptance"' in SOURCE
 assert 'id="live-panel-acceptance"' in SOURCE
-assert 'assets/live-acceptance.js?v=1.47.0' in SOURCE
+assert 'assets/live-acceptance.js?v='+json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['version'] in SOURCE
 STEPS={
  'phone_pairing':{'title':'Approved phone connection','instruction':'Pair approved phone and confirm its Share live status'},
  'moving_preview':{'title':'Moving phone preview','instruction':'Verify continuous decoded preview frames on Director'},

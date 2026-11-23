@@ -5,7 +5,7 @@ const load=(path)=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
 test('v1.47 release and migration use the existing Live Director infrastructure',()=>{
   const version=JSON.parse(load('package.json')).version;
-  assert.equal(version,'1.47.0');
+  assert.match(version,/^1\.\d+\.\d+$/);
   assert.ok(load('includes/bootstrap.php').includes("AZ_VERSION = '"+version+"'"));
   assert.match(load('includes/database.php'),/az_upgrade_live_acceptance_schema/);
   assert.match(load('includes/bootstrap.php'),/live-acceptance\.php/);
@@ -53,7 +53,7 @@ test('Director Acceptance tab appears only for admins, and reuses existing tab s
   assert.match(page,/id="live-panel-acceptance"/);
   assert.match(page,/id="azh-live-acceptance"/);
   assert.match(page,/if\(az_has_role\(\$user,'admin'\)\): \?>/);
-  assert.match(page,/live-acceptance\.js\?v=1\.47\.0/);
+  assert.ok(page.includes('live-acceptance.js?v='+JSON.parse(load('package.json')).version));
   assert.match(director,/document\.querySelectorAll\('\[data-live-tab\]'\)/);
   assert.match(director,/panel\.hidden=!active/);
 });
