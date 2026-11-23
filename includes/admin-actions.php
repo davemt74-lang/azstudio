@@ -172,11 +172,11 @@ function az_admin_action_change(array $user,array $body,?PDO $db=null,?int $now=
             if($note==='')$note='Staff acknowledged the outstanding workflow.';
         }elseif($operation==='resolve'){
             if(!in_array($before,['open','acknowledged'],true))throw new AzHttpError(409,'Task is already closed.','invalid_transition');
-            if(mb_strlen($note,'UTF-8')<10)throw new AzHttpError(400,'Describe the resolution in at least 10 characters.','resolution_note_required');
+            if(strlen($note)<10)throw new AzHttpError(400,'Describe the resolution in at least 10 characters.','resolution_note_required');
             $after='resolved';$resolved=gmdate('Y-m-d\TH:i:s\Z',$now);
         }elseif($operation==='reopen'){
             if($before!=='resolved')throw new AzHttpError(409,'Only resolved tasks can be reopened.','invalid_transition');
-            if(mb_strlen($note,'UTF-8')<10)throw new AzHttpError(400,'Explain the reason for reopening this task.','reopen_note_required');
+            if(strlen($note)<10)throw new AzHttpError(400,'Explain the reason for reopening this task.','reopen_note_required');
             $after='open';$resolved=null;$ack=null;$due=gmdate('Y-m-d\TH:i:s\Z',$now+86400);
         }else{
             if($before==='resolved')throw new AzHttpError(409,'Reopen a resolved task before reassigning.','invalid_transition');
