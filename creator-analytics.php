@@ -9,8 +9,13 @@ $daysParam=(string)($_GET['days']??'30');
 $kind=(string)($_GET['kind']??'all');
 $days=in_array($daysParam,['7','30','90'],true)?(int)$daysParam:0;
 $modelParam=(string)($_GET['model']??'');
-if($modelParam!=='' && !preg_match('/^[1-9][0-9]{0,12}$/D',$modelParam))
-    throw new AzHttpError(400,'Invalid creator selection.','invalid_creator');
+if($modelParam!=='' && !preg_match('/^[1-9][0-9]{0,12}$/D',$modelParam)) {
+    http_response_code(400);
+    header('Cache-Control: private, no-store');
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'Invalid creator selection.';
+    exit;
+}
 $modelId=$modelParam!==''?(int)$modelParam:null;
 try { $report=az_creator_analytics_report($user,$days,$kind,$modelId); }
 catch(AzHttpError $e){
