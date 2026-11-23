@@ -1,3 +1,16 @@
+AZHottie Studio v1.51.0 — Live production recovery and recorded-video playback checks
+======================================================================
+- Full deployment ZIP from successful post-merge CI only.
+- Existing v1.50 database schema 48 unchanged. Do not rerun installer.
+- On-site backups: code, database, private uploads, and provider config.
+- Viewer Join/Leave race recovery when the room ends or rolls over.
+- Foreground grace for approved phone previews. Explicit Take required.
+- Recorder errors retain a local backup; first-frame playback verification
+  before gallery attach; do not equate byte count with playable audio/video.
+- Mobile Director: persistent safe-area controls reuse guarded actions.
+- Real iPhone, cross-network fan, audio/video sync, and replay acceptance
+  remains manual and required before certifying live production readiness.
+
 AZHottie Studio v1.50.0 — Creator & Video Performance
 - Back up your code, database and private storage/config and media before deploying over the existing installation. DO NOT rerun install.php.
 - Database schema 47 → 48 creates aggregate per-day public-video product CTA taps. No visitor identities, IP addresses, or per-person histories are persisted.
