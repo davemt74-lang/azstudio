@@ -1053,7 +1053,8 @@ if (root) {
     catch(e){recordingFinalizing=false;updateRecordControls();reportRecord('Could not finalize recording: '+statusText(e),true);}
   }
   function discardLocalRecording(){
-    if(saving||recordingFinalizing||!recordedFile)return;
+    if(saving||recordingFinalizing){reportRecord('The recording is still being finalized or saved. Discard is disabled until it finishes.',true);return;}
+    if(!recordedFile)return;
     if(!window.confirm('Discard this unsaved local recording from the Director tab? Download a backup first if you need to keep it. This cannot be undone.'))return;
     recordedFile=null;recordToken=null;savedMediaId=null;recordRoom=null;
     if(recordUrl){URL.revokeObjectURL(recordUrl);recordUrl=null;}
