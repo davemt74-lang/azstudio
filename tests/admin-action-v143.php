@@ -23,7 +23,7 @@ az_upgrade_admin_action_schema($db);
 action_assert(az_schema_version($db)===46,'Schema 45->46 failed');
 az_upgrade_admin_action_schema($db);
 $required=['admin_action_tasks','admin_action_history','admin_action_reminders'];
-foreach($required as $table)action_assert((int)$db->query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='$table'")->fetchColumn()===1,'Missing '+$table);
+foreach($required as $table)action_assert((int)$db->query("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='$table'")->fetchColumn()===1,'Missing '.$table);
 $cast=str_repeat('a',32);$video=str_repeat('b',32);$recent=str_repeat('c',32);
 $db->prepare('INSERT INTO casting_leads VALUES(?,?,?,?)')->execute([$cast,'new',$at(-100*3600),'PRIVATE_APPLICANT_NAME and screening answers']);
 $db->prepare('INSERT INTO casting_leads VALUES(?,?,?,?)')->execute([$recent,'new',$at(-3600),'PRIVATE_UNREVIEWED_APPLICATION']);
