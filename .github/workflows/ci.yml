@@ -118,6 +118,7 @@ jobs:
           python tests/live-recovery-browser.py
           python tests/live-acceptance-browser.py
           python tests/live-triage-browser.py
+          python tests/live-v149-browser.py
           python tests/live-shopping-v141-browser.py
       - uses: actions/upload-artifact@v4
         if: always()
@@ -142,6 +143,7 @@ jobs:
             ${{ runner.temp }}/azh_live_recovery_browser/*.png
             ${{ runner.temp }}/azh_live_acceptance_browser/*.png
             ${{ runner.temp }}/azh_live_triage_browser/*.png
+            ${{ runner.temp }}/azh_live_v149_browser/*.png
             ${{ runner.temp }}/azh_live_shop_v141/*.png
           if-no-files-found: ignore
           retention-days: 14

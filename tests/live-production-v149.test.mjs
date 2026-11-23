@@ -53,10 +53,13 @@ test('Director finalizes and verifies original recording before permitting anoth
  assert.match(src,/const reason=recordingStartBlockReason/);
  assert.match(src,/backupPending:Boolean\(recordedFile\)/);
  assert.match(src,/recordingStarting=true;updateRecordControls\(\)/);
+ assert.match(src,/if\(!room\|\|room\.id!==startRoomId\)/);
  assert.match(src,/recordingFinalizing=true;updateRecordControls\(\)/);
  assert.match(src,/if\(!invalidRecording\)await saveRecording\(file,title,startedRoom\)/);
  assert.match(src,/const startedRecorder=recorder,startedRoom=recordRoom/);
  assert.match(src,/if\(recorder\?\.state==='recording'\)finishRecording\(\)/);
+ assert.match(src,/if\(room\|\|broadcastStarting\)return/);
+ assert.match(src,/finally\{broadcastStarting=false;if\(!room\)\$\('live-go'\)\.disabled=false;\}/);
  assert.match(src,/Discard local copy/);
  assert.match(src,/window\.confirm\('Discard this unsaved local recording/);
  assert.match(src,/saved file verification|Saved file verification failed/i);
