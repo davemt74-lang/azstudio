@@ -92,11 +92,25 @@ function az_admin_intelligence_priorities(array $dashboard,array $candidates):ar
     $actions=[];
     foreach(($candidates['items']??[]) as $item){
         $actions[]=['category'=>$item['kind'],'title'=>$item['title'],'detail'=>$item['detail'],
-          'href'=>$item['href'],'priority'=>$item['priority'],'ageHours'=>$item['ageHours'],'count'=>1];
+          'href'=>$item['href'],'priority'=>$item['priority'],'ageHours'=>$item['ageHours'],'count'=>1,
+            'sourceKind'=>$item['kind'],'sourceId'=>$item['sourceId'],'sourceStage'=>$item['stage']];
     }
     $make=static function(int $count,string $category,string $title,string $detail,string $href,int $priority)use(&$actions):void{
-        if($count>0)$actions[]=['category'=>$category,'title'=>$title,'detail'=>$detail,
-            'href'=>$href,'priority'=>$priority,'count'=>$count];
+        if($count>0){
+            $stage=match($href){
+                'commerce.php?tab=providers'=>'provider_exception',
+                'commerce.php?tab=orders'=>'manual_orders',
+                'commerce.php?tab=payouts'=>'payout_batches',
+                'user-submissions.php'=>'video_queue',
+                'casting.php?status=new'=>'casting_queue',
+                default=>'other'
+            };
+            $actions[]=['category'=>$category,'title'=>$title,'detail'=>$detail,
+                'href'=>$href,'priority'=>$priority,'count'=>$count,
+                'sourceKind'=>'queue',
+                'sourceId'=>substr(hash('sha256','studio_management_queue:'.$stage),0,32),
+                'sourceStage'=>$stage];
+        }
     };
     $make((int)($dashboard['pendingProviders']??0),'commerce','Reconcile original provider operations',
         'Resolve uncertain refunds, return labels or Connect transfers using their original records before any new financial request.',

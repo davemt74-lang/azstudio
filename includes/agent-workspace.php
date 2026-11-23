@@ -111,7 +111,7 @@ function az_agent_workspace_history(int $recipient): array
     return array_map(static fn($r):array=>[
         'id'=>$r['id'],'kind'=>$r['kind'],'title'=>$r['title'],'detail'=>$r['detail'],
         'href'=>$r['href'],'createdAt'=>$r['created_at'],'readAt'=>$r['read_at'],
-        'actor'=>(str_starts_with($r['kind'],'followthrough_')||str_starts_with($r['kind'],'casting_review_')||str_starts_with($r['kind'],'casting_new_')||str_starts_with($r['kind'],'casting_contacted_')||str_starts_with($r['kind'],'casting_screening_')||str_starts_with($r['kind'],'casting_interview_')||str_starts_with($r['kind'],'casting_onboarding_incomplete')||str_starts_with($r['kind'],'casting_invitation_missing')||str_starts_with($r['kind'],'casting_invitation_expiring')||str_starts_with($r['kind'],'video_review_due')||str_starts_with($r['kind'],'commerce_provider_followup')||str_starts_with($r['kind'],'commerce_commission_followup')||str_starts_with($r['kind'],'admin_intelligence_'))?'AZHottie Agent':((int)$r['actor_id']===$recipient?'You':$r['actor_name']),
+        'actor'=>(str_starts_with($r['kind'],'followthrough_')||str_starts_with($r['kind'],'casting_review_')||str_starts_with($r['kind'],'casting_new_')||str_starts_with($r['kind'],'casting_contacted_')||str_starts_with($r['kind'],'casting_screening_')||str_starts_with($r['kind'],'casting_interview_')||str_starts_with($r['kind'],'casting_onboarding_incomplete')||str_starts_with($r['kind'],'casting_invitation_missing')||str_starts_with($r['kind'],'casting_invitation_expiring')||str_starts_with($r['kind'],'video_review_due')||str_starts_with($r['kind'],'commerce_provider_followup')||str_starts_with($r['kind'],'commerce_commission_followup')||str_starts_with($r['kind'],'admin_intelligence_')||str_starts_with($r['kind'],'admin_action_'))?'AZHottie Agent':((int)$r['actor_id']===$recipient?'You':$r['actor_name']),
     ],$q->fetchAll());
 }
 function az_agent_workspace_mark_read(int $recipient,array $body): void
@@ -233,6 +233,9 @@ function az_agent_workspace_brain(array $user): array
     $cards[]=az_agent_workspace_card('commerce','Commerce Agent daily briefing',
         $commerceAgent['nextStep'],'commerce.php?tab=agent',2);
     $management=$admin?az_admin_intelligence_briefing($user):null;
+    $actionCenter=$admin?az_admin_action_chat_summary($user):null;
+    if($actionCenter&&$actionCenter['counts']['overdue']>0)$cards[]=az_agent_workspace_card('action_center',
+        $actionCenter['counts']['overdue'].' overdue studio follow-ups','Assign an owner, review due dates, or record a resolution in the Action Center.','admin-studio.php',0);
     if($management)$cards[]=az_agent_workspace_card('management','Studio management briefing',
         $management['nextStep'],'admin-studio.php',1);
     $schedule=az_agent_schedule_briefing($user);
@@ -252,7 +255,7 @@ function az_agent_workspace_brain(array $user): array
     if ($admin) $summary['liveAlerts']=count($liveHealth['issues']??[]);
     $followthrough=['cron'=>az_agent_followthrough_status(), 'manual'=>$admin?az_agent_followthrough_status($id):null];
     return ['cards'=>array_slice($cards,0,16),'summary'=>$summary,'assignOptions'=>$assignmentChoices,'followthrough'=>$followthrough,
-      'liveHealth'=>$liveHealth,'casting'=>$casting,'video'=>$video,'publishing'=>$publishing,'commerce'=>$commerce,'commerceAgent'=>$commerceAgent,'management'=>$management,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, publishing, commerce, Watch engagement, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
+      'liveHealth'=>$liveHealth,'casting'=>$casting,'video'=>$video,'publishing'=>$publishing,'commerce'=>$commerce,'commerceAgent'=>$commerceAgent,'management'=>$management,'actionCenter'=>$actionCenter,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, publishing, commerce, Watch engagement, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
 }
 /** The only choices offered are owned active shots and eligible active roster members. */
 function az_agent_workspace_assign_options(array $user): array

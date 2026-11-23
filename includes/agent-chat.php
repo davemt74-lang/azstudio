@@ -204,7 +204,10 @@ function az_agent_provider_reply(array $job,int $userId): string
         // Applicant names, contact details, optional preferences, notes and questionnaire answers
         // are never included in third-party AI requests. Casting context is aggregate only.
         $summary['suggestions']=array_values(array_filter($summary['suggestions'],static fn($c)=>!str_contains($c['href'],'casting.php')&&!str_contains($c['href'],'onboarding')));
-        if(az_has_role($member,'admin'))$summary['managementAgent']=az_admin_intelligence_chat_snapshot($member,$brain['management']??null);
+        if(az_has_role($member,'admin')){
+            $summary['managementAgent']=az_admin_intelligence_chat_snapshot($member,$brain['management']??null);
+            $summary['actionCenter']=az_admin_action_chat_summary($member);
+        }
         $summary['casting']=az_agent_casting_chat_snapshot($member);
         $summary['scheduling']=az_agent_schedule_chat_snapshot($member);
         $summary['videoProduction']=az_video_agent_chat_snapshot($member);

@@ -18,11 +18,16 @@ try {
         session_write_close();
         az_json(['ok'=>true,'data'=>az_agent_casting_briefing($user,az_has_role($user,'admin')?az_agent_workspace_assign_options($user):[])]);
     }
+    if($method==='GET'&&$action==='actionCenter') {
+        if(!az_has_role($user,'admin'))throw new AzHttpError(403,'Admin access required.','role_required');
+        session_write_close();
+        az_json(['ok'=>true,'data'=>az_admin_action_snapshot($user)]);
+    }
     if($method==='GET'&&$action==='state') {
         session_write_close();
         az_json(['ok'=>true,'data'=>az_agent_workspace_state($user)]);
     }
-    if($method!=='POST'||!in_array($action,['markRead','checkFollowthrough','remindAssignment','checkCasting','castingAdvance','castingCheckpoint','checkSchedule','checkCommerce','checkManagement'],true))
+    if($method!=='POST'||!in_array($action,['markRead','checkFollowthrough','remindAssignment','checkCasting','castingAdvance','castingCheckpoint','checkSchedule','checkCommerce','checkManagement','actionTrack','actionChange','actionSync'],true))
         throw new AzHttpError(405,'Unsupported agent workspace action.','method_not_allowed');
     az_require_csrf();$body=az_json_body();session_write_close();
     if($action==='markRead'){
@@ -30,6 +35,15 @@ try {
         az_json(['ok'=>true,'data'=>az_agent_workspace_state($user)]);
     }
     if(!az_has_role($user,'admin'))throw new AzHttpError(403,'Admin access required.','role_required');
+    if($action==='actionTrack'){
+        az_json(['ok'=>true,'data'=>az_admin_action_track($user,$body)]);
+    }
+    if($action==='actionChange'){
+        az_json(['ok'=>true,'data'=>az_admin_action_change($user,$body)]);
+    }
+    if($action==='actionSync'){
+        az_json(['ok'=>true,'data'=>az_admin_action_scan((int)$user['id'])]);
+    }
     if($action==='checkManagement'){
         az_json(['ok'=>true,'data'=>az_admin_intelligence_scan((int)$user['id'])]);
     }
