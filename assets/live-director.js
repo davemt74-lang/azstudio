@@ -4,6 +4,7 @@ import {randomId,selectRecordingMime,uploadToPersonalGallery} from './personal-p
 import {nextProgramId,switchDelay,fitCover,statusText,transitionProgress,safeOverlayText} from './live-core.js';
 import {CameraHealth,cameraStateText,cameraSummary,cameraPermissionMessage} from './live-camera-health.js';
 import {liveVideoTrack,ViewerVideoRoute,outgoingFrameSample} from './live-program-delivery.js';
+import {PhoneRepairBudget} from './live-recovery.js';
 import {normalizeLayout,layoutRects,compositionReady,chooseRundownSegment,safeShowText,rundownPreview} from './live-show-core.js';
 
 const root=document.getElementById('azh-director');
@@ -13,7 +14,7 @@ if (root) {
   const ctx=$('live-program-canvas').getContext('2d',{alpha:false});
   const stage=$('live-program-canvas');
   const sources=new Map(), sourceCards=new Map(), idleCards=new Map(), viewers=new Map(), timers=new Set();
-  const phoneStates=new Map();
+  const phoneStates=new Map(),phoneRepair=new PhoneRepairBudget(),phoneRepairTimers=new Map();
   let activeLayout=normalizeLayout('single',['']),draftLayout=normalizeLayout('single',['']);
   let beforeMediaLayout=null,mediaProgramActive=false,mediaCueId='',programMediaId='',mediaLibrary=[],mediaGain=null;
   // Every Take prepares a separate media element. An invalid or undecodable next
@@ -137,7 +138,61 @@ if (root) {
       layoutCtx.fillText(safeOverlayText(pendingSceneSettings.text),24,layoutStage.height-23,layoutStage.width-48);
     }
   }
+  // A WebRTC phone peer can stay 'connected' while its decoded preview is frozen.
+  // Close only that stale approved feed (never another Program source, approval or
+  // the MediaRecorder), causing the PHONE to negotiate a fresh offer. Bounded to
+  // two attempts per phone in two minutes; a human can explicitly retry.
+  function cancelPhoneRepair(id){const timer=phoneRepairTimers.get(id);if(timer!==undefined)clearTimeout(timer);phoneRepairTimers.delete(id);}
+  function requestPhoneRepair(item,{manual=false}={}){
+    if(!item||item.kind!=='phone'||sources.get(item.id)!==item)return;
+    const phoneId=item.id.slice(6);
+    const device=connectedPhones.find(d=>d.id===phoneId);
+    if(!device||device.status!=='approved'||!device.sharing){
+      feedback('This phone is not actively sharing. Open Camera Studio on the phone and select Share live.',true);return;
+    }
+    if(document.hidden&&!manual)return;
+    if(!manual&&item.health?.update()!=='stalled')return;
+    const peer=phones.peers.get(phoneId);
+    if(!peer){
+      feedback('No active phone relay to restart. Keep the phone open, or stop and restart Share live on that phone.',true);
+      return;
+    }
+    const next=phoneRepair.next(phoneId,{manual});
+    if(!next){
+      phoneStates.set(phoneId,'Automatic reconnect limit reached. Restart Share live on this phone.');
+      feedback('Phone '+(device.name||'camera')+' has a frozen preview after two recovery attempts. Restart sharing on the phone or select Reconnect feed.',true);
+      return;
+    }
+    // Removing a single HostPhoneFeeds peer never changes source approval.
+    // Its onRemove hook drops only that source and returns an affected Program
+    // to the existing holding slate; the recording remains active.
+    const oldNonce=peer.nonce;
+    phones.remove(phoneId,true);
+    const message=(manual?'Manual':'Automatic')+' phone video recovery '+next.attempt+'/'+next.maxAttempts+' requested. Waiting for a new phone offer…';
+    phoneStates.set(phoneId,message);showSources();feedback(message,true);
+    // Owner-authenticated, CSRF-checked signaling reset makes the phone's
+    // next poll reoffer immediately instead of waiting for WebRTC ICE timeout.
+    // Nonce guard ensures any newer offer/phone connection is never touched.
+    void phoneRequest('resetFeed',{id:phoneId,nonce:oldNonce}).then(response=>{
+      if(response.reset)feedback('Phone relay restarted. Waiting for its fresh camera offer…');
+    }).catch(error=>{
+      feedback('Could not confirm phone relay reset: '+statusText(error)+'. Ask the phone to stop and restart Share live.',true);
+    });
+  }
+  function queuePhoneRepair(item){
+    if(item.kind!=='phone'||document.hidden||phoneRepairTimers.has(item.id))return;
+    const timer=setTimeout(()=>{
+      phoneRepairTimers.delete(item.id);
+      if(sources.get(item.id)===item&&!document.hidden&&item.health?.update()==='stalled')requestPhoneRepair(item);
+    },1500);
+    phoneRepairTimers.set(item.id,timer);
+  }
   function onSourceHealth(item,state){
+    if(item.kind==='phone'){
+      phoneRepair.healthy(item.id.slice(6),state==='live');
+      if(state==='stalled')queuePhoneRepair(item);
+      else cancelPhoneRepair(item.id);
+    }
     if(!sources.has(item.id))return;
     if(selected===item.id&&!mediaProgramActive&&activeLayout.type==='single'&&['stalled','muted','offline','blocked'].includes(state)&&!(document.hidden&&state==='stalled')){
       cameraFaultActive=Boolean(room);selected=null;activeLayout=normalizeLayout('single',['']);transitionStart=0;routeViewerVideo();feedback('The on-air camera stopped delivering decoded video. Program is showing the holding slate until a healthy feed is taken.',true);
@@ -217,9 +272,12 @@ if (root) {
     const actions=document.createElement('div');actions.className='azh-phone-card-actions';
     const take=button('Broadcast now',()=>takeSource(item.id),'azh-live-button azh-phone-broadcast');take.disabled=true;take.setAttribute('aria-label','Broadcast '+item.label+' now');
     const disconnect=button('Disconnect',async()=>{try{await phoneRequest('revoke',{id:item.id.slice(6)});removeSource(item.id);await refreshPhones();}catch(e){feedback('Could not disconnect phone: '+statusText(e),true);}},'azh-live-button azh-live-secondary azh-phone-disconnect');
-    actions.append(take,disconnect);
+    const repair=button('Reconnect feed',()=>requestPhoneRepair(item,{manual:true}),
+      'azh-live-button azh-live-secondary azh-phone-repair');repair.hidden=true;
+    repair.setAttribute('aria-label','Reconnect '+item.label+' video feed');
+    actions.append(take,repair,disconnect);
     card.append(wrap,meta,actions);
-    const tile={card,indicator,inactive,details,title,resume,take};sourceCards.set(item.id,tile);
+    const tile={card,indicator,inactive,details,title,resume,take,repair};sourceCards.set(item.id,tile);
     return card;
   }
   function createIdlePhoneCard(device){
@@ -260,6 +318,7 @@ if (root) {
         tile.details.textContent=selected===id?'● ON PROGRAM':ready?`● LIVE · ${item.health.framesPerSecond()} fps`:cameraStateText(state);
         tile.take.disabled=!ready||(!mediaProgramActive&&activeLayout.type==='single'&&selected===id);tile.take.textContent=!mediaProgramActive&&activeLayout.type==='single'&&selected===id?'● Broadcasting':'Broadcast now';
         tile.resume.hidden=state!=='blocked'&&state!=='paused';
+        tile.repair.hidden=ready||!['stalled','muted','offline'].includes(state);
         tile.card.hidden=false;
         cards.push(tile.card);
         continue;
@@ -281,7 +340,7 @@ if (root) {
       for(let i=0;i<cards.length;i++)if(list.children[i]!==cards[i])list.insertBefore(cards[i],list.children[i]||null);
     }
     const valid=new Set(connectedPhones.map(d=>d.id));
-    for(const [id,tile] of idleCards)if(!valid.has(id)){tile.card.remove();idleCards.delete(id);}
+    for(const [id,tile] of idleCards)if(!valid.has(id)){tile.card.remove();idleCards.delete(id);phoneRepair.clear(id);}
     for(const [id,tile] of sourceCards)if(!sources.has(id)){tile.card.remove();sourceCards.delete(id);}
     cameraCounts();
     refreshCompositionOptions();
@@ -306,7 +365,7 @@ if (root) {
   }
   function removeSource(id){
     const item=sources.get(id);if(!item)return;
-    sources.delete(id);detachCameraAudio(id);item.health?.stop();item.video.pause();item.video.srcObject=null;
+    cancelPhoneRepair(id);sources.delete(id);detachCameraAudio(id);item.health?.stop();item.video.pause();item.video.srcObject=null;
     sourceCards.get(id)?.card.remove();sourceCards.delete(id);
     if(item.kind==='local')item.stream.getTracks().forEach(t=>t.stop());
     if(previewSelected===id)previewSelected=null;
@@ -737,7 +796,7 @@ if (root) {
   }
   void enumerate().catch(()=>{});
   navigator.mediaDevices?.addEventListener?.('devicechange',()=>void enumerate().catch(()=>{}));
-  const cameraWatch=setInterval(()=>{for(const item of sources.values())item.health?.update();if(sources.size)showSources();},1600);
+  const cameraWatch=setInterval(()=>{for(const item of sources.values()){item.health?.update();if(item.kind==='phone')phoneRepair.healthy(item.id.slice(6),Boolean(item.health?.playable()));}if(sources.size)showSources();},1600);
   async function ensureAudio() {
     if(audioDestination){if(audioCtx?.state==='suspended')await audioCtx.resume();return;}
     const Ctor=globalThis.AudioContext||globalThis.webkitAudioContext;
@@ -978,6 +1037,7 @@ if (root) {
     if(!room||recorder?.state==='recording'||saving)return;
     try {
       const stream=await ensureProgram();
+      if(!room)throw Error('The live broadcast ended before recording started. Start a new session.');
       recordToken=randomId();savedMediaId=null;
       if(!globalThis.MediaRecorder)throw Error('This browser does not support program recording.');
       const mime=selectRecordingMime(x=>MediaRecorder.isTypeSupported(x));
@@ -991,10 +1051,11 @@ if (root) {
         const type=(recorder.mimeType||mime||'video/webm').split(';')[0];const ext=type.includes('mp4')?'mp4':'webm';
         const title=`${$('live-title').value.trim()||'AZHottie Live'} · ${new Date(startAt).toLocaleDateString()}`;
         const file=new File([new Blob(chunks,{type})],`azhottie-program-${startAt}.${ext}`,{type});recordedFile=file;chunks=[];
-        if(file.size<1024){reportRecord('Recording is unexpectedly small. Keep the backup and check video permissions.',true);}
+        const invalidRecording=file.size<1024;
+        if(invalidRecording)reportRecord('Recording contains too few bytes to verify. Keep the local backup; it will not be uploaded automatically.',true);
         if(recordUrl)URL.revokeObjectURL(recordUrl);recordUrl=URL.createObjectURL(file);
         const area=$('live-record-backup');area.replaceChildren();const a=document.createElement('a');a.href=recordUrl;a.download=file.name;a.className='azh-live-button azh-live-secondary';a.textContent='↓ Download recording backup';area.append(a);
-        void saveRecording(file,title,recordRoom);
+        if(!invalidRecording)void saveRecording(file,title,recordRoom);
       };
       recorder.start(1000);$('live-record').disabled=true;$('live-record-stop').disabled=false;document.body.classList.add('azh-is-recording');reportRecord('● RECORDING — the complete Program output, camera switches, overlays, and mixed audio.');
     }catch(e){reportRecord(statusText(e),true);}
@@ -1004,7 +1065,7 @@ if (root) {
   loop=setInterval(()=>{void refreshPhones();if(room)void pollViewers();},2500);void refreshPhones();
   window.addEventListener('beforeunload',e=>{if(recorder?.state==='recording'||saving||recordedFile){e.preventDefault();e.returnValue='';}});
   window.addEventListener('pagehide',()=>{
-    clearInterval(loop);clearInterval(liveHealthTimer);clearInterval(cameraWatch);clearInterval(audioMeterLoop);clearInterval(hiddenRenderTimer);clearInterval(deliveryTimer);cancelAnimationFrame(raf);phones.stop();for(const id of [...viewers.keys()])closeViewer(id);
+    clearInterval(loop);clearInterval(liveHealthTimer);clearInterval(cameraWatch);clearInterval(audioMeterLoop);clearInterval(hiddenRenderTimer);clearInterval(deliveryTimer);for(const id of phoneRepairTimers.keys())cancelPhoneRepair(id);cancelAnimationFrame(raf);phones.stop();for(const id of [...viewers.keys()])closeViewer(id);
     if(room)liveEnd(true);
     clearPreview();for(const id of [...sources.keys()])removeSource(id);
     micStream?.getTracks().forEach(t=>t.stop());for(const id of [...cameraAudioNodes.keys()])detachCameraAudio(id);canvasStream?.getTracks().forEach(t=>t.stop());oscillator?.stop();audioCtx?.close();

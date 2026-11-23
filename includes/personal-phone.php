@@ -199,6 +199,22 @@ function az_personal_phone_live_poll(array $device,string $nonce):array
     $db->prepare('UPDATE personal_phone_live SET updated_epoch=? WHERE device_id=? AND nonce=?')->execute([time(),$device['id'],$nonce]);
     return ['answer'=>$row['answer_sdp']?:null];
 }
+/** Studio-owner-only offer reset for a stalled approved phone feed.
+ * Removing its *exact* stale nonce makes the phone's next authorized poll
+ * return stream_expired, triggering the existing bounded phone-side reoffer.
+ * No phone approval, recording or media file is modified.
+ */
+function az_personal_phone_live_reset(int $owner,string $id,string $nonce):array
+{
+    if(!az_valid_id($id)||!az_valid_id($nonce))
+        throw new AzHttpError(400,'Invalid phone relay identity.','invalid_stream');
+    $q=az_db()->prepare("DELETE FROM personal_phone_live WHERE device_id=? AND nonce=?
+       AND EXISTS (SELECT 1 FROM personal_phone_devices WHERE id=? AND owner_id=?
+                   AND status='approved' AND expires_epoch>?)");
+    $q->execute([$id,$nonce,$id,$owner,time()]);
+    // A phone that already changed nonce is left alone; never delete a new offer.
+    return ['reset'=>$q->rowCount()===1,'approvalUnchanged'=>true];
+}
 function az_personal_phone_live_end(array $device,string $nonce):array
 {
     if (!az_valid_id($nonce))throw new AzHttpError(400,'Invalid stream.','invalid_stream');
