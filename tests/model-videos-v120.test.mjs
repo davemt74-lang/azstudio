@@ -57,7 +57,9 @@ test('shared navigation recognizes new routes and provides model/admin access',(
   assert.match(shared,/\['user-submissions\.php', 'User Submissions'/);
   assert.match(header,/my-videos/);assert.match(header,/user-submissions/);
   assert.match(read('dashboard.php'),/User Submissions/);
-  assert.match(read('admin-studio.php'),/User Submissions/);
+  // New admin Command Center uses a concise review label but keeps the same protected route.
+  assert.match(read('admin-studio.php'),/href="user-submissions\.php"/);
+  assert.match(read('admin-studio.php'),/Video submissions/);
 });
 test('text containers have explicit light backgrounds and legible ink',()=>{
   const css=read('assets/model-videos.css');

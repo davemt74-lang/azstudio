@@ -1,3 +1,12 @@
+AZHottie Studio v1.41.0 — Live Shopping Analytics & Admin Command Center
+- Back up the full database, application code, storage/config.php, uploads and private media. Install application files over the existing site; DO NOT rerun install.php.
+- First application boot upgrades database schema 43 → 44. It creates commerce_live_engagement_daily with aggregate daily spotlight impressions and checkout CTA taps. Confirm MySQL migration and make a backup before and after.
+- New Studio Command Center shows administrator-only signed Stripe net revenue, separately recorded cash/manual sales, new model casting profiles, pending submitted videos, video/profile view tracking and approved live-shopping attribution. Editors may access only their authorized live production tools, not admin reporting.
+- Live Director Shopping includes a read-only broadcast performance pulse. Product impressions and taps are deduplicated per signed-in browser session for 30 minutes; they are NOT unique viewers, sales or completed bank payouts.
+- Stripe-paid orders are validated by signed Stripe provider events. Cash and external seller transactions remain staff-recorded. Creator earnings are estimates and are not bank payouts.
+- View/CTA telemetry does not store individual viewer IDs, IPs, browser fingerprints or browsing histories. No automatic financial actions or live payment switches are enabled.
+- Run hosted TEST transactions, signed webhooks and actual livestream/product attribution checks independently before production. See docs/RELEASE_1_41_0.txt.
+
 AZHottie Studio v1.37.0 — Provider Refunds, Return Labels & Connect Transfers
 - Back up database, protected storage/config.php, site/media/uploads. Deploy application files while preserving private data; do NOT rerun install.php. Database schema upgrades 42 to 43.
 - TEST by default. Enable private AZH_STRIPE_ALLOW_REFUND_ACTIONS, AZH_STRIPE_ALLOW_CONNECT_TRANSFERS, AZH_EASYPOST_ALLOW_RETURN_LABEL_PURCHASES and existing EasyPost label-purchase switch only after configuring supported Stripe/EasyPost test accounts. Separate maximum per-label/refund/transfer amounts apply.

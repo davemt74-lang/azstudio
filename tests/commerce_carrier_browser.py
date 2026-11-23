@@ -111,7 +111,7 @@ def run():
             assert len(buys)==1,('unexpected label purchases',width,buys)
             assert 'Private Recipient' not in page.locator('#azh-shipping-orders').inner_text(),('address exposed',width)
             page.get_by_role('button',name='Confirm handed to carrier').click()
-            page.locator('#azh-shipping-orders').get_by_text('SHIPPED').wait_for(timeout=8000)
+            page.locator('#azh-shipping-orders').get_by_text('SHIPPED', exact=True).wait_for(timeout=8000)
             assert any(a=='transition' and d.get('trackingNumber')=='1Z999AA10123456784'
                 for a,d in actions),('actual label tracking not used',width)
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+2'),('overflow',width)

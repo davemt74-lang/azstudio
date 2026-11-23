@@ -338,7 +338,8 @@ function az_model_video_dashboard_summary(): array
     $counts=az_db()->query('SELECT status,COUNT(*) AS total FROM model_videos GROUP BY status');
     foreach ($counts->fetchAll() as $row) {
         $status=(string)$row['status'];
-        if (array_key_exists($status,$summary)) $summary[$status]=(int)$row['total'];
+        if ($status==='pending_review') $summary['pending']=(int)$row['total'];
+        elseif (array_key_exists($status,$summary)) $summary[$status]=(int)$row['total'];
         $summary['total']+=(int)$row['total'];
     }
     $latest=az_db()->query("SELECT p.id,p.title,p.submitted_at,u.name AS model_name

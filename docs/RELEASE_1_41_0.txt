@@ -1,0 +1,38 @@
+# AZHottie Studio v1.41.0 — Live shopping analytics & Admin Command Center
+
+## Implementation
+
+- Full responsive, admin-only Studio Command Center replaces the old admin homepage.
+- Six live scorecards: 30-day signed Stripe product net, separately staff-recorded cash net, Stripe-confirmed live-attributed net, new casting applications, pending video submissions, and 30-day video play starts.
+- Action queue for financial provider reconciliation, unreviewed casting applications, pending creator videos, unverified manual orders, settlement approval, and creator promotions, with deep links to existing workspaces.
+- Casting CRM shows recent open model application profiles, city, status and screening dates. "Resumes" refers to existing applicant screening records; this does not claim a PDF résumé upload feature.
+- Video review uses existing model_videos state; fixes pending_review being miscounted as zero pending.
+- 14-day profile view / video play / live product impression chart, plus 30-day completion, watch-time, and CTA totals. These are events, not distinct people.
+- Live Director displays selected product, approved creator, session-bounded product view and button-tap counts, Stripe checkouts/confirmed net, with cash and commissions kept separately.
+- Admin-only data access; authorized production editors see only their permitted live tools.
+
+## Safety and attribution
+
+- Engagement events are bound on the server to the **currently featured active live product and approved creator promotion**; clients cannot supply the attribution IDs.
+- Impression occurs only when the product is visible in the foreground for about 1.2 seconds. No viewer identity, IP, browser fingerprint or page history is persisted. A single browser session records at most one view and one CTA tap per active spotlight each 30 minutes.
+- Signed Stripe payment events, administrator-attested external seller orders and recorded cash transactions are not combined in a false "verified revenue" total. Commission figures are estimates, not paid balances.
+- No refund, EasyPost label purchase, Stripe Connect transfer, payout, credit card charge or production mode enablement is added by dashboard tracking.
+- Live financial actions remain disabled by default and require separate hosted TEST verification and explicit staff configuration.
+
+## Upgrade
+
+1. Back up database, code, private storage/config.php, uploads and media.
+2. Install the deploy ZIP over application code without rerunning install.php or overwriting storage or private files.
+3. On first successful database boot, schema upgrades from **43 to 44**, creating commerce_live_engagement_daily for SQLite or MySQL.
+4. Verify the admin Command Center, viewer live product panel, Director Shopping tab, casting and video review links, 30-day KPI breakdown and responsive UI on hosted PHP/MySQL.
+5. Confirm Stripe TEST checkout and signed webhook attribution, cash recorded state and TEST creator promotion association independently. Do not infer bank payout from a Connect platform transfer.
+
+## Automated release gate
+
+- PHP: php tests/admin-command-v141.php — SQLite schema migration, counters, role isolation, verified-vs-cash distinctions and pending_review regression.
+- Responsive Chromium: python tests/admin-command-browser.py — 1440/1024/768/390/320px dashboard layout.
+- Live product Chromium: python tests/live-shopping-v141-browser.py — visible impression, CTA click, CSRF, repeat-dedup, 1440/390/320px.
+- Existing full PHP/SQLite/JavaScript and Commerce browser suites.
+- Deployment ZIP integrity/sanitization, followed by five matching CI jobs on the post-merge main commit.
+
+CI success validates code-level release readiness only. Hosted provider acceptance and actual camera/buyer behavior are separate gates.

@@ -15,11 +15,21 @@ try {
     if($method==='GET' && $action==='liveFeature'){
         az_json(['ok'=>true,'data'=>az_is_installed()?az_commerce_live_feature():null]);
     }
+    if($method==='POST' && $action==='liveEngagement'){
+        $user=az_require_auth(true);az_require_csrf();
+        $body=az_json_body();
+        $event=az_text($body['event']??'',12,'Live engagement event');
+        az_json(['ok'=>true,'data'=>az_live_shop_track($user,$event)]);
+    }
     $user=az_require_auth(true);
     az_agent_workspace_assert($user);
     if($method==='GET' && $action==='agentBriefing'){
         session_write_close();
         az_json(['ok'=>true,'data'=>az_commerce_agent_report($user)]);
+    }
+    if($method==='GET' && $action==='livePulse'){
+        az_commerce_admin($user);session_write_close();
+        az_json(['ok'=>true,'data'=>az_live_shop_pulse($user)]);
     }
     if($method==='GET' && $action==='analytics'){
         $user=az_require_auth(true);az_agent_workspace_assert($user);session_write_close();

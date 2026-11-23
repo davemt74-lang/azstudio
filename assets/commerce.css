@@ -63,3 +63,13 @@
 .azh-shipping-product-summary{min-width:0}.azh-commerce-card form[data-stripe-checkout]{min-width:0}
 
 .azh-commerce-tabs{max-width:100%;flex-wrap:wrap}.azh-commerce-panel[data-panel=payouts] h3{margin:20px 0 12px}.azh-commerce-card{overflow-wrap:anywhere}
+
+/* v1.41: Live Director shopping attribution pulse (read-only). */
+.azh-live-pulse{border:1px solid #eed9e4;background:#fffafc;border-radius:13px;padding:16px;margin:15px 0;min-width:0}
+.azh-live-pulse h3{color:#473040;font-size:17px;letter-spacing:-.02em;margin:0 0 9px}
+.azh-live-pulse #director-commerce-pulse-status{font-size:12px;color:#7f6575;line-height:1.5;margin:0 0 14px;overflow-wrap:anywhere}
+.azh-live-pulse-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,135px),1fr));gap:8px}
+.azh-live-pulse-metrics>div{border:1px solid #f1e4eb;background:#fff;border-radius:10px;padding:12px;display:grid;gap:6px;min-width:0}
+.azh-live-pulse-metrics strong{font-size:clamp(19px,2vw,27px);letter-spacing:-.04em;color:#473040;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.azh-live-pulse-metrics span{font-size:10px;color:#786776;line-height:1.45}
+.azh-live-pulse-notice{font-size:11px;color:#806f7b;line-height:1.55;margin:13px 0 0}
