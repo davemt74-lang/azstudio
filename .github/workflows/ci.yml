@@ -61,6 +61,7 @@ jobs:
           php tests/admin-action-v143.php
           php tests/admin-coordination-v144.php
           php tests/admin-ops-learning-v145.php
+          php tests/live-phone-reset-v146.php
 
   fixtures:
     name: SQLite permissions and migration fixtures
@@ -112,6 +113,7 @@ jobs:
           python tests/admin-action-browser.py
           python tests/admin-coordination-browser.py
           python tests/admin-ops-learning-browser.py
+          python tests/live-recovery-browser.py
           python tests/live-shopping-v141-browser.py
       - uses: actions/upload-artifact@v4
         if: always()
@@ -133,6 +135,7 @@ jobs:
             ${{ runner.temp }}/azh_admin_action_browser/*.png
             ${{ runner.temp }}/azh_coordination_browser/*.png
             ${{ runner.temp }}/azh_ops_learning_browser/*.png
+            ${{ runner.temp }}/azh_live_recovery_browser/*.png
             ${{ runner.temp }}/azh_live_shop_v141/*.png
           if-no-files-found: ignore
           retention-days: 14

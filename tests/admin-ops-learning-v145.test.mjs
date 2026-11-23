@@ -5,7 +5,7 @@ const read=(path)=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 
 test('Operations learning is versioned, wired to existing dashboard and role-gated API',()=>{
   const pkg=JSON.parse(read('package.json'));
-  assert.equal(pkg.version,'1.45.0');
+  assert.match(pkg.version,/^1\.\d+\.\d+$/);
   assert.ok(read('includes/bootstrap.php').includes("AZ_VERSION = '"+pkg.version+"'"));
   assert.match(read('includes/bootstrap.php'),/admin-ops-learning\.php/);
   const api=read('agent-workspace-api.php');
