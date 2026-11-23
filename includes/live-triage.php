@@ -33,8 +33,8 @@ function az_live_triage_analyze(?array $room,?array $d,array $checks=[]):array
         $approved=max(0,(int)($d['phoneApproved']??0));
         $offering=max(0,(int)($d['phoneOffering']??0));
         $directorFresh=($d['directorFresh']??false)===true;
-        $healthy=$d['healthyCameras']===null?null:max(0,(int)$d['healthyCameras']);
-        $cameras=$d['cameraCount']===null?null:max(0,(int)$d['cameraCount']);
+        $healthy=($d['healthyCameras']??null)===null?null:max(0,(int)$d['healthyCameras']);
+        $cameras=($d['cameraCount']??null)===null?null:max(0,(int)$d['cameraCount']);
         $mode=(string)($d['programMode']??'');
         $viewers=max(0,(int)($d['viewerCount']??0));
         $reports=max(0,(int)($d['fanReporting']??0));
@@ -134,7 +134,7 @@ function az_live_triage_support_summary(?array $room,?array $d,array $triage,arr
     $live=($room['status']??'')==='live';
     $number=static function(mixed $value):?float{
         if($value===null||!is_numeric($value))return null;
-        return round(max(0,min(1000000,(float)$value)),1);
+        return round(max(0,min(1000000000000,(float)$value)),1);
     };
     $kinds=['phoneApproved','phoneOffering','cameraCount','healthyCameras','viewerCount',
       'fanReporting','fanPlaying','fanStalled','fanBlocked','outboundStalls','savedRecordings',
