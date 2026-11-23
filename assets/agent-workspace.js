@@ -131,6 +131,27 @@ function mountAgentWorkspace(root=document) {
       }
       content.append(report);
     }
+    const management=brain.management;
+    if(management && state?.role==='admin'){
+      const section=make('section','azh-aw-followthrough');
+      section.append(text('p','STUDIO MANAGEMENT · WORKFLOW TRIAGE','azh-aw-eyebrow'),text('h3','Admin Director Briefing'));
+      section.append(text('p',management.basis||'Workflow data only; approvals remain staff-controlled.','azh-aw-meta'));
+      for(const item of (management.actionsFollowups||[]).slice(0,4)){
+        const line=make('p','azh-aw-meta');
+        line.append(text('strong',item.title+' — '),text('span',item.detail+' '),link('Review ↗',item.href));
+        section.append(line);
+      }
+      for(const item of (management.opportunities||[]).slice(0,2)){
+        const line=make('p','azh-aw-meta');
+        line.append(text('strong',item.title+' — '),text('span',item.detail+' '),link('Explore ↗',item.href));
+        section.append(line);
+      }
+      section.append(link('Open Admin Command Center ↗','admin-studio.php'));
+      section.append(button('Check management follow-ups','azh-aw-outline',()=>{
+        if(window.confirm('Check for overdue casting and video review reminders? No applicant, publication or payment decision will be made.'))void executeAgentAction('checkManagement',{});
+      }));
+      content.append(section);
+    }
     const commerceAgent=brain.commerceAgent;
     if(commerceAgent){
       const section=make('section','azh-aw-followthrough');

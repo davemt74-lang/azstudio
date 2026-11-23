@@ -6,6 +6,7 @@ require_once __DIR__.'/includes/member-layout.php';
 $user=az_live_require_editor();$isAdmin=az_has_role($user,'admin');
 header('Cache-Control: no-store');header('X-Robots-Tag: noindex,nofollow');
 $data=$isAdmin?az_admin_command_data($user):null;
+$management=$isAdmin?az_admin_intelligence_briefing($user,$data):null;
 $room=$isAdmin?($data['live']['onAir']??false):az_live_active_room()!==null;
 $shortcuts=[
  ['commerce.php','◆','Commerce','Orders, products & creator commissions'],
@@ -20,9 +21,9 @@ $shortcuts=[
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
 <title>Studio Command Center · AZHottie</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css"><link rel="stylesheet" href="assets/live-studio.css?v=1.40.0">
-<link rel="stylesheet" href="assets/admin-command.css?v=1.41.0"></head>
+<link rel="stylesheet" href="assets/admin-command.css?v=1.42.0"></head>
 <body data-page="admin-studio"><?php az_render_universal_header('admin-studio',$user);az_render_member_layout_open('admin-studio',$user); ?>
-<main class="azd" id="azh-admin-command" aria-labelledby="azd-title">
+<main class="azd" id="azh-admin-command" data-csrf="<?= az_h(az_csrf_token()) ?>" aria-labelledby="azd-title">
   <header class="azd-hero">
     <div class="azd-hero-copy"><p class="azd-eyebrow"><span class="azd-spark" aria-hidden="true">✳</span> AZHOTTIE / STUDIO OPERATIONS</p>
       <h1 id="azd-title">Your studio, <em>in focus.</em></h1>
@@ -36,6 +37,49 @@ $shortcuts=[
       <a href="live-director.php">Open studio <span aria-hidden="true">↗</span></a>
     </div>
   </header>
+<?php if($isAdmin): ?>
+<section class="azd-panel azd-agent-center" id="azd-management" aria-labelledby="azd-management-title">
+  <div class="azd-panel-heading azd-agent-heading">
+    <div><p class="azd-kicker">YOUR MANAGEMENT SPECIALIST</p><h2 id="azd-management-title">Agent Director Briefing</h2>
+      <p class="azd-muted">A recorded workflow snapshot, not an automatic screening, publishing or payment decision.</p></div>
+    <div class="azd-agent-tools"><button type="button" id="azd-management-check" class="azd-agent-check">Check follow-ups</button><a class="azd-link" href="agent-chat.php?topic=studio">Discuss with Agent ↗</a></div>
+  </div>
+  <div class="azd-agent-stats">
+    <div><strong><?= (int)$management['counts']['newApplications'] ?></strong><span>New applications</span></div>
+    <div><strong><?= (int)$management['counts']['pendingVideos'] ?></strong><span>Video reviews</span></div>
+    <div><strong><?= (int)$management['counts']['providerExceptions'] ?></strong><span>Provider exceptions</span></div>
+    <div><strong><?= (int)$management['counts']['agedWorkflowItems'] ?></strong><span>Aged workflow items</span></div>
+  </div>
+  <div class="azd-agent-columns">
+    <div class="azd-agent-priorities">
+      <div class="azd-agent-subhead"><h3>Prioritized follow-ups</h3><span>Staff decisions required</span></div>
+      <?php if($management['actionsFollowups']): ?>
+      <ol class="azd-agent-actions">
+      <?php foreach(array_slice($management['actionsFollowups'],0,6) as $item): ?>
+        <li><a href="<?= az_h($item['href']) ?>">
+          <span class="azd-agent-priority" data-level="<?= (int)$item['priority'] ?>"><?= (int)$item['priority']===0?'Urgent':((int)$item['priority']===1?'Review':'Routine') ?></span>
+          <span><strong><?= az_h($item['title']) ?></strong><small><?= az_h($item['detail']) ?></small></span><span class="azd-agent-arrow" aria-hidden="true">↗</span>
+        </a></li>
+      <?php endforeach; ?>
+      </ol>
+      <?php else: ?><p class="azd-empty">No management exceptions require immediate follow-up.</p><?php endif; ?>
+      <p class="azd-agent-next"><strong>Recommended next step</strong> <?= az_h($management['nextStep']) ?></p>
+    </div>
+    <div class="azd-agent-opportunities">
+      <div class="azd-agent-subhead"><h3>Opportunities & watchpoints</h3><span>Evidence-based</span></div>
+      <?php foreach(array_slice($management['opportunities'],0,3) as $opportunity): ?>
+        <a href="<?= az_h($opportunity['href']) ?>" class="azd-agent-opportunity">
+          <strong><?= az_h($opportunity['title']) ?> <span aria-hidden="true">↗</span></strong>
+          <small><?= az_h($opportunity['detail']) ?></small>
+        </a>
+      <?php endforeach; ?>
+      <p class="azd-agent-next"><strong>Open question</strong> <?= az_h($management['openQuestions'][0]) ?></p>
+    </div>
+  </div>
+  <p id="azd-management-status" class="azd-agent-status" role="status" aria-live="polite">Recommendations reflect current database records. No automated decisions or financial actions have been performed.</p>
+  <?php if($management['truncated']): ?><p class="azd-disclaimer">Large workflow queue: a bounded sample was assessed. Review Casting and Video Submissions for remaining items.</p><?php endif; ?>
+</section>
+<?php endif; ?>
 <?php if($isAdmin): ?>
   <section class="azd-section" aria-labelledby="azd-pulse-title"><div class="azd-section-heading"><div><p class="azd-kicker">BUSINESS AT A GLANCE</p><h2 id="azd-pulse-title">Studio pulse</h2></div><p class="azd-muted">Revenue and audience: rolling 30 days · Queues: current</p></div>
   <div class="azd-kpis">
@@ -132,4 +176,4 @@ $shortcuts=[
     <?php foreach([['live-director.php','◉','Live Director','Broadcast cameras and program'],['live-productions.php','▣','Saved shows','Recorded productions']] as [$href,$icon,$title,$description]): ?><a href="<?= az_h($href) ?>" class="azd-shortcut"><span class="azd-shortcut-icon"><?= az_h($icon) ?></span><strong><?= az_h($title) ?></strong><small><?= az_h($description) ?></small></a><?php endforeach; ?></div>
   </section>
 <?php endif; ?>
-</main><?php az_render_member_layout_close(); ?></body></html>
+</main><?php az_render_member_layout_close(); ?><script type="module" src="assets/admin-intelligence.js?v=1.42.0"></script></body></html>

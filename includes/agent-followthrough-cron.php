@@ -14,6 +14,7 @@ try {
     $result['publishing']=az_publishing_scan();
     $result['commerce']=az_commerce_scan();
     $result['commerceAgent']=az_commerce_agent_scan();
+    $result['management']=az_admin_intelligence_scan();
     $result['localCommerce']=az_local_scan();
     $result['shipping']=az_fulfillment_scan();
     $result['returns']=az_returns_scan();
