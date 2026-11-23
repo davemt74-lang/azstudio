@@ -17,6 +17,8 @@ test('Agent Brain and Chat use a role-scoped report, not another notification sy
  const gateway=readFileSync(new URL('../agent-workspace-api.php',import.meta.url),'utf8');
  assert.match(backend,/commerceAgent.*az_commerce_agent_admin_report/);
  assert.match(backend,/'commerceAgent'=>\$commerceAgent/);
+ assert.match(backend,/commerce_provider_followup/);
+ assert.match(backend,/commerce_commission_followup/);
  assert.match(chat,/'commerceAgent'=>az_commerce_agent_chat_snapshot/);
  assert.match(cron,/\$result\['commerceAgent'\]=az_commerce_agent_scan\(\)/);
  assert.match(gateway,/if\(\$action==='checkCommerce'\)/);
