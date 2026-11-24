@@ -24,7 +24,7 @@ test('public product endpoints cannot mutate orders or publish promotions',()=>{
   assert.match(api,/az_commerce_public_products/);
   assert.match(api,/az_commerce_live_feature/);
   assert.match(api,/reviewOrder/);
-  const storefront=load('shop.php');
+  const storefront=load('shop.php')+load('includes/shop-homepage-view.php');
   assert.match(storefront,/noopener noreferrer external/);
   assert.doesNotMatch(storefront,/commerce_orders/);
 });
@@ -35,3 +35,4 @@ test('commerce is reachable in the shared navigation and live viewer',()=>{
   assert.match(load('includes/agent-chat.php'),/az_commerce_chat_snapshot/);
   assert.match(load('includes/agent-followthrough-cron.php'),/az_commerce_scan/);
 });
+

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
 test('Shop2.1 uses approved photographic hero and separate public/admin pages',()=>{
- const page=read('shop.php');const admin=read('shop-homepage-editor.php');
+ const page=(read('shop.php')+read('includes/shop-homepage-view.php'));const admin=read('shop-homepage-editor.php');
  assert.match(page,/az_shop_homepage_state\(\)/);
  assert.match(page,/shop-editorial-hero-v157|az_shop_homepage_image_src/);
  assert.match(page,/data-shop-preview/);
@@ -20,7 +20,7 @@ test('Admin editor controls all sections and categories with save/publish/CSRF',
  assert.match(ui,/beforeunload/);assert.match(ui,/publish/);
 });
 test('Sample catalog never seeds orders or uses checkout; published state controls visibility',()=>{
- const php=read('shop.php');const helper=read('includes/shop-homepage.php');
+ const php=(read('shop.php')+read('includes/shop-homepage-view.php'));const helper=read('includes/shop-homepage.php');
  assert.match(php,/!empty\(\$p\['demo'\]\)/);
  assert.match(php,/Demo only · Checkout unavailable/);assert.match(php,/\$layout\['storeEnabled'\]/);
  assert.match(php,/\$layout\['categories'\]/);assert.match(helper,/sampleEnabled'=>false/);
@@ -31,15 +31,16 @@ test('Uploaded home images are guarded and do not accept arbitrary URLs',()=>{
  const helper=read('includes/shop-homepage.php'),media=read('shop-homepage-media.php');
  assert.match(helper,/getimagesize/);assert.match(helper,/is_uploaded_file/);
  assert.match(helper,/5\*1024\*1024/);assert.match(helper,/shop-homepage-media.php\?id=/);
- assert.match(helper,/in_array\(\$id,\[\$live\['heroImage'\]/);
+ assert.match(helper,/az_shop_homepage_image_ids\(\$live\)/);
  assert.match(media,/az_shop_homepage_image_access/);
  assert.match(media,/Content-Security-Policy/);
  assert.doesNotMatch(helper,/file_get_contents\(\$body\['heroImage'\]/);
 });
 test('Existing checkout, camera and commerce stays integrated',()=>{
- const store=read('shop.php'),director=read('live-director.php'),fan=read('live.php');
+ const store=(read('shop.php')+read('includes/shop-homepage-view.php')),director=read('live-director.php'),fan=read('live.php');
  assert.match(store,/data-stripe-checkout/);assert.match(store,/data-local-order/);
  assert.match(store,/data-channel="shop"/);
  const v=JSON.parse(read('package.json')).version;
  assert.ok(director.includes('live-director.js?v='+v));assert.ok(fan.includes('live-viewer.js?v='+v));
 });
+

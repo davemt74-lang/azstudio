@@ -16,6 +16,15 @@ try{
     }else{
         $body=az_json_body();
         if($action==='save')$result=az_shop_homepage_save($user,$body);
+        elseif($action==='preview'){
+            $design=$body['design']??null;
+            if($design instanceof stdClass)$design=get_object_vars($design);
+            if(!is_array($design))throw new AzHttpError(400,'Invalid design payload.','invalid_design');
+            $layout=az_shop_homepage_validate($design,az_db());
+            session_write_close();
+            require_once __DIR__.'/includes/shop-homepage-view.php';
+            $result=['html'=>az_shop_homepage_render($layout,true,true)];
+        }
         elseif($action==='toggle')$result=az_shop_homepage_toggle($user,$body);
         elseif($action==='deleteImage')$result=az_shop_homepage_image_delete($user,(string)($body['id']??''));
         else throw new AzHttpError(405,'Unsupported action.','method_not_allowed');

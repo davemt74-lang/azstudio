@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-/** Shop 2.1: a published editorial layout + admin draft; no commerce or inventory mutation. */
+/** Shop 2.2: one validated design for the live preview, draft and published shop. */
 function az_shop_homepage_sections(): array
 {
     return ['hero'=>'Hero banner','categories'=>'Category tiles','featured'=>'Trending products',
@@ -17,12 +17,70 @@ function az_shop_homepage_default(): array
         'catalogTitle'=>'Explore the Collection',
         'heroImage'=>'default','backgroundImage'=>'none','heroPosition'=>'center',
         'heroAlignment'=>'left','heroHeight'=>440,'headingSize'=>65,
+        'heroFocalX'=>50,'heroFocalY'=>50,'heroTextPosition'=>'center',
+        'mobileHeroImage'=>'inherit','mobileHeroFocalX'=>65,'mobileHeroFocalY'=>50,
+        'mobileHeroHeight'=>510,'mobileHeadingSize'=>44,'mobileHeroAlignment'=>'left',
+        'mobileHeroTextPosition'=>'top','mobileOverlayStrength'=>30,
         'fontStyle'=>'modern','textColor'=>'#251d28','accentColor'=>'#cf2167',
         'buttonColor'=>'#d82676','backgroundColor'=>'#ffffff','overlayStrength'=>5,
         'sections'=>array_fill_keys(array_keys(az_shop_homepage_sections()),true),
         'categories'=>array_fill_keys(array_keys(az_shop_categories()),true),
-        'order'=>array_keys(az_shop_homepage_sections())
+        'order'=>array_keys(az_shop_homepage_sections()),
+        'categoryCards'=>array_map(static fn(string $title):array=>['title'=>$title,'image'=>'default'],az_shop_categories()),
+        'categoryOrder'=>array_keys(az_shop_categories()),'showEmptyCategories'=>true,
+        'featuredMode'=>'automatic','featuredProductIds'=>[],'featuredCount'=>8
     ];
+}
+
+/** Merge new editor controls into existing designs without resetting hidden content. */
+function az_shop_homepage_normalize(array $design): array
+{
+    $defaults=az_shop_homepage_default();$out=array_replace($defaults,$design);
+    foreach(['sections','categories'] as $key){
+        $values=$design[$key]??[];
+        if($values instanceof stdClass)$values=get_object_vars($values);
+        $out[$key]=array_replace($defaults[$key],is_array($values)?$values:[]);
+    }
+    $cards=$design['categoryCards']??[];
+    if($cards instanceof stdClass)$cards=get_object_vars($cards);
+    $out['categoryCards']=$defaults['categoryCards'];
+    foreach($out['categoryCards'] as $slug=>$card){
+        $stored=is_array($cards)?($cards[$slug]??[]):[];
+        if($stored instanceof stdClass)$stored=get_object_vars($stored);
+        if(is_array($stored))$out['categoryCards'][$slug]=array_replace($card,$stored);
+    }
+    // v1.57 used three named positions. Preserve their visual intent on upgrade.
+    if(!array_key_exists('heroFocalX',$design)){
+        $position=$out['heroPosition'];
+        $out['heroFocalX']=is_string($position)?(['left'=>0,'center'=>50,'right'=>100][$position]??50):50;
+    }
+    return $out;
+}
+
+function az_shop_homepage_category_images(): array
+{
+    return ['apparel'=>'shop-category-apparel-v157.webp','fitness'=>'shop-category-fitness-v157.webp',
+        'lifestyle'=>'shop-category-lifestyle-v157.webp','digital'=>'shop-category-digital-v157.webp',
+        'candy'=>'shop-category-candy-v157.webp','photography'=>'shop-category-photography-v157.webp',
+        'spa'=>'shop-category-spa-v157.webp','accessories'=>'shop-demo-tote-v157.webp',
+        'bundles'=>'shop-demo-bundle-v157.webp','gifts'=>'shop-demo-gift-v157.webp','other'=>'shop-demo-candles-v157.webp'];
+}
+
+function az_shop_homepage_category_image_src(string $slug,string $image='default'): string
+{
+    if($image==='default')return 'assets/'.(az_shop_homepage_category_images()[$slug]??'shop-category-apparel-v157.webp');
+    return az_shop_homepage_image_src($image);
+}
+
+/** Every uploaded image referenced by a saved design participates in access/deletion checks. */
+function az_shop_homepage_image_ids(array $design): array
+{
+    $ids=[$design['heroImage']??'none',$design['backgroundImage']??'none',$design['mobileHeroImage']??'inherit'];
+    foreach($design['categoryCards']??[] as $card){
+        if($card instanceof stdClass)$card=get_object_vars($card);
+        if(is_array($card))$ids[]=$card['image']??'none';
+    }
+    return array_values(array_unique(array_filter($ids,static fn($id):bool=>is_string($id)&&az_valid_id($id))));
 }
 function az_upgrade_shop_homepage_schema(PDO $db): void
 {
@@ -56,11 +114,10 @@ function az_shop_homepage_state(?PDO $db=null): array
 {
     $db??=az_db();$row=$db->query('SELECT * FROM shop_homepage_settings WHERE id=1')->fetch(PDO::FETCH_ASSOC);
     if(!$row)throw new RuntimeException('Homepage configuration missing.');
-    $defaults=az_shop_homepage_default();
     foreach(['published_json','draft_json'] as $key){
         $decoded=json_decode((string)$row[$key],true);
         if(!is_array($decoded))throw new RuntimeException('Homepage configuration is invalid.');
-        $row[$key]=array_replace($defaults,$decoded);
+        $row[$key]=az_shop_homepage_normalize($decoded);
     }
     $row['revision']=(int)$row['revision'];$row['published_revision']=(int)$row['published_revision'];
     return $row;
@@ -85,6 +142,16 @@ function az_shop_homepage_image_valid(string $id,PDO $db): bool
 function az_shop_homepage_validate(array $body, PDO $db): array
 {
     $defaults=az_shop_homepage_default();$out=$defaults;
+    // New controls are optional for an older open editor; core v1.57 fields
+    // remain required below. Reject malformed supplied values rather than coercing.
+    $newKeys=['heroFocalX','heroFocalY','heroTextPosition','mobileHeroImage','mobileHeroFocalX','mobileHeroFocalY',
+        'mobileHeroHeight','mobileHeadingSize','mobileHeroAlignment','mobileHeroTextPosition','mobileOverlayStrength',
+        'categoryCards','categoryOrder','showEmptyCategories','featuredMode','featuredProductIds','featuredCount'];
+    if(!array_key_exists('heroFocalX',$body)){
+        $position=$body['heroPosition']??'center';
+        $body['heroFocalX']=is_string($position)?(['left'=>0,'center'=>50,'right'=>100][$position]??50):50;
+    }
+    foreach($newKeys as $key)if(!array_key_exists($key,$body))$body[$key]=$defaults[$key];
     foreach(['storeEnabled','sampleEnabled'] as $key){
         if(!isset($body[$key])||!is_bool($body[$key]))throw new AzHttpError(400,'Invalid store setting: '.$key,'invalid_setting');
         $out[$key]=$body[$key];
@@ -101,17 +168,22 @@ function az_shop_homepage_validate(array $body, PDO $db): array
     $links=['#shop-products','#shop-categories','#shop-browse','watch.php','creator-clubs.php'];
     if(!in_array($body['ctaHref']??null,$links,true))throw new AzHttpError(400,'Choose an internal shop link.','invalid_link');
     $out['ctaHref']=$body['ctaHref'];
-    foreach(['heroImage','backgroundImage'] as $key){
+    foreach(['heroImage','backgroundImage','mobileHeroImage'] as $key){
         $id=$body[$key]??null;
-        if(!is_string($id)||!az_shop_homepage_image_valid($id,$db))throw new AzHttpError(400,'Upload or select an approved image.','invalid_image');
+        if(!is_string($id)||!(($key==='mobileHeroImage'&&$id==='inherit')||az_shop_homepage_image_valid($id,$db)))throw new AzHttpError(400,'Upload or select an approved image.','invalid_image');
         $out[$key]=$id;
     }
-    foreach(['heroPosition'=>['left','center','right'],'heroAlignment'=>['left','center'],
-              'fontStyle'=>['modern','editorial','classic']] as $key=>$allowed){
+    foreach(['heroPosition'=>['left','center','right'],'heroAlignment'=>['left','center','right'],
+              'fontStyle'=>['modern','editorial','classic'],'heroTextPosition'=>['top','center','bottom'],
+              'mobileHeroAlignment'=>['left','center','right'],'mobileHeroTextPosition'=>['top','center','bottom'],
+              'featuredMode'=>['automatic','manual']] as $key=>$allowed){
         if(!in_array($body[$key]??null,$allowed,true))throw new AzHttpError(400,'Invalid layout setting.','invalid_layout');
         $out[$key]=$body[$key];
     }
-    foreach(['heroHeight'=>[300,700],'headingSize'=>[35,90],'overlayStrength'=>[0,80]] as $key=>[$min,$max]){
+    foreach(['heroHeight'=>[300,700],'headingSize'=>[35,90],'overlayStrength'=>[0,80],
+        'heroFocalX'=>[0,100],'heroFocalY'=>[0,100],'mobileHeroFocalX'=>[0,100],'mobileHeroFocalY'=>[0,100],
+        'mobileHeroHeight'=>[300,800],'mobileHeadingSize'=>[28,72],'mobileOverlayStrength'=>[0,80],
+        'featuredCount'=>[1,12]] as $key=>[$min,$max]){
         $v=$body[$key]??null;
         if(!is_int($v)||$v<$min||$v>$max)throw new AzHttpError(400,'Invalid visual setting.','invalid_layout');
         $out[$key]=$v;
@@ -124,28 +196,85 @@ function az_shop_homepage_validate(array $body, PDO $db): array
     foreach(['sections'=>az_shop_homepage_sections(),'categories'=>az_shop_categories()] as $key=>$keys){
         $incoming=$body[$key]??null;
         if($incoming instanceof stdClass)$incoming=get_object_vars($incoming);
-        if(!is_array($incoming)||array_keys($incoming)!==array_keys($keys))
+        if(!is_array($incoming)||count($incoming)!==count($keys)||array_diff_key($incoming,$keys))
             throw new AzHttpError(400,'Invalid visibility settings.','invalid_visibility');
         foreach($incoming as $slug=>$enabled){
             if(!is_bool($enabled))throw new AzHttpError(400,'Visibility must be on or off.','invalid_visibility');
             $out[$key][$slug]=$enabled;
         }
     }
-    $order=$body['order']??null;
-    if(!is_array($order)||count($order)!==count($defaults['order'])||array_diff($order,$defaults['order'])||count(array_unique($order))!==count($order))
-        throw new AzHttpError(400,'Invalid section order.','invalid_order');
-    $out['order']=array_values($order);
+    foreach(['order','categoryOrder'] as $key){
+        $order=$body[$key]??null;
+        if(!is_array($order)||!array_is_list($order)||count($order)!==count($defaults[$key]))
+            throw new AzHttpError(400,'Invalid section or collection order.','invalid_order');
+        foreach($order as $id)if(!is_string($id)||!in_array($id,$defaults[$key],true))
+            throw new AzHttpError(400,'Invalid section or collection order.','invalid_order');
+        if(count(array_unique($order))!==count($order))throw new AzHttpError(400,'Duplicate order entry.','invalid_order');
+        $out[$key]=$order;
+    }
+    if(!is_bool($body['showEmptyCategories']))throw new AzHttpError(400,'Choose whether to show empty collections.','invalid_visibility');
+    $out['showEmptyCategories']=$body['showEmptyCategories'];
+    $cards=$body['categoryCards'];if($cards instanceof stdClass)$cards=get_object_vars($cards);
+    if(!is_array($cards)||count($cards)!==count($defaults['categoryCards'])||array_diff_key($cards,$defaults['categoryCards']))
+        throw new AzHttpError(400,'Invalid collection cards.','invalid_category');
+    foreach($cards as $slug=>$card){
+        if($card instanceof stdClass)$card=get_object_vars($card);
+        if(!is_array($card)||count($card)!==2||array_diff_key($card,['title'=>true,'image'=>true]))
+            throw new AzHttpError(400,'Invalid collection card.','invalid_category');
+        $title=$card['title']??null;$image=$card['image']??null;
+        $length=is_string($title)?preg_match_all('/./us',trim($title)):false;
+        if($length===false||$length<1||$length>60||preg_match('/[\x00-\x1f\x7f]/',$title))
+            throw new AzHttpError(400,'Collection names must contain 1–60 characters.','invalid_category');
+        if(!is_string($image)||!az_shop_homepage_image_valid($image,$db))
+            throw new AzHttpError(400,'Choose an uploaded or default collection image.','invalid_image');
+        $out['categoryCards'][$slug]=['title'=>trim($title),'image'=>$image];
+    }
+    $ids=$body['featuredProductIds'];
+    if(!is_array($ids)||!array_is_list($ids)||count($ids)>24)throw new AzHttpError(400,'Choose up to 24 featured products.','invalid_product');
+    $demoIds=array_column(az_shop_homepage_demo_products(),'id');
+    foreach($ids as $id){
+        if(!is_string($id)||(!az_valid_id($id)&&!in_array($id,$demoIds,true)))throw new AzHttpError(400,'Invalid featured product.','invalid_product');
+        if(az_valid_id($id)){
+            $q=$db->prepare('SELECT id FROM commerce_products WHERE id=?');$q->execute([$id]);
+            if(!$q->fetchColumn())throw new AzHttpError(400,'A selected product no longer exists. Remove it from featured products.','invalid_product');
+        }
+    }
+    if(count(array_unique($ids))!==count($ids))throw new AzHttpError(400,'A featured product may only be selected once.','invalid_product');
+    $out['featuredProductIds']=$ids;
     return $out;
+}
+
+/** Lightweight admin picker: include older active products without checkout/stock queries. */
+function az_shop_homepage_product_choices(PDO $db): array
+{
+    $q=$db->query("SELECT p.id,p.title,p.price_cents,COALESCE(c.category,'lifestyle') AS category,
+        COALESCE(c.featured,0) AS featured,
+        (SELECT i.id FROM commerce_product_images i WHERE i.product_id=p.id ORDER BY i.sort_order,i.id LIMIT 1) AS image_id
+        FROM commerce_products p LEFT JOIN commerce_product_catalog c ON c.product_id=p.id
+        WHERE p.state='active' ORDER BY p.title,p.id");
+    $items=[];$categories=az_shop_categories();
+    foreach($q->fetchAll(PDO::FETCH_ASSOC) as $p){
+        $items[]=['id'=>$p['id'],'title'=>$p['title'],'priceCents'=>(int)$p['price_cents'],
+            'category'=>array_key_exists($p['category'],$categories)?$p['category']:'other',
+            'imageSrc'=>$p['image_id']?'shop-media.php?id='.$p['image_id']:'',
+            'demo'=>false,'featured'=>(bool)$p['featured']];
+    }
+    foreach(az_shop_homepage_demo_products() as $p)$items[]=['id'=>$p['id'],'title'=>$p['title'],
+        'category'=>$p['category'],'priceCents'=>(int)$p['priceCents'],'imageSrc'=>$p['images'][0]['src'],
+        'demo'=>true,'featured'=>true];
+    return $items;
 }
 function az_shop_homepage_admin_state(array $user,?PDO $db=null):array
 {
     az_shop_admin($user);$db??=az_db();$state=az_shop_homepage_state($db);
     $images=$db->query('SELECT id,mime_type,alt_text,width,height FROM shop_homepage_images ORDER BY created_at DESC LIMIT 60')->fetchAll(PDO::FETCH_ASSOC);
     foreach($images as &$im)$im['src']=az_shop_homepage_image_src($im['id']);unset($im);
+    $choices=az_shop_homepage_product_choices($db);
+    $defaultImages=[];foreach(az_shop_categories() as $slug=>$title)$defaultImages[$slug]=az_shop_homepage_category_image_src($slug);
     return ['draft'=>$state['draft_json'],'published'=>$state['published_json'],
         'revision'=>$state['revision'],'publishedRevision'=>$state['published_revision'],
         'publishedAt'=>$state['published_at'],'sections'=>az_shop_homepage_sections(),
-        'categories'=>az_shop_categories(),'images'=>$images];
+        'categories'=>az_shop_categories(),'images'=>$images,'products'=>$choices,'categoryImages'=>$defaultImages];
 }
 function az_shop_homepage_save(array $user,array $body,?PDO $db=null):array
 {
@@ -231,7 +360,7 @@ function az_shop_homepage_image_access(string $id,?array $user=null,?PDO $db=nul
     $admin=is_array($user)&&($user['status']??'')==='active'&&az_has_role($user,'admin');
     if(!$admin){
         $live=az_shop_homepage_public($db);
-        if(!in_array($id,[$live['heroImage'],$live['backgroundImage']],true))
+        if(!in_array($id,az_shop_homepage_image_ids($live),true))
             throw new AzHttpError(404,'Image unavailable.','image_missing');
     }
     if(!preg_match('/^[a-f0-9]{32}\.(jpg|png|webp)$/D',$row['storage_name']))
@@ -243,7 +372,7 @@ function az_shop_homepage_image_delete(array $user,string $id,?PDO $db=null):arr
     az_shop_admin($user);$db??=az_db();$row=az_shop_homepage_image_access($id,$user,$db);
     $state=az_shop_homepage_state($db);
     foreach(['draft_json','published_json'] as $key){
-        if(in_array($id,[$state[$key]['heroImage'],$state[$key]['backgroundImage']],true))
+        if(in_array($id,az_shop_homepage_image_ids($state[$key]),true))
             throw new AzHttpError(409,'Image is used in a saved or published layout.','image_in_use');
     }
     $db->prepare('DELETE FROM shop_homepage_images WHERE id=?')->execute([$id]);

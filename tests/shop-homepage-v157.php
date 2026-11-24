@@ -27,6 +27,9 @@ function request_body(array $body):array{
 if(!in_array('sqlite',PDO::getAvailableDrivers(),true)){fwrite(STDERR,"PHP PDO SQLite required.\n");exit(2);}
 $db=new PDO('sqlite::memory:');$GLOBALS['shop_test_db']=$db;$db->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);$db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE,PDO::FETCH_ASSOC);
 $db->exec('CREATE TABLE studio_schema (id INTEGER PRIMARY KEY,version INTEGER NOT NULL);INSERT INTO studio_schema VALUES(1,52)');
+$db->exec("CREATE TABLE commerce_products(id TEXT PRIMARY KEY,title TEXT,price_cents INTEGER,state TEXT);
+CREATE TABLE commerce_product_catalog(product_id TEXT PRIMARY KEY,category TEXT,featured INTEGER);
+CREATE TABLE commerce_product_images(id TEXT PRIMARY KEY,product_id TEXT,sort_order INTEGER)");
 az_upgrade_shop_homepage_schema($db);ok(az_schema_version($db)===53,'schema 52→53');
 az_upgrade_shop_homepage_schema($db);ok((int)$db->query('SELECT COUNT(*) FROM shop_homepage_settings')->fetchColumn()===1,'idempotent schema');
 $admin=['id'=>1,'status'=>'active','roles'=>['admin']];$fan=['id'=>2,'status'=>'active','roles'=>['fan']];

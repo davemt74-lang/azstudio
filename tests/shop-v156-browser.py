@@ -9,7 +9,7 @@ import os,json
 ROOT=Path(__file__).resolve().parents[1]
 OUT=Path(os.environ.get('RUNNER_TEMP','/tmp'))/'azh_shop_v156_browser'
 OUT.mkdir(parents=True,exist_ok=True)
-SHOP=(ROOT/'shop.php').read_text()
+SHOP=(ROOT/'shop.php').read_text()+(ROOT/'includes/shop-homepage-view.php').read_text()
 ADMIN=(ROOT/'commerce.php').read_text()
 for anchor in ('data-stripe-checkout','data-local-order','data-shop-product','data-shop-filter','shop-product.php'):
  assert anchor in SHOP,anchor
@@ -133,3 +133,4 @@ def run():
   print('Admin merchandising CSRF, save, upload, delete PASS',len(calls),'API calls')
   page.close();browser.close()
 if __name__=='__main__':run()
+

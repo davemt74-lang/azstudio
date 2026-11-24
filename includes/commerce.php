@@ -461,10 +461,21 @@ function az_commerce_live_select(array $user,array $body): array
         return ['roomId'=>$room['id'],'productId'=>$product['id'],'promotionId'=>$promotion?:null];
     });
 }
-function az_commerce_public_products(): array
+function az_commerce_public_products(?array $productIds=null): array
 {
-    $q=az_db()->query("SELECT id,title,description,price_cents,currency,checkout_url,checkout_mode,state
-        FROM commerce_products WHERE state='active' ORDER BY updated_at DESC LIMIT 100");
+    if($productIds===null){
+        $q=az_db()->query("SELECT id,title,description,price_cents,currency,checkout_url,checkout_mode,state
+            FROM commerce_products WHERE state='active' ORDER BY updated_at DESC LIMIT 100");
+    }else{
+        $ids=array_values(array_unique(array_filter($productIds,static fn($id):bool=>is_string($id)&&az_valid_id($id))));
+        if(!$ids)return [];
+        // A curated homepage selects at most 24 records. Resolve those exact
+        // products even when they are older than the first catalog page.
+        $ids=array_slice($ids,0,24);$marks=implode(',',array_fill(0,count($ids),'?'));
+        $q=az_db()->prepare("SELECT id,title,description,price_cents,currency,checkout_url,checkout_mode,state
+            FROM commerce_products WHERE state='active' AND id IN ($marks) ORDER BY updated_at DESC");
+        $q->execute($ids);
+    }
     $rows=[];
     foreach($q->fetchAll(PDO::FETCH_ASSOC) as $r){
         $local=az_local_options($r['id']);
