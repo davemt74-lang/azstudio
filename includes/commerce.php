@@ -127,11 +127,11 @@ function az_commerce_model_ids(): array
     return array_map('intval',az_db()->query("SELECT DISTINCT u.id FROM users u JOIN user_roles r ON r.user_id=u.id AND r.role='model' WHERE u.status='active'")->fetchAll(PDO::FETCH_COLUMN));
 }
 /** Persistent, recipient-specific outbox. Queue in the same DB transaction as the source action. */
-function az_commerce_queue(string $key,int $actor,int $recipient,string $kind,string $title,string $detail,string $href='commerce.php',bool $announce=true): void
+function az_commerce_queue(string $key,int $actor,int $recipient,string $kind,string $title,string $detail,string $href='commerce.php',bool $announce=true,?PDO $db=null): void
 {
     if ($actor<1||$recipient<1)return;
     $eventKey=hash('sha256',$key.'|'.$recipient);
-    $db=az_db();
+    $db??=az_db();
     $q=$db->prepare('SELECT event_key FROM commerce_activity WHERE event_key=?');
     $q->execute([$eventKey]);if($q->fetchColumn())return;
     try {
@@ -151,17 +151,19 @@ function az_commerce_queue_admins(string $key,int $actor,string $kind,string $ti
 function az_commerce_chat_append(int $recipient,array $event): void
 {
     $db=az_db();
-    $q=$db->prepare("SELECT id FROM agent_chat_threads WHERE user_id=? AND title='Commerce Agent Updates' ORDER BY created_at LIMIT 1");
-    $q->execute([$recipient]);$thread=$q->fetchColumn();
+    $club=str_starts_with((string)$event['kind'],'club_');
+    $threadTitle=$club?'Creator Club Updates':'Commerce Agent Updates';
+    $q=$db->prepare('SELECT id FROM agent_chat_threads WHERE user_id=? AND title=? ORDER BY created_at LIMIT 1');
+    $q->execute([$recipient,$threadTitle]);$thread=$q->fetchColumn();
     $now=az_now();
     if (!$thread) {
         $thread=az_id();
         $db->prepare('INSERT INTO agent_chat_threads(id,user_id,title,created_at,updated_at) VALUES(?,?,?,?,?)')
-            ->execute([$thread,$recipient,'Commerce Agent Updates',$now,$now]);
+            ->execute([$thread,$recipient,$threadTitle,$now,$now]);
     }
     $q=$db->prepare('SELECT COALESCE(MAX(position),0) FROM agent_chat_messages WHERE thread_id=?');
     $q->execute([$thread]);$position=(int)$q->fetchColumn()+1;
-    $message='Commerce update: '.$event['title']."\n".$event['detail']."\nOpen: ".$event['href']."\nThis notice is based on recorded commerce activity; no action was taken for you.";
+    $message=($club?'Creator Club update: ':'Commerce update: ').$event['title']."\n".$event['detail']."\nOpen: ".$event['href']."\nThis notice is based on recorded ".($club?'Creator Club':'commerce')." activity; no action was taken for you.";
     $db->prepare('INSERT INTO agent_chat_messages(id,thread_id,user_id,position,role,content,client_token,state,created_at,updated_at) VALUES(?,?,?,?,?, ?,NULL,?,?,?)')
         ->execute([az_id(),$thread,$recipient,$position,'assistant',mb_safe_trim($message,2200),'complete',$now,$now]);
     $db->prepare('UPDATE agent_chat_threads SET updated_at=? WHERE id=? AND user_id=?')->execute([$now,$thread,$recipient]);

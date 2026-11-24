@@ -104,3 +104,19 @@
 @media(max-width:600px){.azh-shop-edit{padding:13px}.azh-shop-edit-header{margin-bottom:16px}.azh-shop-edit-header p{font-size:14px}.azh-shop-edit-toolbar{padding:13px;gap:12px}.azh-shop-edit-actions{width:100%}.azh-shop-edit-actions button{flex:1;font-size:13px;padding:9px 10px}.azh-shop-edit-fields{padding:14px;gap:14px}.azh-shop-edit-controls summary{padding:15px;font-size:14px}.azh-shop-preview-header{padding:13px}.azh-shop-preview-devices{padding:10px}.azh-shop-preview-frame-wrap{padding:7px}.azh-preview-dialog-header h2{font-size:18px}#azh-preview-dialog-content{padding:10px}.azh-shop-edit-layout{gap:16px}}
 @media(max-width:360px){.azh-shop-edit-grid{grid-template-columns:1fr}.azh-edit-span{grid-column:auto}.azh-shop-edit-choice{padding:9px;gap:6px}.azh-shop-edit-choice label{font-size:13px}.azh-choice-controls button{font-size:11px;padding:6px}.azh-featured-product-option{gap:7px;padding:8px}.azh-featured-product-image,.azh-featured-photo-placeholder{width:38px;height:46px}#azh-preview-viewport-label{width:100%;margin-left:0}}
 @media(prefers-reduced-motion:reduce){.azh-shop-edit *{scroll-behavior:auto!important}}
+
+/* Recovery lives above the editor; version rows use the page scroll at every width. */
+.azh-shop-recovery{display:grid;gap:12px;padding:18px;margin:0 0 20px;background:#fff8e9;border:1px solid #e9cc94;border-radius:12px;min-width:0}
+.azh-shop-recovery h2{font-size:18px;margin:0 0 6px;color:#634622}
+.azh-shop-recovery p{margin:0;font-size:14px;line-height:1.5;color:#725a39;overflow-wrap:anywhere}
+.azh-shop-recovery label{display:grid;gap:6px;font-size:13px;font-weight:650;min-width:0}
+.azh-shop-recovery select{max-width:100%;width:100%;min-width:0;border:1px solid #d8c3a3;padding:10px;font:inherit;border-radius:8px;background:#fff;color:#594632}
+.azh-shop-recovery-actions{display:flex;flex-wrap:wrap;gap:8px}
+#azh-shop-recovery-status[data-state="error"]{color:#a22e4e}
+.azh-homepage-history{list-style:none;padding:0;margin:0;display:grid;gap:12px;min-width:0}
+.azh-homepage-version{padding:12px;border:1px solid #eadde5;border-radius:9px;display:grid;gap:7px;min-width:0;background:#fffafd;overflow-wrap:anywhere}
+.azh-homepage-version strong{font-size:14px;line-height:1.4;color:#493440}
+.azh-homepage-version small{font-size:12px;line-height:1.45;color:#7b6272}
+.azh-homepage-version-actions{display:flex;flex-wrap:wrap;gap:7px}
+.azh-homepage-version-actions button{font-size:12px;min-height:36px;padding:8px 10px}
+@media(max-width:600px){.azh-shop-recovery{padding:14px}.azh-shop-recovery-actions button{flex:1;min-width:120px}}

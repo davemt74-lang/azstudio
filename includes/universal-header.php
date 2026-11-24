@@ -11,7 +11,7 @@ function az_render_universal_header(string $current, ?array $user = null, bool $
     $admin = $user !== null && az_has_role($user, 'admin');
     $liveEditor = $user !== null && az_has_role($user, 'editor');
     $team = $user !== null && ($admin || $liveEditor || az_has_role($user, 'model') || az_has_role($user, 'professional'));
-    $current = in_array($current, ['index','watch','dashboard','agent-chat','calendar','classes','appointments','account','user','settings','accounts','my-work','my-media','my-videos','my-editor','my-camera','productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','admin','login','signup','install','phone','apply','casting','admin-studio','live-director','live-productions','live','live-shows','commerce','shop','shop-homepage-editor','creator-club-admin','creator-analytics','publishing'], true) ? $current : 'index';
+    $current = in_array($current, ['index','watch','dashboard','agent-chat','calendar','classes','appointments','account','user','settings','accounts','my-work','my-media','my-videos','my-editor','my-camera','productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','admin','login','signup','install','phone','apply','casting','admin-studio','live-director','live-productions','live','live-shows','commerce','shop','shop-homepage-editor','creator-club-admin','creator-clubs','creator-club','creator-club-workspace','creator-analytics','publishing'], true) ? $current : 'index';
     $studioCurrent = in_array($current, ['productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','accounts','admin','casting','shop-homepage-editor','creator-club-admin','creator-analytics','publishing'], true);
     $item = static function (string $href, string $label, bool $active = false): string {
         return '<a class="azh-nav-link' . ($active ? ' is-active' : '') . '" href="' . az_h($href) . '"' . ($active ? ' aria-current="page"' : '') . '>' . az_h($label) . '</a>';
@@ -19,7 +19,7 @@ function az_render_universal_header(string $current, ?array $user = null, bool $
     $signedIn = $user !== null;
     $hasWorkspace = in_array($current, [
         'dashboard','admin-studio','live-director','live-productions','live','live-shows','agent-chat','commerce','account','user','settings','accounts','calendar','classes','appointments','my-work','my-media','my-videos','my-editor','my-camera',
-        'productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','admin','casting','shop-homepage-editor','creator-club-admin','creator-analytics','publishing',
+        'productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','admin','casting','shop-homepage-editor','creator-club-admin','creator-clubs','creator-club','creator-club-workspace','creator-analytics','publishing',
     ], true);
     if ($signedIn && !function_exists('az_render_member_nav_links')) {
         require_once __DIR__ . '/member-layout.php';
@@ -36,7 +36,7 @@ function az_render_universal_header(string $current, ?array $user = null, bool $
     <?php endif; ?>
     <a class="azh-global-header__brand" href="<?= $signedIn ? 'dashboard.php' : 'index.php' ?>" aria-label="AZHottie <?= $signedIn ? 'workspace' : 'home' ?>">AZHOTTIE<span aria-hidden="true">.</span></a>
     <?php if ($signedIn): ?>
-      <?php if ($admin || az_has_role($user,'model')): ?>
+      <?php if (az_agent_activity_available($user)): ?>
       <button type="button" id="azh-aw-bell" class="azh-aw-bell" aria-label="Open agent notifications" aria-controls="azh-aw-drawer" aria-expanded="false" title="Agent notifications">
         <svg viewBox="0 0 24 24" aria-hidden="true" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
         <span id="azh-aw-badge" class="azh-aw-badge" hidden></span>
@@ -76,7 +76,7 @@ function az_render_universal_header(string $current, ?array $user = null, bool $
     <?php endif; ?>
   </div>
 </header>
-<?php if ($signedIn && ($admin || az_has_role($user,'model'))): ?>
+<?php if ($signedIn && az_agent_activity_available($user)): ?>
 <div id="azh-aw-shade" class="azh-aw-shade" hidden></div>
 <aside id="azh-aw-drawer" class="azh-aw-drawer" role="dialog" aria-modal="true" aria-labelledby="azh-aw-title" aria-hidden="true" tabindex="-1" hidden data-csrf="<?= az_h(az_csrf_token()) ?>">
   <div class="azh-aw-header">
@@ -92,7 +92,7 @@ function az_render_universal_header(string $current, ?array $user = null, bool $
   <div id="azh-aw-content" class="azh-aw-content" role="tabpanel" aria-labelledby="azh-aw-tab-notifications" tabindex="0"><p class="azh-aw-loading">Loading verified activity…</p></div>
   <div class="azh-aw-footer"><a href="agent-chat.php">Ask AZHottie Agent <span aria-hidden="true">↗</span></a><small>Assignments and approvals change only when you confirm an action.</small></div>
 </aside>
-<script type="module" src="assets/agent-workspace.js?v=1.26.0"></script>
+<script type="module" src="assets/agent-workspace.js?v=1.59.0"></script>
 <?php endif; ?>
 <?php if ($signedIn && !$hasWorkspace): ?>
   <link rel="stylesheet" href="assets/member-layout.css?v=1.57.1">

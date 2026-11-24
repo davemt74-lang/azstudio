@@ -1,3 +1,15 @@
+AZHottie Studio v1.59.0 — Creator Clubs Workspace & Homepage Recovery
+Deploy the contents of azhottie-studio over the existing installation after backing up code, database, config and private media. Preserve storage/config.php, database files and uploaded media. Do NOT rerun install.php.
+Automatic schema upgrades: 53→54 adds retained homepage versions; 54→55 adds Creator Club audiences, review notes, tier archival and follower notification preferences. Existing tiers, posts, follows and access records are preserved. Back up the database before downgrading because v1.59 introduces nullable post tier IDs for follower posts.
+Open Commerce → Shop Homepage Editor for recovered unsaved edits and Version history. Browser recovery is tied to this account and installation in the same browser; clearing browser data removes those recovery copies. Saved server versions remain independent of browser storage.
+Restore a saved version to the draft, check the preview, then publish explicitly. Recovery and restoration never publish automatically. A stale recovery requires an explicit choice before replacing the latest draft. The latest 30 snapshots are retained; images referenced by those snapshots remain protected until the old version is removed.
+Open My Clubs to manage free follows, notifications and existing access records. Creators open My Creator Club to choose follower/tier audiences, submit for review, read feedback, revise drafts and withdraw posts. Archive tiers to remove them from new selection while preserving existing approved content/access.
+Administrators use Commerce → Membership reviews for pending tiers/posts, review notes and access history. Access revocation acts on the selected existing record only. No public grant or subscription-charge action is added.
+Club updates use the existing bell, History, Brain and Chat. Failed delivery remains in the existing outbox for retry by the private follow-through cron. Fan views contain only their own Club activity.
+Recurring Club billing is not enabled. Free following is not a paid membership; internal test grants remain disabled unless deliberately configured on an isolated staging installation. No payment-provider eligibility or real charging is certified by this release.
+Refresh the editor and Club pages after uploading all files, then verify signed-out shop images and fan/model/admin Club views on your host. Automated CI runs in a test environment; HostGator deployment and physical-device checks remain host acceptance.
+See docs/RELEASE_1_59_0.txt for scope and release validation.
+
 AZHottie Studio v1.58.0 — Shop 2.2 Responsive Homepage Editor & Merchandising
 Deploy the contents of azhottie-studio over your current installation. Preserve storage/config.php, the database, uploaded images, and private media. Do NOT rerun install.php.
 No new schema migration: existing v1.57.x installations remain at schema 53. The new layout fields are added to existing saved designs automatically while preserving deliberately hidden sections and categories.

@@ -27,7 +27,8 @@ function az_render_member_nav_links(string $page, array $user): void
         ['live.php', 'Live AZHottie', 'live', '◉'],
         ['live-shows.php', 'Published live shows', 'live-shows', '▶'],
         ['shop.php', 'Shop', 'shop', '◇'],
-        ['creator-clubs.php', 'Creator Clubs', 'creator-clubs', '♧'],
+        ['creator-clubs.php', 'Explore Creator Clubs', 'creator-clubs', '♧'],
+        ['creator-club-workspace.php', 'My Clubs', 'creator-club-workspace', '♡'],
     ];
     $teamLinks = [
         ['my-work.php', 'My assignments', 'my-work', '▤'],
@@ -78,10 +79,12 @@ function az_render_member_nav_links(string $page, array $user): void
         'my-camera'=>'Phone camera','productions'=>'Productions','director'=>'Production Director','library'=>'Interviews','my-media'=>'My media gallery','my-editor'=>'Video editor',
         'interview'=>'Recording room','editor'=>'Video editor','profiles'=>'Models',
         'questionnaires'=>'Questionnaires','casting'=>'Casting CRM','videos'=>'Finished videos','user-submissions'=>'User Submissions','publishing'=>'Publishing & Growth','commerce'=>'Commerce & Affiliates','shop-homepage-editor'=>'Shop Homepage Editor','accounts'=>'Manage accounts',
-        'creator-analytics'=>'Video performance','creator-clubs'=>'Creator Clubs','creator-club'=>'Creator Club','creator-club-admin'=>'Membership reviews','admin'=>'AI settings',
+        'creator-analytics'=>'Video performance','creator-clubs'=>'Creator Clubs','creator-club'=>'Creator Club','creator-club-workspace'=>'My Clubs','creator-club-admin'=>'Membership reviews','admin'=>'AI settings',
     ][$page] ?? 'My workspace';
     // Details and nested routes retain the corresponding navigation highlight.
     $highlight = ['director'=>'productions','interview'=>'library','editor'=>'library','account'=>'user'][$page] ?? $page;
+    if ($page === 'creator-club' && (!az_has_role($user, 'model') || (isset($_GET['creator']) && (int)$_GET['creator'] !== (int)$user['id']))) $highlight = 'creator-clubs';
+    $teamLinks = array_values(array_filter($teamLinks, static fn(array $entry): bool => $entry[2] !== 'creator-club' || az_has_role($user, 'model')));
     if ($admin && $page === 'commerce' && ($_GET['tab'] ?? '') === 'agent') $highlight = 'commerce-agent';
     $render = static function(array $entries) use ($highlight): void {
         foreach ($entries as [$url, $text, $route, $glyph]) {

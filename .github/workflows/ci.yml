@@ -72,6 +72,9 @@ jobs:
           php tests/shop-v156.php
           php tests/shop-homepage-v157.php
           php tests/shop-homepage-v158.php
+          php tests/shop-homepage-v159.php
+          php tests/creator-club-v159.php
+          php tests/agent-clubs-v159.php
           php tests/admin-navigation-v1571.php
 
   fixtures:
@@ -140,6 +143,8 @@ jobs:
           python tests/shop-v156-browser.py
           python tests/shop-homepage-v157-browser.py
           python tests/shop-homepage-v158-browser.py
+          python tests/shop-homepage-v159-browser.py
+          python tests/creator-club-v159-browser.py
           python tests/shop-hero-v1571-browser.py
           python tests/admin-navigation-v1571-browser.py
           python tests/live-shopping-v141-browser.py
@@ -171,6 +176,8 @@ jobs:
             ${{ runner.temp }}/azh_live_shop_v141/*.png
             ${{ runner.temp }}/azh_shop_v157_browser/*.png
             ${{ runner.temp }}/azh_shop_v158_browser/
+            ${{ runner.temp }}/azh_shop_v159_browser/
+            ${{ runner.temp }}/azh_club_v159_browser/
             ${{ runner.temp }}/azh_shop_v1571_browser/*.png
             ${{ runner.temp }}/azh_admin_navigation_v1571/*.png
             ${{ runner.temp }}/azh_campaign_v153_browser/*.png

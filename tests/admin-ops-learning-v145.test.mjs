@@ -47,7 +47,7 @@ test('Brain and Agent Chat share a bounded admin-only learning summary',()=>{
   assert.match(workspace,/operations_learning/);
   assert.match(panel,/brain\.operationsLearning/);
   assert.match(panel,/Operations Learning/);
-  assert.match(chat,/'operationsLearning'=>az_has_role\(\$member,'admin'\)/);
+  assert.match(chat,/\$summary\['operationsLearning'\]=az_has_role\(\$member,'admin'\)/);
   assert.match(chat,/deterministic history analysis/);
 });
 
@@ -63,3 +63,4 @@ test('Dashboard fetches read-only data, inserts dynamic text safely, with no fin
     assert.ok(!ui.includes(action),'Reporting UI must not mutate '+action);
   }
 });
+

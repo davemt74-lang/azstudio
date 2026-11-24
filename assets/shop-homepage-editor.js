@@ -11,6 +11,8 @@
   const panel = $('azh-shop-preview-panel');
   const dialog = $('azh-shop-preview-dialog');
   const csrf = editor.dataset.csrf;
+  const recoveryPrefix = editor.dataset.recoveryScope ? 'azh-shop-recovery:v1:' + editor.dataset.recoveryScope + ':' : '';
+  let recoveryId = '', recoveryEntries = [], recoveryLoadedKey = '', recoveryBaseRevision = null, recoveryUnavailable = false, recoveryTimer = 0, recoveryConflict = false;
   const strings = ['eyebrow','heading','accent','description','ctaText','ctaHref','categoriesTitle',
     'featuredTitle','catalogTitle','heroImage','backgroundImage','heroPosition','heroAlignment',
     'heroTextPosition','fontStyle','textColor','accentColor','buttonColor','backgroundColor',
@@ -85,6 +87,198 @@
       {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(date);
     $('azh-shop-published-status').textContent = published;
   }
+  function recoveryStatus(message, kind = 'ready') {
+    const node = $('azh-shop-recovery-status');
+    if (node) { node.textContent = message; node.dataset.state = kind; }
+  }
+  function recoveryFailure() {
+    recoveryUnavailable = true;
+    recoveryStatus('Browser recovery is unavailable. Use Save draft to keep your edits.','error');
+  }
+  function recoveryKey() { return recoveryPrefix + recoveryId; }
+  function initRecovery() {
+    if (!recoveryPrefix) return;
+    try {
+      // A fresh key for every document prevents duplicate tabs overwriting each other.
+      // Old copies stay discoverable after reload or a browser crash.
+      recoveryId = crypto.randomUUID();
+      // Check storage before promising recovery is available.
+      localStorage.setItem(recoveryPrefix + 'probe','1'); localStorage.removeItem(recoveryPrefix + 'probe');
+    } catch { recoveryFailure(); }
+  }
+  function validRecovery(record) {
+    if (!record || record.version !== 1 || !Number.isInteger(record.baseRevision) || record.baseRevision < 1
+      || !Number.isFinite(record.savedAt) || record.savedAt < Date.now() - 7 * 86400000 || record.savedAt > Date.now() + 60000
+      || !record.design || typeof record.design !== 'object' || Array.isArray(record.design)) return false;
+    const d = record.design;
+    if (!strings.every(key => typeof d[key] === 'string') || !numbers.every(key => Number.isFinite(d[key]))
+      || !flags.every(key => typeof d[key] === 'boolean')) return false;
+    const permutation = (values, keys) => Array.isArray(values) && values.length === keys.length
+      && new Set(values).size === keys.length && values.every(key => keys.includes(key));
+    if (!permutation(d.order,Object.keys(sectionLabels)) || !permutation(d.categoryOrder,Object.keys(categoryLabels))) return false;
+    if (!Object.keys(sectionLabels).every(key => typeof d.sections?.[key] === 'boolean')
+      || !Object.keys(categoryLabels).every(key => typeof d.categories?.[key] === 'boolean'
+        && typeof d.categoryCards?.[key]?.title === 'string' && typeof d.categoryCards?.[key]?.image === 'string')) return false;
+    return Array.isArray(d.featuredProductIds) && d.featuredProductIds.length <= 24
+      && d.featuredProductIds.every(id => typeof id === 'string' && /^(?:[a-f0-9]{32}|demo-[a-z-]+)$/.test(id));
+  }
+  function readRecoveries() {
+    if (!recoveryPrefix || recoveryUnavailable || !state) return [];
+    const entries = [];
+    try {
+      for (const key of Object.keys(localStorage)) {
+        if (!key.startsWith(recoveryPrefix) || key.endsWith('probe')) continue;
+        const raw = localStorage.getItem(key);
+        let record;
+        try { record = raw && raw.length < 100000 ? JSON.parse(raw) : null; } catch { record = null; }
+        if (!validRecovery(record)) { localStorage.removeItem(key); continue; }
+        // An acknowledged save may have succeeded just before the browser closed.
+        if (stable(record.design) === stable(state.draft)) { localStorage.removeItem(key); continue; }
+        entries.push({...record,key});
+      }
+      entries.sort((a,b) => b.savedAt - a.savedAt);
+      const unique = [], seen = new Set();
+      for (const entry of entries) {
+        const signature = entry.baseRevision + ':' + stable(entry.design);
+        if (seen.has(signature)) { localStorage.removeItem(entry.key); continue; }
+        seen.add(signature); unique.push(entry);
+      }
+      for (const old of unique.slice(8)) localStorage.removeItem(old.key);
+      return unique.slice(0,8);
+    } catch { recoveryFailure(); return []; }
+  }
+  function recoveryDate(value) {
+    return new Intl.DateTimeFormat(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(value));
+  }
+  function showRecoveries() {
+    const area = $('azh-shop-recovery'), choice = $('azh-recovery-choice');
+    if (!area || !choice || recoveryLoadedKey) return;
+    recoveryEntries = readRecoveries(); choice.replaceChildren();
+    for (const item of recoveryEntries) choice.add(new Option(recoveryDate(item.savedAt) + ' · ' + item.design.heading,item.key));
+    area.hidden = recoveryEntries.length === 0;
+    $('azh-recovery-choice-label').hidden = false;
+    editor.querySelector('[data-action="recover"]').hidden = false;
+    editor.querySelector('[data-action="discardRecovery"]').hidden = false;
+    editor.querySelector('[data-action="rebaseRecovery"]').hidden = true;
+    editor.querySelector('[data-action="cancelRecovery"]').hidden = true;
+    updateRecoveryNote();
+  }
+  function updateRecoveryNote() {
+    const entry = recoveryEntries.find(item => item.key === $('azh-recovery-choice')?.value);
+    if (!entry) return;
+    $('azh-shop-recovery-note').textContent = entry.baseRevision === state.revision
+      ? 'These edits were never saved to the server. Preview them, then choose Save draft when ready.'
+      : 'A newer saved draft exists. You can preview this recovery; replacing the current draft requires a separate choice.';
+  }
+  function clearRecovery() {
+    clearTimeout(recoveryTimer);
+    try {
+      if (recoveryId) localStorage.removeItem(recoveryKey());
+      if (recoveryLoadedKey) localStorage.removeItem(recoveryLoadedKey);
+    } catch { recoveryFailure(); }
+    recoveryLoadedKey = ''; recoveryBaseRevision = null; recoveryConflict = false;
+    if ($('azh-shop-recovery')) $('azh-shop-recovery').hidden = true;
+    if (!recoveryUnavailable) recoveryStatus('Saved edits are on the server. Unsaved edits are kept on this browser for 7 days.');
+  }
+  function persistRecovery() {
+    clearTimeout(recoveryTimer);
+    if (!state || !recoveryId || recoveryUnavailable || !dirty) return;
+    try {
+      const record = {version:1,baseRevision:recoveryBaseRevision ?? state.revision,savedAt:Date.now(),design:fields()};
+      localStorage.setItem(recoveryKey(),JSON.stringify(record));
+      recoveryStatus('Recovery saved on this browser · ' + recoveryDate(record.savedAt));
+    } catch { recoveryFailure(); }
+  }
+  function queueRecovery() {
+    clearTimeout(recoveryTimer);
+    if (!dirty && !recoveryLoadedKey) {
+      try { if (recoveryId) localStorage.removeItem(recoveryKey()); } catch { recoveryFailure(); }
+      return;
+    }
+    recoveryTimer = window.setTimeout(persistRecovery,250);
+  }
+  function recoverEdits() {
+    if (busy || !state) return;
+    const entry = recoveryEntries.find(item => item.key === $('azh-recovery-choice')?.value);
+    if (!entry || dirty && !window.confirm('Replace the unsaved edits in this tab with this recovery copy?')) return;
+    recoveryLoadedKey = entry.key; recoveryBaseRevision = entry.baseRevision;
+    render(normalizeDesign(entry.design)); showSaveState('Recovered edits loaded into the private preview.');
+    $('azh-recovery-choice-label').hidden = true;
+    editor.querySelector('[data-action="recover"]').hidden = true;
+    editor.querySelector('[data-action="discardRecovery"]').hidden = true;
+    editor.querySelector('[data-action="cancelRecovery"]').hidden = false;
+    const stale = recoveryBaseRevision !== state.revision;
+    editor.querySelector('[data-action="rebaseRecovery"]').hidden = !stale;
+    $('azh-shop-recovery-note').textContent = stale
+      ? 'This recovery started from revision ' + recoveryBaseRevision + '; the saved draft is now revision ' + state.revision + '. Review the preview, then explicitly choose whether to use it over the latest draft.'
+      : 'Recovered edits are private. Save draft to keep them on the server, or keep the saved draft.';
+    persistRecovery(); queuePreview(true); setBusy(false);
+  }
+  async function rebaseRecovery() {
+    if (busy || !recoveryLoadedKey || !window.confirm('Use these recovered edits over the latest saved draft? This only prepares your editor; Save draft or Publish is still required.')) return;
+    const pending = fields(); setBusy(true,'Checking the latest saved draft…');
+    try {
+      acceptState(await api('state')); recoveryBaseRevision = state.revision; recoveryConflict = false;
+      render(pending); showSaveState('Recovery ready to save over revision ' + state.revision + '. The public shop is unchanged.');
+      editor.querySelector('[data-action="rebaseRecovery"]').hidden = true;
+      $('azh-shop-recovery-note').textContent = 'You chose to use this recovery over revision ' + state.revision + '. Review it and choose Save draft when ready.';
+      persistRecovery(); queuePreview(true);
+    } catch (error) { handleError(error); } finally { setBusy(false); }
+  }
+  async function cancelRecovery() {
+    if (busy || !window.confirm('Discard these recovered edits and keep the saved draft?')) return;
+    setBusy(true,'Loading the saved draft…');
+    try { await loadState(false); clearRecovery(); } catch (error) { handleError(error); } finally { setBusy(false); }
+  }
+  function renderHistory() {
+    const list = $('azh-homepage-history'); if (!list) return;
+    list.replaceChildren();
+    const labels = {saveDraft:'Draft saved',publish:'Published',resetDraft:'Published design copied to draft',
+      restore:'Restored to draft',upgrade:'Existing design',storeEnabled:'Store visibility changed',sampleEnabled:'Sample catalog changed'};
+    for (const version of state.history || []) {
+      const row = element('li','azh-homepage-version'); row.dataset.versionId = version.id;
+      row.append(element('strong','',version.heading || 'Homepage design'));
+      row.append(element('small','',labels[version.action] || 'Saved version'));
+      row.append(element('small','', 'Revision ' + version.revision + ' · ' + version.scope + ' · ' + version.enabledSections + ' sections'));
+      row.append(element('small','',version.actor + ' · ' + recoveryDate(Date.parse(version.createdAt))));
+      const actions = element('div','azh-homepage-version-actions');
+      const restore = button('Restore to draft','Restore ' + version.heading + ' from revision ' + version.revision + ' to the draft');
+      restore.dataset.versionRestore = version.id;
+      const remove = button('Remove version','Remove saved version from revision ' + version.revision);
+      remove.dataset.versionDelete = version.id; actions.append(restore,remove); row.append(actions); list.append(row);
+    }
+    $('azh-history-status').textContent = (state.history || []).length
+      ? (state.history || []).length + ' of ' + (state.historyLimit || 30) + ' saved versions retained.' : 'Your next saved draft or publication will appear here.';
+  }
+  async function historyAction(action,id) {
+    if (busy || !state) return;
+    const restoring = action === 'restoreVersion';
+    const message = restoring ? 'Restore this version as the saved private draft? Current unsaved edits will be replaced. Featured products that are no longer available will be removed and reported. The published shop will not change.'
+      : 'Remove this saved version from history? Your current draft and published shop will not change.';
+    if (!window.confirm(message)) return;
+    const pending = fields(); setBusy(true,restoring ? 'Restoring saved version to the draft…' : 'Removing saved version…');
+    try {
+      const result = await api(action,{id,revision:state.revision});
+      if (restoring) {
+        state.revision = result.revision; state.draft = normalizeDesign(result.data); dirty = false; clearRecovery();
+      } else state.history = (state.history || []).filter(item => item.id !== id);
+      try {
+        const fresh = await api('state');
+        if (restoring) acceptState(fresh);
+        else {
+          // Removing history is metadata-only; preserve this tab's edit revision.
+          state.history = fresh.history || []; state.images = fresh.images || state.images;
+        }
+      } catch { /* Keep the acknowledged write if the metadata refresh fails. */ }
+      render(restoring ? state.draft : pending); $('azh-history-controls')?.querySelector('summary')?.focus({preventScroll:true});
+      const removed = Number(result.removedFeaturedCount) || 0;
+      showSaveState(restoring ? removed > 0
+        ? 'Version restored as draft; ' + removed + ' unavailable featured ' + (removed === 1 ? 'product removed.' : 'products removed.') + ' Review before publishing.'
+        : 'Version restored to the private draft. Publish separately when ready.' : 'Saved version removed.');
+      queuePreview(true);
+    } catch (error) { handleError(error); } finally { setBusy(false); }
+  }
+
   function fields() {
     const draft = clone(state.draft);
     for (const name of strings) draft[name] = form.elements.namedItem(name).value;
@@ -114,11 +308,23 @@
   function setBusy(value, message) {
     busy = value; fieldset.disabled = value || !state; editor.setAttribute('aria-busy', String(value));
     for (const control of editor.querySelectorAll('[data-action]')) control.disabled = value || !state;
+    if (recoveryConflict || recoveryBaseRevision !== null && state && recoveryBaseRevision !== state.revision)
+      for (const action of ['save','publish']) editor.querySelector('[data-action="' + action + '"]').disabled = true;
     if (message) status(message, 'saving');
   }
   function handleError(error) {
     status(error.message, 'error');
-    if (error.code === 'revision_conflict') editor.querySelector('[data-action="reload"]').hidden = false;
+    if (error.code === 'revision_conflict') {
+      editor.querySelector('[data-action="reload"]').hidden = false;
+      if (dirty && $('azh-shop-recovery')) {
+        recoveryLoadedKey = recoveryLoadedKey || recoveryKey(); recoveryBaseRevision ??= state.revision;
+        recoveryConflict = true; persistRecovery();
+        $('azh-shop-recovery').hidden = false; $('azh-recovery-choice-label').hidden = true;
+        $('azh-shop-recovery-note').textContent = 'The server has a newer saved draft. Keep that saved draft, or explicitly prepare these edits over the latest revision before saving.';
+        for (const action of ['recover','discardRecovery']) editor.querySelector('[data-action="' + action + '"]').hidden = true;
+        for (const action of ['rebaseRecovery','cancelRecovery']) editor.querySelector('[data-action="' + action + '"]').hidden = false;
+      }
+    }
   }
   function safeImage(src) {
     if (!src) return '';
@@ -171,13 +377,14 @@
       ...Object.values(design.categoryCards || {}).map(card => card.image)]);
   }
   function imageIsUsed(id) {
-    return [fields(),state.draft,state.published].some(design => referencedImages(design).has(id));
+    return [fields(),state.draft,state.published].some(design => referencedImages(design).has(id))
+      || (state.history || []).some(version => (version.imageIds || []).includes(id));
   }
   function updateImageDeleteButtons() {
     for (const control of editor.querySelectorAll('[data-image-delete]')) {
       const used = imageIsUsed(control.dataset.imageDelete); control.disabled = used;
       control.textContent = used ? 'In use' : 'Delete unused';
-      control.title = used ? 'Remove this image from the current, saved and published designs before deleting it.' : '';
+      control.title = used ? 'This image is used by the current draft, published shop, or a retained version. Remove those references before deleting it.' : '';
     }
   }
   function renderImageLibrary(design) {
@@ -295,7 +502,7 @@
     for (const name of [...strings,...numbers]) if (!['heroImage','mobileHeroImage','backgroundImage'].includes(name)) form.elements.namedItem(name).value = design[name];
     for (const name of flags) form.elements.namedItem(name).checked = Boolean(design[name]);
     renderImageLibrary(design); renderSections(design); renderCategories(design);
-    updateRangeLabels(); updateImagePreviews(); renderFeatured();
+    updateRangeLabels(); updateImagePreviews(); renderFeatured(); renderHistory();
   }
   function fitPreview() {
     const available = stage.clientWidth;
@@ -336,13 +543,13 @@
   }
   function changed() {
     if (!state || busy) return;
-    updateRangeLabels(); updateImagePreviews(); showSaveState(); queuePreview();
+    updateRangeLabels(); updateImagePreviews(); showSaveState(); queueRecovery(); queuePreview();
   }
-  async function loadState() {
+  async function loadState(checkRecovery = true) {
     const fresh = await api('state'); acceptState(fresh); render(); dirty = false;
     editor.querySelector('[data-action="reload"]').hidden = true;
     showSaveState('Ready · ' + (stable(state.draft) === stable(state.published) ? 'published revision ' + state.publishedRevision : 'saved draft, not published'));
-    queuePreview(true);
+    queuePreview(true); if (checkRecovery) showRecoveries();
   }
   function validateBeforeSave() {
     const invalid = [...form.elements].find(control => control.willValidate && !control.validity.valid);
@@ -357,6 +564,9 @@
   }
   async function save(mode) {
     if (busy || !state) return;
+    if (recoveryConflict || recoveryBaseRevision !== null && recoveryBaseRevision !== state.revision) {
+      status('A newer saved draft exists. Choose Use recovery over latest draft before saving recovered edits.','error'); return;
+    }
     if (!validateBeforeSave()) return;
     if (mode === 'publish' && !window.confirm('Publish this homepage design to the public shop?')) return;
     const snapshot = fields(); setBusy(true,mode === 'publish' ? 'Publishing homepage…' : 'Saving draft…');
@@ -366,7 +576,7 @@
       // fails, a successful save must not become a second stale-revision save.
       state.revision = result.revision; state.draft = normalizeDesign(result.data || snapshot);
       if (result.published) { state.published = clone(state.draft); state.publishedRevision++; }
-      dirty = false;
+      dirty = false; clearRecovery();
       try { acceptState(await api('state')); } catch { /* The write itself was confirmed. */ }
       render(); showSaveState(result.published ? 'Homepage published successfully.' : 'Draft saved · not visible to the public.');
       editor.querySelector('[data-action="reload"]').hidden = true; queuePreview(true);
@@ -379,7 +589,7 @@
       const result = await api('save',{revision:state.revision,action:'resetDraft'});
       state.revision = result.revision; state.draft = normalizeDesign(result.data || state.published);
       try { acceptState(await api('state')); } catch { /* The restore was confirmed. */ }
-      render(); dirty = false; showSaveState('Published design restored to the draft.'); queuePreview(true);
+      render(); dirty = false; clearRecovery(); showSaveState('Published design restored to the draft.'); queuePreview(true);
     } catch (error) { handleError(error); } finally { setBusy(false); }
   }
   function openUpload(target) {
@@ -407,7 +617,7 @@
         state.categoryImages = fresh.categoryImages || state.categoryImages;
       }
       catch { state.images = [{id:result.id,src:result.src,alt_text:result.alt || alt},...state.images]; }
-      render(pending); showSaveState();
+      render(pending); showSaveState(); persistRecovery();
       $('azh-edit-upload-file').value = ''; form.elements.namedItem('uploadAlt').value = '';
       $('azh-edit-upload-status').textContent = 'Image selected in your private preview. Save draft to keep this choice.';
       queuePreview(true);
@@ -466,6 +676,8 @@
     if (control.dataset.imageRemove) { form.elements.namedItem(control.dataset.imageRemove).value = 'none'; changed(); return; }
     if (control.dataset.categoryImageRemove) { form.querySelector(`[data-category-image="${control.dataset.categoryImageRemove}"]`).value = 'none'; changed(); return; }
     if (control.dataset.imageDelete) void deleteImage(control.dataset.imageDelete);
+    if (control.dataset.versionRestore) void historyAction('restoreVersion',control.dataset.versionRestore);
+    if (control.dataset.versionDelete) void historyAction('deleteVersion',control.dataset.versionDelete);
   });
   form.addEventListener('submit',event => { event.preventDefault(); void save('saveDraft'); });
   editor.querySelector('[data-action="save"]').addEventListener('click',() => void save('saveDraft'));
@@ -475,8 +687,17 @@
   editor.querySelector('[data-action="reload"]').addEventListener('click',async () => {
     if (busy || dirty && !window.confirm('Reload the saved design and discard unsaved edits in this tab?')) return;
     setBusy(true,'Loading saved design…');
-    try { await loadState(); } catch (error) { handleError(error); } finally { setBusy(false); }
+    try { await loadState(false); clearRecovery(); } catch (error) { handleError(error); } finally { setBusy(false); }
   });
+  editor.querySelector('[data-action="recover"]')?.addEventListener('click',recoverEdits);
+  editor.querySelector('[data-action="rebaseRecovery"]')?.addEventListener('click',() => void rebaseRecovery());
+  editor.querySelector('[data-action="cancelRecovery"]')?.addEventListener('click',() => void cancelRecovery());
+  editor.querySelector('[data-action="discardRecovery"]')?.addEventListener('click',() => {
+    if (busy || !window.confirm('Discard this unsaved recovery copy? The saved draft and published shop will not change.')) return;
+    try { localStorage.removeItem($('azh-recovery-choice').value); showRecoveries(); } catch { recoveryFailure(); }
+  });
+  $('azh-recovery-choice')?.addEventListener('change',updateRecoveryNote);
+  window.addEventListener('pagehide',persistRecovery);
   $('azh-edit-upload').addEventListener('click',() => void uploadImage());
   $('azh-featured-more').addEventListener('click',() => { resultsLimit += 12; renderProductResults(); });
   for (const control of editor.querySelectorAll('[data-preview-width]')) control.addEventListener('click',() => {
@@ -514,6 +735,6 @@
   window.addEventListener('resize',fitPreview);
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(fitPreview).observe(stage);
   try { frameReady = frame.contentDocument?.readyState === 'complete' && frame.contentDocument.body?.dataset.shopPreview === '1'; } catch { /* Wait for the iframe load event. */ }
-  fitPreview(); setBusy(true);
+  initRecovery(); fitPreview(); setBusy(true);
   loadState().catch(handleError).finally(() => setBusy(false));
 })();

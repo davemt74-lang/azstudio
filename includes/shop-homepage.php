@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require_once __DIR__.'/shop-homepage-history.php';
 /** Shop 2.2: one validated design for the live preview, draft and published shop. */
 function az_shop_homepage_sections(): array
 {
@@ -274,7 +275,8 @@ function az_shop_homepage_admin_state(array $user,?PDO $db=null):array
     return ['draft'=>$state['draft_json'],'published'=>$state['published_json'],
         'revision'=>$state['revision'],'publishedRevision'=>$state['published_revision'],
         'publishedAt'=>$state['published_at'],'sections'=>az_shop_homepage_sections(),
-        'categories'=>az_shop_categories(),'images'=>$images,'products'=>$choices,'categoryImages'=>$defaultImages];
+        'categories'=>az_shop_categories(),'images'=>$images,'products'=>$choices,'categoryImages'=>$defaultImages,
+        'history'=>az_shop_homepage_history_list($user,$db),'historyLimit'=>30];
 }
 function az_shop_homepage_save(array $user,array $body,?PDO $db=null):array
 {
@@ -283,43 +285,53 @@ function az_shop_homepage_save(array $user,array $body,?PDO $db=null):array
     if(!is_int($revision)||$revision<1)throw new AzHttpError(400,'Invalid revision.','invalid_revision');
     $mode=(string)($body['action']??'');
     if(!in_array($mode,['saveDraft','publish','resetDraft'],true))throw new AzHttpError(400,'Invalid operation.','invalid_action');
-    $state=az_shop_homepage_state($db);
-    if($state['revision']!==$revision)throw new AzHttpError(409,'Homepage changed in another tab. Reload to continue.','revision_conflict');
-    if($mode==='resetDraft')$draft=$state['published_json'];
-    else {
-        // az_json_body keeps nested JSON objects as stdClass. Normalize the
-        // expected design object here; its fields still pass strict validation.
-        $design=$body['design']??null;
-        if($design instanceof stdClass)$design=get_object_vars($design);
-        if(!is_array($design))throw new AzHttpError(400,'Invalid design payload.','invalid_design');
-        $draft=az_shop_homepage_validate($design,$db);
-    }
-    $encoded=json_encode($draft,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
-    $date=az_now();
-    if($mode==='publish'){
-        $q=$db->prepare('UPDATE shop_homepage_settings SET draft_json=?,published_json=?,revision=revision+1,published_revision=published_revision+1,updated_at=?,published_at=? WHERE id=1 AND revision=?');
-        $q->execute([$encoded,$encoded,$date,$date,$revision]);
-    }else{
-        $q=$db->prepare('UPDATE shop_homepage_settings SET draft_json=?,revision=revision+1,updated_at=? WHERE id=1 AND revision=?');
-        $q->execute([$encoded,$date,$revision]);
-    }
-    if($q->rowCount()!==1)throw new AzHttpError(409,'Homepage changed; reload before saving.','revision_conflict');
-    return ['saved'=>true,'published'=>$mode==='publish','revision'=>$revision+1,'data'=>$draft];
+    $db->beginTransaction();
+    try{
+        az_shop_homepage_write_lock($db);$state=az_shop_homepage_state($db);
+        if($state['revision']!==$revision)throw new AzHttpError(409,'Homepage changed in another tab. Reload to continue.','revision_conflict');
+        if($mode==='resetDraft')$draft=$state['published_json'];
+        else {
+            // Nested JSON objects retain strict validation after normalization.
+            $design=$body['design']??null;
+            if($design instanceof stdClass)$design=get_object_vars($design);
+            if(!is_array($design))throw new AzHttpError(400,'Invalid design payload.','invalid_design');
+            $draft=az_shop_homepage_validate($design,$db);
+        }
+        $encoded=json_encode($draft,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);$date=az_now();
+        if($mode==='publish'){
+            $q=$db->prepare('UPDATE shop_homepage_settings SET draft_json=?,published_json=?,revision=revision+1,published_revision=published_revision+1,updated_at=?,published_at=? WHERE id=1 AND revision=?');
+            $q->execute([$encoded,$encoded,$date,$date,$revision]);
+        }else{
+            $q=$db->prepare('UPDATE shop_homepage_settings SET draft_json=?,revision=revision+1,updated_at=? WHERE id=1 AND revision=?');
+            $q->execute([$encoded,$date,$revision]);
+        }
+        if($q->rowCount()!==1)throw new AzHttpError(409,'Homepage changed; reload before saving.','revision_conflict');
+        if(az_shop_homepage_history_enabled($db))az_shop_homepage_history_record($db,$draft,$revision+1,$mode==='publish'?'published':'draft',$mode,$user);
+        $db->commit();
+        return ['saved'=>true,'published'=>$mode==='publish','revision'=>$revision+1,'data'=>$draft];
+    }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
 }
 function az_shop_homepage_toggle(array $user,array $body,?PDO $db=null):array
 {
     az_shop_admin($user);$db??=az_db();
     $key=$body['key']??null;$enabled=$body['enabled']??null;$rev=$body['revision']??null;
-    if(!in_array($key,['sampleEnabled','storeEnabled'],true)||!is_bool($enabled)||!is_int($rev))
+    if(!in_array($key,['sampleEnabled','storeEnabled'],true)||!is_bool($enabled)||!is_int($rev)||$rev<1)
         throw new AzHttpError(400,'Invalid store toggle.','invalid_toggle');
-    $state=az_shop_homepage_state($db);
-    if($state['revision']!==$rev)throw new AzHttpError(409,'Settings changed; refresh.','revision_conflict');
-    $draft=$state['draft_json'];$live=$state['published_json'];
-    $draft[$key]=$enabled;$live[$key]=$enabled;
-    $q=$db->prepare('UPDATE shop_homepage_settings SET draft_json=?,published_json=?,revision=revision+1,published_revision=published_revision+1,updated_at=?,published_at=? WHERE id=1 AND revision=?');
-    $now=az_now();$q->execute([json_encode($draft,JSON_THROW_ON_ERROR),json_encode($live,JSON_THROW_ON_ERROR),$now,$now,$rev]);
-    if($q->rowCount()!==1)throw new AzHttpError(409,'Settings changed; refresh.','revision_conflict');
-    return ['saved'=>true,'key'=>$key,'enabled'=>$enabled,'revision'=>$rev+1];
+    $db->beginTransaction();
+    try{
+        az_shop_homepage_write_lock($db);$state=az_shop_homepage_state($db);
+        if($state['revision']!==$rev)throw new AzHttpError(409,'Settings changed; refresh.','revision_conflict');
+        $draft=$state['draft_json'];$live=$state['published_json'];
+        $draft[$key]=$enabled;$live[$key]=$enabled;
+        $q=$db->prepare('UPDATE shop_homepage_settings SET draft_json=?,published_json=?,revision=revision+1,published_revision=published_revision+1,updated_at=?,published_at=? WHERE id=1 AND revision=?');
+        $now=az_now();$q->execute([json_encode($draft,JSON_THROW_ON_ERROR),json_encode($live,JSON_THROW_ON_ERROR),$now,$now,$rev]);
+        if($q->rowCount()!==1)throw new AzHttpError(409,'Settings changed; refresh.','revision_conflict');
+        if(az_shop_homepage_history_enabled($db)){
+            az_shop_homepage_history_record($db,$live,$rev+1,'published',$key,$user);
+            if($draft!==$live)az_shop_homepage_history_record($db,$draft,$rev+1,'draft',$key,$user);
+        }
+        $db->commit();return ['saved'=>true,'key'=>$key,'enabled'=>$enabled,'revision'=>$rev+1];
+    }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
 }
 function az_shop_homepage_image_dir():string
 {
@@ -369,13 +381,19 @@ function az_shop_homepage_image_access(string $id,?array $user=null,?PDO $db=nul
 }
 function az_shop_homepage_image_delete(array $user,string $id,?PDO $db=null):array
 {
-    az_shop_admin($user);$db??=az_db();$row=az_shop_homepage_image_access($id,$user,$db);
-    $state=az_shop_homepage_state($db);
-    foreach(['draft_json','published_json'] as $key){
-        if(in_array($id,az_shop_homepage_image_ids($state[$key]),true))
-            throw new AzHttpError(409,'Image is used in a saved or published layout.','image_in_use');
-    }
-    $db->prepare('DELETE FROM shop_homepage_images WHERE id=?')->execute([$id]);
+    az_shop_admin($user);$db??=az_db();$db->beginTransaction();
+    try{
+        az_shop_homepage_write_lock($db);$row=az_shop_homepage_image_access($id,$user,$db);
+        $state=az_shop_homepage_state($db);
+        foreach(['draft_json','published_json'] as $key){
+            if(in_array($id,az_shop_homepage_image_ids($state[$key]),true))
+                throw new AzHttpError(409,'Image is used in a saved or published layout.','image_in_use');
+        }
+        if(az_shop_homepage_history_uses_image($db,$id))
+            throw new AzHttpError(409,'A saved version uses this image. Remove that version from history before deleting its image.','image_in_history');
+        $db->prepare('DELETE FROM shop_homepage_images WHERE id=?')->execute([$id]);
+        $db->commit();
+    }catch(Throwable $e){if($db->inTransaction())$db->rollBack();throw $e;}
     @unlink(az_shop_homepage_image_dir().'/'.$row['storage_name']);
     return ['deleted'=>true,'id'=>$id];
 }
