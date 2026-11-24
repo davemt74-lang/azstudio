@@ -18,7 +18,7 @@ try{
         az_creator_club_tier($user,(string)($_POST['title']??''),(string)($_POST['description']??''),$price*100);
     }elseif($action==='post'){
         if($creator!==(int)$user['id'])throw new AzHttpError(403,'Creator only.','forbidden');
-        az_creator_club_post($user,(string)($_POST['tier_id']??''),($_POST['media_id']??'')?:null,(string)($_POST['title']??''),(string)($_POST['body']??''));
+        az_creator_club_post($user,(string)($_POST['tier_id']??''),($_POST['media_id']??'')?:null,(string)($_POST['title']??''),(string)($_POST['body']??''),az_db(),($_POST['rights_confirmed']??'')==='1');
     }elseif($action==='withdraw'){
         if($creator!==(int)$user['id'])throw new AzHttpError(403,'Creator only.','forbidden');
         az_creator_club_withdraw($user,(string)($_POST['id']??''),(int)($_POST['revision']??0));
