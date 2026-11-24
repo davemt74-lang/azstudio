@@ -821,3 +821,11 @@ A previously on-air phone that disconnects leaves a safe holding slate. When the
 Automated Node and Chrome tests exercise concurrent phone feeds, delayed viewer Join cancellation, stale lease cleanup, recording state safety, user-controlled restore, mixer readiness and mobile layouts. Actual physical-device, cellular-network, audio/video synchronization and saved-show playback are separate acceptance requirements.
 
 A client and server ordering safeguard now rejects an older, delayed fan Join request if a newer session for that member already exists, preserving the newer viewer slot. New clients use a monotonic timestamp-prefixed 32-hex nonce plus an 80-bit random suffix; existing older random nonces remain supported. No schema change.
+
+AZHottie Studio v1.55.0 — Per-Creator Club Foundation
+------------------------------------------------------
+- Upgrade schema 50 → 51 automatically on first authenticated bootstrap.
+- Fan follows, creator-specific tier proposals, reviewed exclusive text/private-video posts, staff review queue.
+- Per-request authorization on subscriber video playback; no public link to owner's private media.
+- Monthly prices are non-billing proposals. PAID SUBSCRIPTIONS, adult-content payments, auto-renewal, tips and creator payouts are NOT ENABLED.
+- Back up site/database/private media/config before uploading. Do not run the installer.

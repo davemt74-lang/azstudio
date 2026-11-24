@@ -8,7 +8,7 @@ function az_render_member_nav_links(string $page, array $user): void
 {
     $admin = az_has_role($user, 'admin');
     $liveEditor = $admin || az_has_role($user, 'editor');
-    $adminPage = in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','commerce','accounts','admin'], true) || ($admin && $page==='creator-analytics');
+    $adminPage = in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','commerce','accounts','admin','creator-club-admin'], true) || ($admin && $page==='creator-analytics');
     $contributor = $admin || az_has_role($user, 'editor') || az_has_role($user, 'model') || az_has_role($user, 'professional');
     $links = [
         ['dashboard.php', 'Overview', 'dashboard', '⌂'],
@@ -21,11 +21,13 @@ function az_render_member_nav_links(string $page, array $user): void
         ['live.php', 'Live AZHottie', 'live', '◉'],
         ['live-shows.php', 'Published live shows', 'live-shows', '▶'],
         ['shop.php', 'Shop', 'shop', '◇'],
+        ['creator-clubs.php', 'Creator Clubs', 'creator-clubs', '♧'],
     ];
     $teamLinks = [
         ['my-work.php', 'My assignments', 'my-work', '▤'],
         ['my-media.php', 'My media gallery', 'my-media', '▣'],
         ['my-videos.php', 'My Videos', 'my-videos', '▷'],
+        ['creator-club.php', 'My Creator Club', 'creator-club', '♡'],
         ['commerce.php', 'Creator Commerce', 'commerce', '◈'],
         ['creator-analytics.php', 'Video performance', 'creator-analytics', '▥'],
         ['my-editor.php', 'Video editor', 'my-editor', '✂'],
@@ -39,6 +41,7 @@ function az_render_member_nav_links(string $page, array $user): void
         ['library.php', 'Interviews', 'library', '▣'],
         ['profiles.php', 'Models', 'profiles', '♧'],
         ['casting.php', 'Casting CRM', 'casting', '✧'],
+        ['creator-club-admin.php', 'Membership reviews', 'creator-club-admin', '♡'],
         ['questionnaires.php', 'Questionnaires', 'questionnaires', '☷'],
         ['videos.php', 'Video library', 'videos', '▸'],
         ['user-submissions.php', 'User Submissions', 'user-submissions', '▤'],
@@ -54,7 +57,7 @@ function az_render_member_nav_links(string $page, array $user): void
         'my-camera'=>'Phone camera','productions'=>'Productions','director'=>'Production Director','library'=>'Interviews','my-media'=>'My media gallery','my-editor'=>'Video editor',
         'interview'=>'Recording room','editor'=>'Video editor','profiles'=>'Models',
         'questionnaires'=>'Questionnaires','casting'=>'Casting CRM','videos'=>'Finished videos','user-submissions'=>'User Submissions','publishing'=>'Publishing & Growth','commerce'=>'Commerce & Affiliates','accounts'=>'Manage accounts',
-        'creator-analytics'=>'Video performance','admin'=>'AI settings',
+        'creator-analytics'=>'Video performance','creator-clubs'=>'Creator Clubs','creator-club'=>'Creator Club','creator-club-admin'=>'Membership reviews','admin'=>'AI settings',
     ][$page] ?? 'My workspace';
     // Details and nested routes retain the corresponding navigation highlight.
     $highlight = ['director'=>'productions','interview'=>'library','editor'=>'library'][$page] ?? $page;
