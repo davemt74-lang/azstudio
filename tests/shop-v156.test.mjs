@@ -16,6 +16,7 @@ test('public product and image boundaries are server enforced, not just hidden i
  assert.match(php,/a\.state='approved'/);assert.match(php,/v\.rights_confirmed=1/);
  assert.match(php,/a\.video_revision=v\.revision/);
  assert.match(php,/az_shop_image_access/);assert.match(php,/az_commerce_active/);
+ assert.match(php,/p\.price_cents,p\.currency FROM commerce_product_images/);
  assert.match(php,/array_replace\(\$row,\['id'=>\$row\['product_id'\]\]\)/);
  assert.match(php,/is_uploaded_file/);assert.match(php,/getimagesize/);assert.match(php,/image\/webp/);
  assert.match(php,/24000000/);assert.match(php,/Require all denied/);
