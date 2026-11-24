@@ -28,6 +28,8 @@ test('Exclusive content requires a server-authorized post, not merely hidden UI'
  assert.match(media,/Accept-Ranges: bytes/);
  assert.match(media,/Cross-Origin-Resource-Policy: same-origin/);
  assert.match(read('includes/creator-memberships.php'),/revoked_at IS NULL/);
+ assert.match(read('includes/creator-memberships.php'),/rights_confirmed/);
+ assert.match(read('creator-club.php'),/name="rights_confirmed"/);
  assert.match(read('includes/creator-memberships.php'),/ends_at>\?/);
  assert.doesNotMatch(read('creator-club.php'),/personal-media-file\.php\?/);
 });
