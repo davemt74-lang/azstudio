@@ -74,7 +74,7 @@ $new=az_campaign_create(['promotionId'=>$promotion,'platform'=>'tiktok','schedul
 $scheduled=az_campaign_decide(['id'=>$new['id'],'revision'=>1,'decision'=>'schedule'],7);check($scheduled['state']==='scheduled','handoff scheduled');
 $early=false;try{az_campaign_decide(['id'=>$new['id'],'revision'=>2,'decision'=>'activate'],7);}catch(AzHttpError $e){$early=$e->errorCode==='not_due';}check($early,'early scheduled activation blocked');
 $db->prepare('UPDATE publishing_campaigns SET schedule_at=? WHERE id=?')->execute([gmdate('Y-m-d\TH:i:s\Z',time()-3600),$new['id']]);
-$all=az_campaign_list(7);check($all[0]['handoffDue']===true,'due handoff appears');
+$all=az_campaign_list(7);$due=array_values(array_filter($all,static fn($item)=>$item['id']===$new['id']));check(count($due)===1&&$due[0]['handoffDue']===true,'due handoff appears');
 $activated=az_campaign_decide(['id'=>$new['id'],'revision'=>2,'decision'=>'activate'],7);check($activated['state']==='active','due campaign activated manually');
 @unlink(AZ_STORAGE.'/schema-migration.lock');@rmdir(AZ_STORAGE);
 echo "v1.53 campaign migration, privacy, lifecycle and scheduling PASS\n";
