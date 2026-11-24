@@ -30,6 +30,7 @@ function az_upgrade_creator_memberships_schema(PDO $db):void
         $db->exec("CREATE TABLE IF NOT EXISTS creator_club_posts (
             id CHAR(32) PRIMARY KEY,creator_id $userId NOT NULL,tier_id CHAR(32) NOT NULL,
             media_id CHAR(32) NULL,title VARCHAR(160) NOT NULL,body TEXT NOT NULL,
+            rights_confirmed INTEGER NOT NULL DEFAULT 0,
             state VARCHAR(20) NOT NULL DEFAULT 'pending',revision INTEGER NOT NULL DEFAULT 1,
             created_at VARCHAR(32) NOT NULL,updated_at VARCHAR(32) NOT NULL,
             reviewed_by $userId NULL,reviewed_at VARCHAR(32) NULL,
@@ -98,7 +99,7 @@ function az_creator_club_tier(array $actor,string $title,string $description,int
     $creator=(int)$actor['id'];$db??=az_db();az_creator_club_require_creator($actor,$creator,$db);
     $title=trim(preg_replace('/[\x00-\x1F\x7F]/u',' ',$title)??'');
     $description=trim($description);
-    if($title===''||strlen($title)>100||mb_strlen($description)>1200||$cents<100||$cents>50000)
+    if($title===''||strlen($title)>100||strlen($description)>1200||$cents<100||$cents>50000)
         throw new AzHttpError(400,'Provide a title, details and a proposed price between $1 and $500.','invalid_tier');
     $q=$db->prepare('SELECT COUNT(*) FROM creator_club_tiers WHERE creator_id=? AND state IN (\'approved\',\'pending\')');
     $q->execute([$creator]);if((int)$q->fetchColumn()>=5)throw new AzHttpError(409,'You can have at most five pending or approved tiers.','tier_limit');
@@ -124,6 +125,7 @@ function az_creator_club_review(array $actor,string $kind,string $id,int $revisi
             $t=$db->prepare("SELECT 1 FROM creator_club_tiers WHERE id=? AND creator_id=? AND state='approved'");
             $t->execute([$row['tier_id'],$row['creator_id']]);
             if(!$t->fetchColumn())throw new AzHttpError(409,'The tier is not approved.','tier_not_approved');
+            if((int)($row['rights_confirmed']??0)!==1)throw new AzHttpError(409,'Creator rights confirmation is missing.','rights_not_confirmed');
             if($row['media_id']!==null)az_personal_media_row((string)$row['media_id'],(int)$row['creator_id']);
         }
         $next=$decision==='approve'?'approved':'rejected';$now=az_now();
@@ -154,7 +156,7 @@ function az_creator_club_is_following(?array $viewer,int $creator,?PDO $db=null)
     $q=$db->prepare('SELECT 1 FROM creator_club_follows WHERE fan_id=? AND creator_id=?');
     $q->execute([(int)$viewer['id'],$creator]);return (bool)$q->fetchColumn();
 }
-function az_creator_club_post(array $actor,string $tierId,?string $mediaId,string $title,string $body,?PDO $db=null):array
+function az_creator_club_post(array $actor,string $tierId,?string $mediaId,string $title,string $body,?PDO $db=null,bool $rightsConfirmed=false):array
 {
     $db??=az_db();$creator=(int)$actor['id'];az_creator_club_require_creator($actor,$creator,$db);
     if(!az_valid_id($tierId))throw new AzHttpError(400,'Choose an approved tier.','invalid_tier');
@@ -163,10 +165,11 @@ function az_creator_club_post(array $actor,string $tierId,?string $mediaId,strin
     if($mediaId==='')$mediaId=null;
     if($mediaId!==null)az_personal_media_row($mediaId,$creator);
     $title=trim(preg_replace('/[\x00-\x1F\x7F]/u',' ',$title)??'');$body=trim($body);
-    if($title===''||mb_strlen($title)>160||mb_strlen($body)>6000||($body===''&&$mediaId===null))
+    if(!$rightsConfirmed)throw new AzHttpError(400,'Confirm rights and participant consent before submitting.','rights_required');
+    if($title===''||strlen($title)>160||strlen($body)>6000||($body===''&&$mediaId===null))
         throw new AzHttpError(400,'Provide a title and text or a private video.','invalid_post');
     $id=az_id();$now=az_now();
-    $db->prepare("INSERT INTO creator_club_posts(id,creator_id,tier_id,media_id,title,body,state,revision,created_at,updated_at) VALUES(?,?,?,?,?,?,'pending',1,?,?)")
+    $db->prepare("INSERT INTO creator_club_posts(id,creator_id,tier_id,media_id,title,body,rights_confirmed,state,revision,created_at,updated_at) VALUES(?,?,?,?,?,?,1,'pending',1,?,?)")
       ->execute([$id,$creator,$tierId,$mediaId,$title,$body,$now,$now]);
     return ['id'=>$id,'state'=>'pending'];
 }
@@ -203,7 +206,7 @@ function az_creator_club_can_view(?array $viewer,array $post,?PDO $db=null,?stri
     $db??=az_db();$creator=(int)$post['creator_id'];$viewerId=(int)$viewer['id'];
     if($viewerId===$creator&&az_has_role($viewer,'model'))return true;
     if(az_has_role($viewer,'admin'))return true;
-    if($post['state']!=='approved')return false;
+    if($post['state']!=='approved'||(int)($post['rights_confirmed']??0)!==1)return false;
     // A post's media stays restricted when its tier is suspended or creator deactivated.
     try {az_creator_club_creator($creator,$db);}catch(AzHttpError){return false;}
     $q=$db->prepare("SELECT 1 FROM creator_club_tiers WHERE id=? AND creator_id=? AND state='approved'");
