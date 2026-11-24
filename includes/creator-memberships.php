@@ -79,9 +79,9 @@ function az_creator_club_creator(int $id, ?PDO $db=null):array
 }
 function az_creator_club_require_creator(array $actor,int $creator,?PDO $db=null):void
 {
-    az_creator_club_creator($creator,$db);
     if((int)$actor['id']!==$creator||!az_has_role($actor,'model'))
         throw new AzHttpError(403,'Only this creator can manage these drafts.','creator_forbidden');
+    az_creator_club_creator($creator,$db);
 }
 function az_creator_club_require_admin(array $actor):void
 {
