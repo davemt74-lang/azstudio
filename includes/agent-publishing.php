@@ -286,6 +286,12 @@ function az_publishing_agent_briefing(array $user): array
     $statuses=[];foreach($q->fetchAll() as $r)$statuses[$r['status']]=(int)$r['n'];
     $q=az_db()->prepare("SELECT COUNT(*) FROM publishing_agent_promotions WHERE ".($admin?"state='draft'":"user_id=? AND state='draft'"));$q->execute($admin?[]:[$id]);$draftPromos=(int)$q->fetchColumn();
     $counts=['publishingPending'=>(int)($statuses['pending_review']??0),'publishingScheduled'=>(int)($statuses['scheduled']??0),'publishingPublished'=>(int)($statuses['published']??0),'publishingDraftPromos'=>$draftPromos];
+    if($admin&&function_exists('az_campaign_list')&&az_schema_version(az_db())>=49){
+        $due=0;foreach(az_campaign_list($id) as $campaign){if($campaign['handoffDue'])$due++;}
+        $counts['campaignHandoffsDue']=$due;
+        if($due)$cards[]=az_agent_workspace_card('growth','Campaign handoffs due',
+            $due.' planned campaign(s) are ready for a human publishing decision. No external platform was contacted.','publishing.php#pg-campaign-workspace',1);
+    }
     $stats=az_publishing_analytics($user);
     if($admin){
         if($counts['publishingPending'])$cards[]=az_agent_workspace_card('publishing','Publishing approvals needed',

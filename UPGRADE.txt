@@ -1,3 +1,11 @@
+AZHottie v1.53.0 — Publishing & Growth 2.0
+
+Backup code, database, storage and media. Deploy over existing installation; do not rerun install.php.
+Schema 48 -> 49 adds publishing campaign drafts, manual scheduling/activation, audit records, and daily aggregate link opens.
+Social network posting is NOT connected or automatic. Downloaded share-card art uses the public approved cover only.
+Any active link automatically fails closed when the video, creator consent or approved social copy changes.
+Tracked opens are session-limited requests; do not present them as unique people, verified play starts or sales.
+
 AZHottie Studio v1.51.0 — Live production recovery and recorded-video playback checks
 ======================================================================
 - Full deployment ZIP from successful post-merge CI only.
