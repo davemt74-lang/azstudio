@@ -30,3 +30,10 @@ test('other features stay installed and v1.53 assets are versioned',()=>{
  assert.ok(read('live.php').includes('live-viewer.js?v='+version));
  assert.ok(read('live-director.php').includes('live-director.js?v='+version));
 });
+
+test('installed-site first database boot migrates in order before returning connection',()=>{
+ const db=read('includes/database.php');const first=db.slice(db.indexOf('function az_db()'),db.indexOf('function az_create_schema('));
+ const creator=first.indexOf('az_upgrade_creator_analytics_schema(');const campaign=first.indexOf('az_upgrade_publishing_campaign_schema(');const done=first.lastIndexOf('return $GLOBALS');
+ assert.ok(creator>0 && campaign>creator && done>campaign,'normal first boot must run both schema 48 and 49 migrations');
+ assert.match(first,/if \(isset\(\$GLOBALS\['az_database'\]\)\) \{\s*return \$GLOBALS\['az_database'\]/);
+});
