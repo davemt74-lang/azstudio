@@ -344,9 +344,20 @@
     showSaveState('Ready · ' + (stable(state.draft) === stable(state.published) ? 'published revision ' + state.publishedRevision : 'saved draft, not published'));
     queuePreview(true);
   }
+  function validateBeforeSave() {
+    const invalid = [...form.elements].find(control => control.willValidate && !control.validity.valid);
+    if (!invalid) return true;
+    for (let ancestor = invalid.parentElement; ancestor && ancestor !== form; ancestor = ancestor.parentElement)
+      if (ancestor.tagName === 'DETAILS') ancestor.open = true;
+    const label = invalid.labels?.[0]?.textContent.trim().replace(/\s+/g,' ') || 'the highlighted field';
+    status('Check ' + label + ' before saving.','error');
+    previewStatus('Complete the highlighted field to update the preview.','error');
+    invalid.focus(); invalid.reportValidity();
+    return false;
+  }
   async function save(mode) {
     if (busy || !state) return;
-    if (!form.reportValidity()) return;
+    if (!validateBeforeSave()) return;
     if (mode === 'publish' && !window.confirm('Publish this homepage design to the public shop?')) return;
     const snapshot = fields(); setBusy(true,mode === 'publish' ? 'Publishing homepage…' : 'Saving draft…');
     try {

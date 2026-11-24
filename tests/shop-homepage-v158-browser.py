@@ -201,6 +201,18 @@ def full_lifecycle(browser, base):
     mutations.clear()
     assert_preview_navigation_stays_inside(page, context, base)
 
+    # Validation must remain discoverable even when a required control is in
+    # a closed accordion. No failed attempt may turn into a saved draft.
+    field(page, 'heading', '')
+    page.locator('[name=heading]').evaluate('(input)=>input.closest("details").open=false')
+    page.locator('[data-action=save]').click()
+    page.wait_for_function('document.querySelector("#azh-shop-editor-status")?.dataset.state === "error"')
+    assert page.locator('[name=heading]').is_visible(), 'Saving an invalid closed panel must reveal the required field'
+    assert page.locator('[name=heading]').evaluate('(input)=>document.activeElement===input'), 'Invalid control must receive focus'
+    assert set(mutations) <= {'preview'}, 'Required-field validation must not issue a save'
+    field(page, 'heading', baseline['draft']['heading'])
+    until_preview(page, 'document.querySelector("#azh-hero-heading")?.textContent === "Saved private collection"')
+
     assert not page.locator('[name=storeEnabled]').is_checked()
     assert frame(page).locator('[data-section=featured]').count() == 0
     field(page, 'storeEnabled', True)
@@ -322,10 +334,14 @@ def full_lifecycle(browser, base):
     page.locator('#azh-edit-fullscreen').click()
     assert page.locator('#azh-shop-preview-dialog').evaluate('(dialog)=>dialog.open')
     assert_frame_fits(page, 1440)
+    until_preview(page, 'document.querySelector("#azh-hero-heading")?.textContent === "Designed in the real editor"')
+    assert_featured(page, ['demo-hoodie', PRODUCT_A])
     page.keyboard.press('Escape')
     assert not page.locator('#azh-shop-preview-dialog').evaluate('(dialog)=>dialog.open')
-    assert page.locator('#azh-edit-fullscreen').evaluate('(button)=>document.activeElement===button'), 'Fullscreen must restore focus'
+    page.wait_for_function('document.activeElement===document.querySelector("#azh-edit-fullscreen")')
     assert_frame_fits(page, 1440)
+    until_preview(page, 'document.querySelector("#azh-hero-heading")?.textContent === "Designed in the real editor"')
+    assert_featured(page, ['demo-hoodie', PRODUCT_A])
 
     page.locator('[data-action=save]').click()
     page.wait_for_function('document.querySelector("#azh-shop-editor-status")?.dataset.state === "draft"')
