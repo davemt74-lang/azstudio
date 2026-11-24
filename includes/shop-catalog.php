@@ -243,7 +243,7 @@ function az_shop_image_action(array $user,array $body):array
 function az_shop_image_access(string $id,?array $actor=null):array
 {
     if(!az_valid_id($id))throw new AzHttpError(404,'Image not found.','image_missing');
-    $db=az_db();$q=$db->prepare('SELECT i.*,p.state,p.checkout_mode,p.checkout_url,p.price_cents FROM commerce_product_images i JOIN commerce_products p ON p.id=i.product_id WHERE i.id=?');
+    $db=az_db();$q=$db->prepare('SELECT i.*,p.state,p.checkout_mode,p.checkout_url,p.price_cents,p.currency FROM commerce_product_images i JOIN commerce_products p ON p.id=i.product_id WHERE i.id=?');
     $q->execute([$id]);$row=$q->fetch(PDO::FETCH_ASSOC);
     if(!$row)throw new AzHttpError(404,'Image not found.','image_missing');
     $admin=is_array($actor)&&($actor['status']??'')==='active'&&az_has_role($actor,'admin');
