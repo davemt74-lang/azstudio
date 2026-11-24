@@ -1,3 +1,12 @@
+AZHottie Studio v1.57.1 — Hero Image Fix & Organized Admin Navigation
+Deploy the contents of azhottie-studio over your current installation. Preserve storage/config.php, the database, uploaded images, and private media. Do NOT rerun install.php.
+No new schema migration: v1.57.0 installations remain at schema 53.
+The selected default or uploaded hero now resolves correctly in the storefront and private preview, including installations in a subdirectory. Page background image paths are corrected too. Existing enabled hero settings need no re-upload or re-selection.
+The homepage editor preserves section/category switches when opening, saving, publishing, and reordering. Its JSON save/publish requests are accepted with the same role, CSRF, revision, and field checks.
+Admin links are grouped into Account, Content, Commerce, Agentic, and Platform Settings accordions. The category containing the current page opens automatically. Shop Homepage Editor is under Commerce.
+Refresh the admin page after deployment to load the updated navigation and editor assets.
+See docs/RELEASE_1_57_1.txt for the change list and release gates.
+
 AZHottie Studio v1.57.0 — Shop 2.1 & Homepage Editor
 Back up code, DB, config and media, then deploy over v1.56. Do NOT rerun installer. Preserve private storage and uploaded files.
 Schema 52→53 adds draft/published homepage settings and private homepage image metadata.

@@ -26,7 +26,7 @@ test('other features stay installed and v1.53 assets are versioned',()=>{
  assert.match(read('publishing.php'),/id="pg-campaign-workspace"/);
  assert.match(read('includes/bootstrap.php'),/require_once __DIR__ \. '\/publishing-campaigns\.php'/);
  const version=JSON.parse(read('package.json')).version;
- assert.match(version,/^1\.(?:5[3-9]|[6-9][0-9])\.0$/);
+ assert.match(version,/^1\.(?:5[3-9]|[6-9][0-9])\.\d+$/);
  assert.ok(read('live.php').includes('live-viewer.js?v='+version));
  assert.ok(read('live-director.php').includes('live-director.js?v='+version));
 });
@@ -37,3 +37,4 @@ test('installed-site first database boot migrates in order before returning conn
  assert.ok(creator>0 && campaign>creator && done>campaign,'normal first boot must run both schema 48 and 49 migrations');
  assert.match(first,/if \(isset\(\$GLOBALS\['az_database'\]\)\) \{\s*return \$GLOBALS\['az_database'\]/);
 });
+

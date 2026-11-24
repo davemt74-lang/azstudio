@@ -71,6 +71,7 @@ jobs:
           php tests/creator-club-v155.php
           php tests/shop-v156.php
           php tests/shop-homepage-v157.php
+          php tests/admin-navigation-v1571.php
 
   fixtures:
     name: SQLite permissions and migration fixtures
@@ -103,6 +104,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: sqlite3, pdo_sqlite, mbstring
+          coverage: none
       - run: |
           python -m pip install playwright==1.58.0
           google-chrome --version
@@ -132,6 +138,8 @@ jobs:
           python tests/creator-club-v155-browser.py
           python tests/shop-v156-browser.py
           python tests/shop-homepage-v157-browser.py
+          python tests/shop-hero-v1571-browser.py
+          python tests/admin-navigation-v1571-browser.py
           python tests/live-shopping-v141-browser.py
       - uses: actions/upload-artifact@v4
         if: always()
@@ -160,6 +168,8 @@ jobs:
             ${{ runner.temp }}/azh_live_v151_browser/*.png
             ${{ runner.temp }}/azh_live_shop_v141/*.png
             ${{ runner.temp }}/azh_shop_v157_browser/*.png
+            ${{ runner.temp }}/azh_shop_v1571_browser/*.png
+            ${{ runner.temp }}/azh_admin_navigation_v1571/*.png
             ${{ runner.temp }}/azh_campaign_v153_browser/*.png
             ${{ runner.temp }}/azh_talent_v154_browser/*.png
           if-no-files-found: ignore
@@ -181,3 +191,4 @@ jobs:
           path: dist/AZHottie_Studio_Full_Deploy.zip
           if-no-files-found: error
           retention-days: 14
+

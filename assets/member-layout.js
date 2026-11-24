@@ -1,6 +1,14 @@
 /* One responsive sidebar toggle, located in the universal header. */
 (() => {
  'use strict';
+ // Native details provides keyboard and no-script support. Keep one category
+ // open in older browsers that do not yet implement the details name attribute.
+ document.querySelectorAll('.azh-side-navigation nav').forEach(nav=>{
+   const groups=Array.from(nav.querySelectorAll('.azh-side-group'));
+   groups.forEach(group=>group.addEventListener('toggle',()=>{
+     if(group.open) groups.forEach(other=>{if(other!==group) other.open=false;});
+   }));
+ });
  const header=document.getElementById('azh-global-header');
  if(!header || header.dataset.authenticated!=='true') return;
  const toggle=document.getElementById('azh-member-menu-button');

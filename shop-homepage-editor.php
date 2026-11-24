@@ -8,7 +8,7 @@ header('Cache-Control: private, no-store');header('X-Robots-Tag: noindex,nofollo
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>Shop Homepage Editor · AZHottie</title><link rel="icon" href="assets/favicon.svg">
 <link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css">
-<link rel="stylesheet" href="assets/shop-homepage-editor.css?v=1.57.0"></head>
+<link rel="stylesheet" href="assets/shop-homepage-editor.css?v=1.57.1"></head>
 <body data-page="shop-homepage-editor"><?php az_render_universal_header('shop-homepage-editor',$user);az_render_member_layout_open('shop-homepage-editor',$user); ?>
 <main class="azh-shop-edit" id="azh-shop-editor" data-csrf="<?= az_h(az_csrf_token()) ?>">
 <header class="azh-shop-edit-header"><div><p class="azh-shop-edit-kicker">COMMERCE / STORE DESIGN</p><h1>Shop Homepage Editor</h1><p>Design your storefront, preview a private draft, and publish when ready. Hiding a section or collection never deletes its content.</p></div><a href="shop.php" target="_blank" rel="noopener">View published shop ↗</a></header>
@@ -53,4 +53,4 @@ header('Cache-Control: private, no-store');header('X-Robots-Tag: noindex,nofollo
 <div class="azh-shop-preview-frame-wrap" id="azh-preview-wrap"><iframe id="azh-shop-preview" src="shop.php?preview=1" title="Private AZHottie shop homepage draft" loading="lazy"></iframe></div>
 <p class="azh-shop-preview-foot">Text and color edits update as you type. Save Draft and Preview to refresh all images, section visibility, product categories and sample data.</p>
 </section></div></main>
-<?php az_render_member_layout_close(false); ?><script src="assets/shop-homepage-editor.js?v=1.57.0" defer></script></body></html>
+<?php az_render_member_layout_close(false); ?><script src="assets/shop-homepage-editor.js?v=1.57.1" defer></script></body></html>

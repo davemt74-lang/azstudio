@@ -11,15 +11,15 @@ function az_render_universal_header(string $current, ?array $user = null, bool $
     $admin = $user !== null && az_has_role($user, 'admin');
     $liveEditor = $user !== null && az_has_role($user, 'editor');
     $team = $user !== null && ($admin || $liveEditor || az_has_role($user, 'model') || az_has_role($user, 'professional'));
-    $current = in_array($current, ['index','watch','dashboard','agent-chat','calendar','classes','appointments','account','user','settings','accounts','my-work','my-media','my-videos','my-editor','my-camera','productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','admin','login','signup','install','phone','apply','casting','admin-studio','live-director','live-productions','live','live-shows','commerce','shop'], true) ? $current : 'index';
-    $studioCurrent = in_array($current, ['productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','accounts','admin','casting'], true);
+    $current = in_array($current, ['index','watch','dashboard','agent-chat','calendar','classes','appointments','account','user','settings','accounts','my-work','my-media','my-videos','my-editor','my-camera','productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','admin','login','signup','install','phone','apply','casting','admin-studio','live-director','live-productions','live','live-shows','commerce','shop','shop-homepage-editor','creator-club-admin','creator-analytics','publishing'], true) ? $current : 'index';
+    $studioCurrent = in_array($current, ['productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','accounts','admin','casting','shop-homepage-editor','creator-club-admin','creator-analytics','publishing'], true);
     $item = static function (string $href, string $label, bool $active = false): string {
         return '<a class="azh-nav-link' . ($active ? ' is-active' : '') . '" href="' . az_h($href) . '"' . ($active ? ' aria-current="page"' : '') . '>' . az_h($label) . '</a>';
     };
     $signedIn = $user !== null;
     $hasWorkspace = in_array($current, [
         'dashboard','admin-studio','live-director','live-productions','live','live-shows','agent-chat','commerce','account','user','settings','accounts','calendar','classes','appointments','my-work','my-media','my-videos','my-editor','my-camera',
-        'productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','admin','casting',
+        'productions','director','library','interview','editor','profiles','questionnaires','videos','user-submissions','admin','casting','shop-homepage-editor','creator-club-admin','creator-analytics','publishing',
     ], true);
     if ($signedIn && !function_exists('az_render_member_nav_links')) {
         require_once __DIR__ . '/member-layout.php';
@@ -95,9 +95,10 @@ function az_render_universal_header(string $current, ?array $user = null, bool $
 <script type="module" src="assets/agent-workspace.js?v=1.26.0"></script>
 <?php endif; ?>
 <?php if ($signedIn && !$hasWorkspace): ?>
+  <link rel="stylesheet" href="assets/member-layout.css?v=1.57.1">
   <aside class="azh-floating-sidebar" id="azh-side-navigation" aria-label="Workspace sidebar" hidden><?php az_render_member_nav_links($current, $user); ?></aside>
 <?php endif; ?>
-<script defer src="assets/universal-header.js"></script>
+<script defer src="assets/universal-header.js?v=1.57.1"></script>
 
 <?php
 }
