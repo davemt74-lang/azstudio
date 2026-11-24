@@ -1,0 +1,96 @@
+AZHottie Studio v1.59.0
+Creator Clubs Workspace & Homepage Recovery
+Release date: 2026-11-24 (America/Phoenix)
+
+PURPOSE
+This release completes the next usable Creator Club workflow and adds recovery
+for homepage work. The shared Shop 2.2 renderer, default hero, responsive preview,
+sample catalog switches and category/section visibility controls remain installed.
+
+HOMEPAGE RECOVERY AND HISTORY
+- Unsaved editor changes are saved in this browser, scoped to the signed-in
+  account and installation (up to eight copies retained for seven days). On
+  return, the administrator can recover or discard
+  an interrupted edit. Recovery never publishes or silently overwrites the server.
+- When a newer server revision exists, the recovered layout remains available
+  for inspection. Replacing the latest draft requires an explicit choice and
+  still uses the current optimistic revision check when saving.
+- Save Draft, Publish, reset-to-published, commerce visibility/sample toggles and
+  version restoration record server snapshots with action, author and timestamp.
+  The upgrade also records the existing live design and distinct saved draft.
+- Version history retains the newest 30 snapshots. Restoring any snapshot changes
+  only the private draft; publishing remains a separate deliberate action.
+- If a featured product was removed or made inactive since a saved version,
+  restoration removes only that unavailable selection and reports the exact count.
+  The rest of the layout, original snapshot and published page remain unchanged.
+- Images referenced by the live page, saved draft or retained history cannot be
+  deleted. An administrator may remove an unwanted saved version explicitly.
+- Browser recovery is not a cross-device backup. Browser-storage refusal is
+  reported; Save Draft remains the reliable server save. Clearing browser data
+  removes local recovery copies, not the server's version history.
+
+CREATOR CLUBS
+- Discovery and individual Club pages use one shared sidebar. My Clubs provides
+  an account-owned view of free follows, notification preferences, recent posts
+  available to that member, and existing access records with accurate statuses.
+- A member can unfollow an unavailable creator. A new follow still requires an
+  available creator profile. Private profiles and inactive accounts fail closed.
+- Creators can submit text/private-video posts for free followers or an approved
+  tier. Staff review and the existing rights/consent confirmation remain required.
+- Pending/rejected tiers and pending/rejected/withdrawn posts can be revised and
+  resubmitted. Published posts must be withdrawn before editing. Stale revisions
+  cannot replace a newer edit or staff decision.
+- Tier archival removes the tier from new selection. Existing approved content
+  and valid access remain intact. Restoring a tier respects the five-tier limit.
+- Review notes explain requested changes. The admin review workspace exposes
+  current pending items, review/access history and explicit revocation of an
+  existing access record. A free follow never unlocks tier-only content.
+- Access checks run on every post/media request, including private video ranges.
+  Feed selection applies authorization before limiting recent results, so newer
+  locked posts do not hide older available follower updates.
+
+SHARED ACTIVITY
+- Review requests, review decisions, new free follows and eligible approved post
+  updates enter the existing recipient-specific commerce outbox in the same
+  transaction as the source action. Delivery is retryable and deduplicated.
+- The existing bell and History show account-owned events. Proactive messages
+  appear in a private Creator Club Updates thread in existing Agent Chat.
+- Persistent member alerts contain generic wording and a safe on-site link;
+  private post titles, bodies and media IDs are not copied into notifications.
+  Opening a link rechecks current access, including withdrawal and revocation.
+- Fan Brain and AI context contain only the fan's own Club counts/suggestions.
+  Fans cannot read casting, production, scheduling, management or finance reports
+  through these endpoints. Existing model/admin workflows retain their scope.
+- Notification preferences control new post alerts for each followed club.
+  Delivery failures remain retryable through the existing private cron.
+
+BILLING BOUNDARY
+Recurring Creator Club payments remain disabled. No subscribe, charge, renewal,
+provider subscription, cancellation or public entitlement-grant endpoint is added.
+Existing internal temporary test grants remain behind their default-off private
+flag. An access record is not a payment receipt. Eligible provider selection and
+verified recurring billing lifecycle work belong to a separate release.
+
+MIGRATION AND DELIVERY
+Schema 53→54 creates homepage history; 54→55 adds Club management fields and
+nullable post tier IDs for follower audiences. SQLite rebuilds the post table in
+a transaction and preserves legacy records. MySQL alterations are replay-safe.
+The deployment package excludes tests, CI files, developer tooling, configuration,
+databases, private media and generated logs. Preserve existing storage on upload.
+
+ACCEPTANCE GATES
+The release workflow requires all five jobs: JavaScript regression, PHP lint and
+integration tests, SQLite permissions/migration fixtures, responsive browser
+acceptance, and safe archive creation. New real PHP/Chromium tests exercise
+homepage recovery/restore and Club follow/post/review/access flows, with mobile
+and desktop screenshots. Shared activity integration checks transaction rollback,
+deduplication, recipient privacy, read-status ownership and fan context isolation.
+These checks certify the tested release behavior. They do not certify a live
+HostGator upload, real payment processing or every physical mobile device.
+
+POST-DEPLOY HOST CHECK
+Open Commerce → Shop Homepage Editor, confirm default/custom hero rendering,
+save a draft, restore a version and verify the public page changes only after
+publishing. Open Club pages as fan, model and admin, confirm a single sidebar,
+then exercise follow, follower-post review and the existing notification drawer.
+Do not rerun install.php. Retain a code/database/private-media backup.

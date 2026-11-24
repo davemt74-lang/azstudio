@@ -7,7 +7,7 @@ header('X-Content-Type-Options: nosniff');
 header('X-Robots-Tag: noindex, nofollow');
 try {
     $user=az_require_auth(true);
-    az_agent_workspace_assert($user);
+    az_agent_activity_assert($user);
     $action=is_string($_GET['action']??null)?$_GET['action']:'';
     $method=strtoupper($_SERVER['REQUEST_METHOD']??'GET');
     if($method==='GET'&&$action==='badge') {
@@ -15,6 +15,7 @@ try {
         az_json(['ok'=>true,'data'=>['unreadCount'=>az_agent_workspace_unread_count($user)]]);
     }
     if($method==='GET'&&$action==='castingBriefing') {
+        if(az_agent_workspace_role($user)==='fan')throw new AzHttpError(403,'Creator or administrator access required.','role_required');
         session_write_close();
         az_json(['ok'=>true,'data'=>az_agent_casting_briefing($user,az_has_role($user,'admin')?az_agent_workspace_assign_options($user):[])]);
     }
@@ -39,7 +40,7 @@ try {
         throw new AzHttpError(405,'Unsupported agent workspace action.','method_not_allowed');
     az_require_csrf();$body=az_json_body();session_write_close();
     if($action==='markRead'){
-        az_agent_workspace_mark_read((int)$user['id'],$body);
+        az_agent_workspace_mark_read((int)$user['id'],$body,az_agent_workspace_role($user)==='fan');
         az_json(['ok'=>true,'data'=>az_agent_workspace_state($user)]);
     }
     if(!az_has_role($user,'admin'))throw new AzHttpError(403,'Admin access required.','role_required');

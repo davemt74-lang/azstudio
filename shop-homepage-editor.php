@@ -8,12 +8,17 @@ header('Cache-Control: private, no-store');header('X-Robots-Tag: noindex,nofollo
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>Shop Homepage Editor · AZHottie</title><link rel="icon" href="assets/favicon.svg">
 <link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/member-layout.css">
-<link rel="stylesheet" href="assets/shop-homepage-editor.css?v=1.58.0"></head>
+<link rel="stylesheet" href="assets/shop-homepage-editor.css?v=1.59.0"></head>
 <body data-page="shop-homepage-editor"><?php az_render_universal_header('shop-homepage-editor',$user);az_render_member_layout_open('shop-homepage-editor',$user); ?>
-<main class="azh-shop-edit" id="azh-shop-editor" data-csrf="<?= az_h(az_csrf_token()) ?>">
+<main class="azh-shop-edit" id="azh-shop-editor" data-csrf="<?= az_h(az_csrf_token()) ?>" data-recovery-scope="<?= az_h(hash('sha256',__DIR__.'|'.(string)$user['id'])) ?>">
 <header class="azh-shop-edit-header"><div><p class="azh-shop-edit-kicker">COMMERCE / STORE DESIGN</p><h1>Shop Homepage Editor</h1><p>Shape your storefront and see every change in the private preview. Publish when you are ready.</p></div><a href="shop.php" target="_blank" rel="noopener">Open published shop</a></header>
-<div class="azh-shop-edit-toolbar"><div class="azh-shop-edit-state"><span id="azh-shop-editor-status" role="status" aria-live="polite" data-state="loading">Loading shop settings…</span><small id="azh-shop-published-status"></small></div>
+<div class="azh-shop-edit-toolbar"><div class="azh-shop-edit-state"><span id="azh-shop-editor-status" role="status" aria-live="polite" data-state="loading">Loading shop settings…</span><small id="azh-shop-published-status"></small><small id="azh-shop-recovery-status" role="status" aria-live="polite">Unsaved edits are kept on this browser for 7 days.</small></div>
 <div class="azh-shop-edit-actions"><button type="button" data-action="reload" hidden>Reload saved version</button><button type="button" data-action="reset" disabled>Discard draft changes</button><button type="button" data-action="save" disabled>Save draft</button><button type="button" data-action="preview" disabled>Preview draft</button><button type="button" class="azh-shop-edit-publish" data-action="publish" disabled>Publish homepage</button></div></div>
+<section id="azh-shop-recovery" class="azh-shop-recovery" aria-labelledby="azh-shop-recovery-title" hidden>
+<div><h2 id="azh-shop-recovery-title">Recover unsaved edits</h2><p id="azh-shop-recovery-note">A private copy of your edits is available on this browser.</p></div>
+<label id="azh-recovery-choice-label">Recovery copy<select id="azh-recovery-choice"></select></label>
+<div class="azh-shop-recovery-actions"><button type="button" data-action="recover">Preview recovered edits</button><button type="button" data-action="discardRecovery">Discard this recovery</button><button type="button" data-action="rebaseRecovery" hidden>Use recovery over latest draft</button><button type="button" data-action="cancelRecovery" hidden>Keep saved draft</button></div>
+</section>
 <div class="azh-shop-edit-layout">
 <form id="azh-shop-editor-form" class="azh-shop-edit-controls" autocomplete="off"><fieldset id="azh-shop-editor-fields" disabled>
 <details open><summary>Hero text &amp; buttons</summary><div class="azh-shop-edit-fields">
@@ -77,6 +82,7 @@ header('Cache-Control: private, no-store');header('X-Robots-Tag: noindex,nofollo
 <label>Image description<input name="uploadAlt" maxlength="180" placeholder="Describe the image"></label>
 <button type="button" id="azh-edit-upload">Upload &amp; select</button><p id="azh-edit-upload-status" role="status" aria-live="polite"></p><div id="azh-edit-upload-list"></div>
 </div></details>
+<details id="azh-history-controls"><summary>Version history &amp; restore</summary><div class="azh-shop-edit-fields"><p>Your latest 30 saved versions are kept on the server. Restoring changes the private draft; publishing is a separate action.</p><p id="azh-history-status" role="status"></p><ol id="azh-homepage-history" class="azh-homepage-history"></ol><p>Images used by a retained version stay protected. Remove an old version here before deleting its unused images.</p></div></details>
 <details id="azh-store-controls"><summary>Store visibility &amp; sample catalog</summary><div class="azh-shop-edit-fields"><label class="azh-shop-edit-switch"><input type="checkbox" name="storeEnabled"> Enable public ecommerce storefront</label>
 <label class="azh-shop-edit-switch"><input type="checkbox" name="sampleEnabled"> Display illustrative sample products</label>
 <p>Samples are labeled and cannot be purchased. These changes go live when you publish.</p>
@@ -89,4 +95,4 @@ header('Cache-Control: private, no-store');header('X-Robots-Tag: noindex,nofollo
 </section></div></div>
 <dialog id="azh-shop-preview-dialog" aria-labelledby="azh-fullscreen-title"><div class="azh-preview-dialog-header"><h2 id="azh-fullscreen-title">Homepage preview</h2><button type="button" id="azh-edit-exit-fullscreen">Close preview</button></div><div id="azh-preview-dialog-content"></div></dialog>
 </main>
-<?php az_render_member_layout_close(false); ?><script src="assets/shop-homepage-editor.js?v=1.58.0" defer></script></body></html>
+<?php az_render_member_layout_close(false); ?><script src="assets/shop-homepage-editor.js?v=1.59.0" defer></script></body></html>

@@ -5,7 +5,7 @@ export function badgeLabel(count) {
 }
 export function safeAgentHref(href) {
   // Keep all activity and suggestion destinations on known, same-site workspace pages.
-  return typeof href==='string' && /^(?:commerce|my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments|my-editor)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?$/.test(href)?href:null;
+  return typeof href==='string' && /^(?:commerce|publishing|creator-club|creator-clubs|creator-club-workspace|creator-club-admin|my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments|my-editor)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?$/.test(href)?href:null;
 }
 export function validWorkAction(action) {
   if(!action || typeof action!=='object')return false;
@@ -56,18 +56,19 @@ function mountAgentWorkspace(root=document) {
   }
   function renderNotifications(){
     const rows=state?.notifications||[];
-    if(!rows.length){content.append(empty('All caught up','New submissions, assignment changes and admin decisions will appear here.'));return;}
+    if(!rows.length){content.append(empty('All caught up',state?.role==='fan'?'Creator Club updates will appear here. Manage notifications for each club in My Clubs.':'Creator Club updates, new submissions, assignment changes and admin decisions will appear here.'));return;}
     const intro=text('p',`${state.unreadCount} unread update${state.unreadCount===1?'':'s'}`,'azh-aw-section-summary');content.append(intro);
     rows.forEach(row=>content.append(renderEvent(row)));
     if(state.unreadCount>rows.length)content.append(text('p','More unread activity is available in History.','azh-aw-section-summary'));
   }
   function renderHistory(){
     const rows=state?.history||[];
-    content.append(text('p','Verified activity since the new history tracker was enabled. Earlier work remains in Productions and My Videos.','azh-aw-section-summary'));
-    if(!rows.length){content.append(empty('No activity recorded yet','When a model submits a video or assignments change, the history will keep a record.'));return;}
+    content.append(text('p',state?.role==='fan'?'Your recorded Creator Club activity. Your latest follows and access are shown in My Clubs.':'Verified activity since tracking was enabled. Earlier work remains in its original workspace.','azh-aw-section-summary'));
+    if(!rows.length){content.append(empty('No activity recorded yet',state?.role==='fan'?'Follow a creator to start your club history.':'Club updates, submissions and assignment changes will appear here.'));return;}
     for(const row of rows)content.append(renderEvent(row,true));
   }
   function workActionControls(card,action){
+    if(state?.role==='fan')return;
     if(!validWorkAction(action))return;
     const actions=make('div','azh-aw-brain-actions');
     if(action.type==='respond'){
@@ -100,10 +101,13 @@ function mountAgentWorkspace(root=document) {
     const brain=state?.brain||{};
     content.append(text('p',brain.basis||'Suggestions are based on verified workspace data.','azh-aw-section-summary'));
     const summary=brain.summary||{};
-    if(Object.keys(summary).length){const wrap=make('div','azh-aw-counts');const labels={pendingReviews:'Pending reviews',submittedAssignments:'Submitted work',awaitingResponses:'Awaiting response',awaitingResponse:'Needs response',overdue:'Overdue',videosUnderReview:'Videos under review',availableShots:'Open shots',liveAlerts:'Live alerts',newApplications:'New casting applications',screening:'Screenings',interviews:'Interviews',approved:'Approved applications',converted:'Converted models',onboardingPending:'Onboarding needs review',onboardingComplete:'Onboarding completed',onboardingTotal:'Onboarding steps',upcomingSchedule:'Upcoming commitments',scheduleConflicts:'Schedule conflicts'};
+    if(Object.keys(summary).length){const wrap=make('div','azh-aw-counts');const labels={pendingReviews:'Pending reviews',submittedAssignments:'Submitted work',awaitingResponses:'Awaiting response',awaitingResponse:'Needs response',overdue:'Overdue',videosUnderReview:'Videos under review',availableShots:'Open shots',liveAlerts:'Live alerts',newApplications:'New casting applications',screening:'Screenings',interviews:'Interviews',approved:'Approved applications',converted:'Converted models',onboardingPending:'Onboarding needs review',onboardingComplete:'Onboarding completed',onboardingTotal:'Onboarding steps',upcomingSchedule:'Upcoming commitments',scheduleConflicts:'Schedule conflicts',clubReviews:'Club reviews',clubFollowers:'Club followers',clubPostsPublished:'Published club posts',clubsFollowing:'Clubs you follow'};
       for(const [key,num] of Object.entries(summary)){const item=make('div');item.append(text('b',num),text('span',labels[key]||key));wrap.append(item);}content.append(wrap);}
-    if(!brain.cards?.length)content.append(empty('Nothing urgent to review','Your current assignments and submissions are up to date.'));
+    if(!brain.cards?.length)content.append(empty('Nothing urgent to review',state?.role==='fan'?'Explore Creator Clubs or manage your follows in My Clubs.':'Your current assignments, club updates and submissions are up to date.'));
     for(const item of brain.cards||[]){const card=make('article','azh-aw-brain-card');card.append(text('p',String(item.kind||'update').replaceAll('_',' ').toUpperCase(),'azh-aw-eyebrow'),text('h3',item.title),text('p',item.detail));card.append(link('Open workspace ↗',item.href));workActionControls(card,item.action);content.append(card);}
+    if(state?.role==='fan'){
+      const hint=make('div','azh-aw-brain-hint');hint.append(text('strong','Your club activity'),text('p','These suggestions use your own follows and recorded access. A free follow does not start a paid subscription. Manage notification preferences in My Clubs.'));content.append(hint);return;
+    }
     const schedule=brain.scheduling||{};
     if(schedule.counts){
       const section=make('section','azh-aw-followthrough');

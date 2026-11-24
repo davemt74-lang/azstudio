@@ -1,3 +1,11 @@
+# AZHottie Studio — v1.59.0
+
+**Creator Clubs workspace and homepage recovery.** Fans can manage free follows, post notifications, recent available updates and their own access history in **My Clubs**. Creators can submit updates for free followers or an approved tier, revise drafts after feedback, withdraw published posts, and archive tiers without silently removing existing access. **Commerce → Membership reviews** includes review notes and access history. Club activity uses the existing notification bell, History, Brain and private Agent Chat; fan context is isolated from production and administrator information. Recurring Club payments remain disabled.
+
+**Commerce → Shop Homepage Editor** now offers account-scoped browser recovery for unsaved edits plus the latest 30 server-saved versions. Restore a version as a private draft, inspect it in the responsive preview, then publish explicitly. Conflicting revisions remain protected, and images referenced by retained versions cannot be removed accidentally. Schema **53 → 54 → 55** migrates automatically; preserve your private storage and do not rerun the installer. See `docs/RELEASE_1_59_0.txt` and `UPGRADE.txt`.
+
+---
+
 # AZHottie Studio — v1.58.0
 
 **Shop 2.2: responsive homepage editing and curated collections.** The editor and published shop now share one renderer. Preview every image, section, category, and product change before saving, with desktop, tablet, phone, and expanded views. Set separate desktop/mobile hero images, crops, text positions, heights, overlays, and heading sizes. Rename and reorder collection cards, choose their images, hide empty collections, and select/reorder featured products. Existing hidden sections, catalog settings, and saved drafts survive the upgrade. Open **Commerce → Shop Homepage Editor**. This update retains schema 53. See `docs/RELEASE_1_58_0.txt` and `UPGRADE.txt`.

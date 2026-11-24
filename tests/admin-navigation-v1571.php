@@ -3,6 +3,7 @@ declare(strict_types=1);
 /** Real shared-shell rendering with inert identity/CSRF helpers; no live records. */
 function az_has_role(array $user, string $role): bool { return in_array($role, $user['roles'], true); }
 function az_h(string $value): string { return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+function az_agent_activity_available(array $user): bool { return ($user['status'] ?? 'active') === 'active' && (az_has_role($user, 'admin') || az_has_role($user, 'model') || az_has_role($user, 'fan')); }
 function az_csrf_token(): string { return 'navigation-fixture-csrf'; }
 function az_is_installed(): bool { return false; }
 function az_social_empty(int $id): array { return ['user_id' => $id, 'avatar_storage_name' => null]; }

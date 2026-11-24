@@ -19,7 +19,7 @@ test('Agent Brain and Chat use a role-scoped report, not another notification sy
  assert.match(backend,/'commerceAgent'=>\$commerceAgent/);
  assert.match(backend,/commerce_provider_followup/);
  assert.match(backend,/commerce_commission_followup/);
- assert.match(chat,/'commerceAgent'=>az_commerce_agent_chat_snapshot/);
+ assert.match(chat,/\$summary\['commerceAgent'\]=az_commerce_agent_chat_snapshot/);
  assert.match(cron,/\$result\['commerceAgent'\]=az_commerce_agent_scan\(\)/);
  assert.match(gateway,/if\(\$action==='checkCommerce'\)/);
  assert.match(gateway,/az_require_csrf\(\)/);
@@ -34,3 +34,4 @@ test('Commerce Agent cannot initiate financial provider POSTs',()=>{
  assert.doesNotMatch(module,/az_provider_stripe_request\(|az_easypost_request\(|az_connect_send_transfer\(/);
  assert.doesNotMatch(script,/initiateRefund|buyReturnLabel|sendConnectTransfer/);
 });
+

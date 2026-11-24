@@ -35,6 +35,19 @@ function az_agent_workspace_available(array $user): bool
 {
     return ($user['status']??'active')==='active' && (az_has_role($user,'model') || az_has_role($user,'admin'));
 }
+/** Fan activity is deliberately separate from the legacy creator-commerce permission. */
+function az_agent_activity_available(array $user):bool
+{
+    return az_agent_workspace_available($user) || (($user['status']??'active')==='active' && az_has_role($user,'fan'));
+}
+function az_agent_activity_assert(array $user):void
+{
+    if(!az_agent_activity_available($user))throw new AzHttpError(403,'Your account does not have access to this activity.','role_required');
+}
+function az_agent_workspace_role(array $user): string
+{
+    return az_has_role($user,'admin')?'admin':(az_has_role($user,'model')?'model':'fan');
+}
 function az_agent_workspace_assert(array $user): void
 {
     if (!az_agent_workspace_available($user)) throw new AzHttpError(403,'Your account does not have access to the agent workspace.','role_required');
@@ -42,7 +55,7 @@ function az_agent_workspace_assert(array $user): void
 /** No external URLs or user-controlled raw HTML may be persisted as navigation targets. */
 function az_agent_workspace_href(string $href): string
 {
-    if (!preg_match('~\A(?:commerce|publishing|my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments|my-editor)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?\z~D',$href))
+    if (!preg_match('~\A(?:commerce|publishing|creator-club|creator-clubs|creator-club-workspace|creator-club-admin|my-videos|my-work|user-submissions|productions|admin-studio|agent-chat|casting|account|live-director|calendar|appointments|my-editor)\.php(?:\?[A-Za-z0-9_=%&.-]{1,120})?\z~D',$href))
         throw new InvalidArgumentException('Agent activity contains an invalid destination.');
     return $href;
 }
@@ -55,9 +68,10 @@ function az_agent_workspace_emit(int $actor,int $recipient,string $kind,string $
     $q=az_db()->prepare('INSERT INTO agent_workspace_events(id,recipient_id,actor_id,kind,title,detail,href,created_at,read_at) VALUES(?,?,?,?,?,?,?,?,?)');
     $q->execute([az_id(),$recipient,$actor,substr($kind,0,48),mb_safe_trim($title,200),mb_safe_trim($detail,600),az_agent_workspace_href($href),$created,$read]);
 }
-function az_agent_workspace_admin_ids(): array
+function az_agent_workspace_admin_ids(?PDO $db=null): array
 {
-    $q=az_db()->query("SELECT DISTINCT u.id FROM users u JOIN user_roles r ON r.user_id=u.id AND r.role='admin' WHERE u.status='active'");
+    $db??=az_db();
+    $q=$db->query("SELECT DISTINCT u.id FROM users u JOIN user_roles r ON r.user_id=u.id AND r.role='admin' WHERE u.status='active'");
     return array_map('intval',$q->fetchAll(PDO::FETCH_COLUMN));
 }
 /** Event delivery failure must not roll back a video the user already saved. */
@@ -94,6 +108,7 @@ function az_agent_workspace_work_event(string $projectId,int $actor,string $kind
 /** Existing production notifications are included, preserving legacy unread states. */
 function az_agent_workspace_work_history(array $user): array
 {
+    if(az_agent_workspace_role($user)==='fan')return [];
     if (!function_exists('az_work_notifications')) return [];
     $work=az_work_notifications($user);
     $admin=az_has_role($user,'admin');$items=[];
@@ -104,31 +119,33 @@ function az_agent_workspace_work_history(array $user): array
     }
     return $items;
 }
-function az_agent_workspace_history(int $recipient): array
+function az_agent_workspace_history(int $recipient,bool $clubsOnly=false): array
 {
-    $q=az_db()->prepare('SELECT e.id,e.kind,e.title,e.detail,e.href,e.created_at,e.read_at,e.actor_id,u.name AS actor_name FROM agent_workspace_events e JOIN users u ON u.id=e.actor_id WHERE e.recipient_id=? ORDER BY e.created_at DESC,e.id DESC LIMIT 100');
+    $q=az_db()->prepare('SELECT e.id,e.kind,e.title,e.detail,e.href,e.created_at,e.read_at,e.actor_id,u.name AS actor_name FROM agent_workspace_events e JOIN users u ON u.id=e.actor_id WHERE e.recipient_id=?'.($clubsOnly?" AND SUBSTR(e.kind,1,14)='commerce_club_'":'').' ORDER BY e.created_at DESC,e.id DESC LIMIT 100');
     $q->execute([$recipient]);
     return array_map(static fn($r):array=>[
         'id'=>$r['id'],'kind'=>$r['kind'],'title'=>$r['title'],'detail'=>$r['detail'],
         'href'=>$r['href'],'createdAt'=>$r['created_at'],'readAt'=>$r['read_at'],
-        'actor'=>(str_starts_with($r['kind'],'followthrough_')||str_starts_with($r['kind'],'casting_review_')||str_starts_with($r['kind'],'casting_new_')||str_starts_with($r['kind'],'casting_contacted_')||str_starts_with($r['kind'],'casting_screening_')||str_starts_with($r['kind'],'casting_interview_')||str_starts_with($r['kind'],'casting_onboarding_incomplete')||str_starts_with($r['kind'],'casting_invitation_missing')||str_starts_with($r['kind'],'casting_invitation_expiring')||str_starts_with($r['kind'],'video_review_due')||str_starts_with($r['kind'],'commerce_provider_followup')||str_starts_with($r['kind'],'commerce_commission_followup')||str_starts_with($r['kind'],'admin_intelligence_')||str_starts_with($r['kind'],'admin_action_'))?'AZHottie Agent':((int)$r['actor_id']===$recipient?'You':$r['actor_name']),
+        'actor'=>str_starts_with($r['kind'],'commerce_club_')?((int)$r['actor_id']===$recipient?'You':'Creator Club'):((str_starts_with($r['kind'],'followthrough_')||str_starts_with($r['kind'],'casting_review_')||str_starts_with($r['kind'],'casting_new_')||str_starts_with($r['kind'],'casting_contacted_')||str_starts_with($r['kind'],'casting_screening_')||str_starts_with($r['kind'],'casting_interview_')||str_starts_with($r['kind'],'casting_onboarding_incomplete')||str_starts_with($r['kind'],'casting_invitation_missing')||str_starts_with($r['kind'],'casting_invitation_expiring')||str_starts_with($r['kind'],'video_review_due')||str_starts_with($r['kind'],'commerce_provider_followup')||str_starts_with($r['kind'],'commerce_commission_followup')||str_starts_with($r['kind'],'admin_intelligence_')||str_starts_with($r['kind'],'admin_action_'))?'AZHottie Agent':((int)$r['actor_id']===$recipient?'You':$r['actor_name'])),
     ],$q->fetchAll());
 }
-function az_agent_workspace_mark_read(int $recipient,array $body): void
+function az_agent_workspace_mark_read(int $recipient,array $body,bool $clubsOnly=false): void
 {
+    $scope=$clubsOnly?" AND SUBSTR(kind,1,14)='commerce_club_'":'';
     if (($body['all']??false) === true) {
-        $q=az_db()->prepare('UPDATE agent_workspace_events SET read_at=? WHERE recipient_id=? AND read_at IS NULL');
+        $q=az_db()->prepare('UPDATE agent_workspace_events SET read_at=? WHERE recipient_id=? AND read_at IS NULL'.$scope);
         $q->execute([az_now(),$recipient]);
+        if($clubsOnly)return;
         $q=az_db()->prepare('UPDATE work_notifications SET read_at=? WHERE recipient_id=? AND read_at IS NULL');
         $q->execute([az_now(),$recipient]);return;
     }
     $ids=$body['ids']??null;
     if (!is_array($ids)||!array_is_list($ids)||count($ids)<1||count($ids)>100) throw new AzHttpError(400,'Select up to 100 activity items.','invalid_items');
-    $q=az_db()->prepare('UPDATE agent_workspace_events SET read_at=? WHERE id=? AND recipient_id=? AND read_at IS NULL');
+    $q=az_db()->prepare('UPDATE agent_workspace_events SET read_at=? WHERE id=? AND recipient_id=? AND read_at IS NULL'.$scope);
     $work=az_db()->prepare('UPDATE work_notifications SET read_at=? WHERE id=? AND recipient_id=? AND read_at IS NULL');
     foreach ($ids as $id) {
         if (!is_string($id))throw new AzHttpError(400,'Invalid activity ID.','invalid_items');
-        if (str_starts_with($id,'work:')&&az_valid_id(substr($id,5))) $work->execute([az_now(),substr($id,5),$recipient]);
+        if (str_starts_with($id,'work:')&&az_valid_id(substr($id,5))) {if(!$clubsOnly)$work->execute([az_now(),substr($id,5),$recipient]);}
         elseif(az_valid_id($id)) $q->execute([az_now(),$id,$recipient]);
         else throw new AzHttpError(400,'Invalid activity ID.','invalid_items');
     }
@@ -140,6 +157,14 @@ function az_agent_workspace_card(string $kind,string $title,string $detail,strin
 /** Source-of-truth suggestions, recomputed on GET. Never assert a worker analyzed private footage. */
 function az_agent_workspace_brain(array $user): array
 {
+    az_agent_activity_assert($user);
+    $clubs=function_exists('az_creator_club_briefing')?az_creator_club_briefing($user):['cards'=>[],'counts'=>[]];
+    // Fan activity never enters the creator/administrator production read models.
+    if(az_agent_workspace_role($user)==='fan')return [
+        'cards'=>$clubs['cards'],'summary'=>$clubs['counts'],'assignOptions'=>[],
+        'creatorClubs'=>$clubs,'generatedAt'=>az_now(),
+        'basis'=>'Your own Creator Club follows, notification preferences and recorded access. Free follows are not paid subscriptions. Recurring billing is not enabled.',
+    ];
     $id=(int)$user['id'];$admin=az_has_role($user,'admin');$cards=[];$now=az_now();$soon=gmdate('Y-m-d\TH:i:s\Z',time()+7*86400);
     if ($admin) {
         $q=az_db()->query("SELECT COUNT(*) FROM model_videos WHERE status='pending_review'");$pending=(int)$q->fetchColumn();
@@ -252,6 +277,8 @@ function az_agent_workspace_brain(array $user): array
     $casting=az_agent_casting_briefing($user,$admin?$assignmentChoices:[]);
     foreach($casting['cards'] as $item)$cards[]=$item;
     $summary=array_merge($summary,$casting['counts']);
+    foreach($clubs['cards'] as $item)$cards[]=$item;
+    $summary=array_merge($summary,$clubs['counts']);
     usort($cards,static fn($a,$b)=>$a['priority']<=>$b['priority'] ?: strcmp($a['title'],$b['title']));
     $liveHealth=$admin?az_live_agent_status($user):null;
     if ($admin && $liveHealth['state']==='attention') {
@@ -262,7 +289,7 @@ function az_agent_workspace_brain(array $user): array
     }
     if ($admin) $summary['liveAlerts']=count($liveHealth['issues']??[]);
     $followthrough=['cron'=>az_agent_followthrough_status(), 'manual'=>$admin?az_agent_followthrough_status($id):null];
-    return ['cards'=>array_slice($cards,0,16),'summary'=>$summary,'assignOptions'=>$assignmentChoices,'followthrough'=>$followthrough,
+    return ['cards'=>array_slice($cards,0,16),'summary'=>$summary,'assignOptions'=>$assignmentChoices,'followthrough'=>$followthrough,'creatorClubs'=>$clubs,
       'liveHealth'=>$liveHealth,'casting'=>$casting,'video'=>$video,'publishing'=>$publishing,'commerce'=>$commerce,'commerceAgent'=>$commerceAgent,'management'=>$management,'actionCenter'=>$actionCenter,'coordination'=>$coordination,'operationsLearning'=>$operationsLearning,'scheduling'=>$schedule,'generatedAt'=>$now,'basis'=>'Verified assignment, casting, scheduling, publishing, commerce, Watch engagement, onboarding, review and live-health data. Casting decisions require an administrator; production matches require explicit confirmation. Scheduled reminders require private cron.'];
 }
 /** The only choices offered are owned active shots and eligible active roster members. */
@@ -292,16 +319,16 @@ function az_agent_workspace_assign_options(array $user): array
 }
 function az_agent_workspace_unread_count(array $user): int
 {
-    $q=az_db()->prepare('SELECT COUNT(*) FROM agent_workspace_events WHERE recipient_id=? AND read_at IS NULL');
+    $q=az_db()->prepare('SELECT COUNT(*) FROM agent_workspace_events WHERE recipient_id=? AND read_at IS NULL'.(az_agent_workspace_role($user)==='fan'?" AND SUBSTR(kind,1,14)='commerce_club_'":''));
     $q->execute([(int)$user['id']]);
-    return (int)$q->fetchColumn()+az_work_notifications($user)['unreadCount'];
+    return (int)$q->fetchColumn()+(az_agent_workspace_role($user)==='fan'?0:az_work_notifications($user)['unreadCount']);
 }
 function az_agent_workspace_state(array $user): array
 {
-    az_agent_workspace_assert($user);
-    $events=array_merge(az_agent_workspace_history((int)$user['id']),az_agent_workspace_work_history($user));
+    az_agent_activity_assert($user);
+    $events=array_merge(az_agent_workspace_history((int)$user['id'],az_agent_workspace_role($user)==='fan'),az_agent_workspace_work_history($user));
     usort($events,static fn($a,$b)=>strcmp($b['createdAt'],$a['createdAt']) ?: strcmp($b['id'],$a['id']));
     $unread=array_values(array_filter($events,static fn($e)=>$e['readAt']===null));
     $unreadCount=az_agent_workspace_unread_count($user);
-    return ['role'=>az_has_role($user,'admin')?'admin':'model','unreadCount'=>$unreadCount,'notifications'=>array_slice($unread,0,40),'history'=>array_slice($events,0,100),'brain'=>az_agent_workspace_brain($user),'checkedAt'=>az_now()];
+    return ['role'=>az_agent_workspace_role($user),'unreadCount'=>$unreadCount,'notifications'=>array_slice($unread,0,40),'history'=>array_slice($events,0,100),'brain'=>az_agent_workspace_brain($user),'checkedAt'=>az_now()];
 }

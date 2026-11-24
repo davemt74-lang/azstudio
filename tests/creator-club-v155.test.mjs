@@ -29,7 +29,7 @@ test('Exclusive content requires a server-authorized post, not merely hidden UI'
  assert.match(media,/Cross-Origin-Resource-Policy: same-origin/);
  assert.match(read('includes/creator-memberships.php'),/revoked_at IS NULL/);
  assert.match(read('includes/creator-memberships.php'),/rights_confirmed/);
- assert.match(read('creator-club.php'),/name="rights_confirmed"/);
+ assert.match(read('includes/creator-club-view.php'),/name="rights_confirmed"/);
  assert.match(read('includes/creator-memberships.php'),/ends_at>\?/);
  assert.doesNotMatch(read('creator-club.php'),/personal-media-file\.php\?/);
 });
@@ -50,3 +50,4 @@ test('New creator club links and schema migration are installed',()=>{
  const [major,minor]=JSON.parse(read('package.json')).version.split('.').map(Number);
  assert.ok(major>1 || (major===1 && minor>=55),'Creator Clubs remains installed in this or newer release');
 });
+
