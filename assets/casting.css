@@ -84,3 +84,25 @@
 .az-agent-onboarding-step>span:nth-child(2){flex:1}.az-agent-onboarding-step>span:first-child{color:#ae326d;font-size:16px;font-weight:800}
 .az-agent-onboarding-step form{margin:0}.az-agent-onboarding-step button{padding:7px 9px;font-size:12px}
 @media(max-width:500px){.az-agent-onboarding-card{padding:13px}.az-agent-onboarding-step{flex-wrap:wrap}.az-agent-review-stats{flex-direction:column}}
+/* v1.54 staff-only Talent Pipeline; responsive native document scrolling */
+.az-talent-stats{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin:16px 0}
+.az-talent-stats a{border:1px solid #eadbe3;background:#fff9fc;border-radius:12px;padding:12px;display:grid;gap:4px;color:#3d2a34;text-decoration:none;min-width:0}
+.az-talent-stats strong{font-size:clamp(1.3rem,2vw,2rem)}.az-talent-stats span{font-size:.75rem;overflow-wrap:anywhere}
+.az-talent-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.az-talent-column{min-width:0;background:#fff;border:1px solid #e9d8e2;border-radius:15px;padding:14px}
+.az-talent-column h3{font-size:1.04rem;margin:0 0 10px}
+.az-talent-task{border:1px solid #eadbe3;background:#fffafc;border-radius:12px;padding:13px;margin:10px 0;min-width:0;overflow-wrap:anywhere}
+.az-talent-task a,.az-talent-links a{color:#873454}.az-talent-task p{margin:6px 0}
+.az-talent-task small{font-size:.79rem;color:#625966}.az-talent-overdue{color:#aa2636!important;font-weight:800}
+.az-talent-state{display:inline-block;margin-left:6px;font-size:.76rem;background:#f5e5ed;border-radius:20px;padding:3px 9px}
+.az-talent-task-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}
+.az-talent-links{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:12px}
+.az-talent-form{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto;gap:12px;align-items:end;margin:18px 0}
+.az-talent-form label,.az-talent-resolve label{display:grid;gap:6px;font-weight:700;font-size:.9rem}
+.az-talent-form input,.az-talent-resolve textarea{width:100%;min-width:0;box-sizing:border-box;color:#241d25;background:white;border:1px solid #cbbbc6;border-radius:9px;padding:10px;font:inherit}
+.az-talent-resolve{margin-top:10px}.az-talent-resolve textarea{min-height:80px}
+.az-talent-basis{font-size:.8rem;color:#5e5660;margin-top:18px}
+@media(max-width:950px){.az-talent-stats{grid-template-columns:repeat(4,minmax(0,1fr))}.az-talent-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.az-talent-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.az-talent-form{grid-template-columns:1fr}.az-talent-followup{padding:12px}.az-talent-form button{min-height:44px;width:100%}}
+/* v1.54: wrap multi-tab casting navigation on narrow phones, never create a sideways page. */
+@media (max-width:680px){.az-casting-tabs{flex-wrap:wrap;justify-content:flex-start}.az-casting-tabs a{min-width:0;max-width:100%}}
