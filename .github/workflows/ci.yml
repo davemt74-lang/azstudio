@@ -70,6 +70,7 @@ jobs:
           php tests/talent-pipeline-v154.php
           php tests/creator-club-v155.php
           php tests/shop-v156.php
+          php tests/shop-homepage-v157.php
 
   fixtures:
     name: SQLite permissions and migration fixtures
@@ -130,6 +131,7 @@ jobs:
           python tests/talent-pipeline-v154-browser.py
           python tests/creator-club-v155-browser.py
           python tests/shop-v156-browser.py
+          python tests/shop-homepage-v157-browser.py
           python tests/live-shopping-v141-browser.py
       - uses: actions/upload-artifact@v4
         if: always()
@@ -157,6 +159,7 @@ jobs:
             ${{ runner.temp }}/azh_live_v149_browser/*.png
             ${{ runner.temp }}/azh_live_v151_browser/*.png
             ${{ runner.temp }}/azh_live_shop_v141/*.png
+            ${{ runner.temp }}/azh_shop_v157_browser/*.png
             ${{ runner.temp }}/azh_campaign_v153_browser/*.png
             ${{ runner.temp }}/azh_talent_v154_browser/*.png
           if-no-files-found: ignore
