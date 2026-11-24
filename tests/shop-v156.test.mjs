@@ -40,7 +40,8 @@ test('search/gallery controls and admin tools are wired and accessible',()=>{
  assert.match(merch,/save storefront settings|Save storefront settings/i.test(read('commerce.php'))? /api\('save'/ : /FormData/);
  assert.match(read('commerce.php'),/id="azh-shop-merch"/);
  assert.match(read('shop.php'),/azh-shop-no-matches/);
- assert.match(read('package.json'),/"version": "1\.56\.0"/);
- assert.match(read('live.php'),/live-viewer\.js\?v=1\.56\.0/);
- assert.match(read('live-director.php'),/live-director\.js\?v=1\.56\.0/);
+ const version=JSON.parse(read('package.json')).version;
+ assert.equal(typeof version,'string');
+ assert.ok(read('live.php').includes('live-viewer.js?v='+version));
+ assert.ok(read('live-director.php').includes('live-director.js?v='+version));
 });

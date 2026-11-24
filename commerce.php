@@ -123,6 +123,15 @@ $admin=az_has_role($user,'admin');
         <label>Visibility<select name="state"><option value="draft">Draft</option><option value="active">Active</option><option value="archived">Archived</option></select></label>
         <div class="azh-commerce-actions"><button type="submit">Save product</button><button type="reset" data-reset-product>New product</button></div>
       </form></div><?php endif; ?>
+    <?php if($admin): ?><section class="azh-commerce-editor" id="azh-shop-homepage-quick" data-csrf="<?= az_h(az_csrf_token()) ?>" aria-labelledby="azh-shop-homepage-title">
+      <p class="azh-eyebrow">STORE DESIGN &amp; VISIBILITY</p><h2 id="azh-shop-homepage-title">Shop Homepage Editor</h2>
+      <p>Design the hero banner, upload background images, edit text and typography, and enable or disable individual homepage sections and product categories. Save a private draft, preview it, then publish.</p>
+      <div class="azh-commerce-actions"><a class="azh-commerce-cta" href="shop-homepage-editor.php">Open Homepage Editor ↗</a><a href="shop.php" target="_blank" rel="noopener" class="azh-commerce-link">View public storefront ↗</a></div>
+      <p><strong>Quick ecommerce controls</strong> · These switches publish immediately. Sample products are illustrative only and cannot be purchased.</p>
+      <div class="azh-commerce-actions"><button type="button" id="azh-toggle-storeEnabled" class="azh-commerce-small">Checking storefront…</button>
+      <button type="button" id="azh-toggle-sampleEnabled" class="azh-commerce-small">Checking sample data…</button></div>
+      <p id="azh-shop-quick-status" role="status" aria-live="polite">Loading storefront switches…</p>
+    </section><?php endif; ?>
     <?php if($admin): ?><section class="azh-commerce-editor" id="azh-shop-merch" data-csrf="<?= az_h(az_csrf_token()) ?>" aria-labelledby="azh-shop-merch-title">
       <div><p class="azh-eyebrow">STORE DISPLAY &amp; CURATION</p><h2 id="azh-shop-merch-title">Product galleries &amp; collections</h2>
       <p>Manage photos, browse categories, featured placement, and curated sets for existing products. Checkout, product pricing and inventory are managed separately above.</p></div>
@@ -308,5 +317,5 @@ $admin=az_has_role($user,'admin');
 <script type="module" src="assets/commerce-provider-actions.js?v=1.37.0"></script>
 <?php if($admin): ?><script type="module" src="assets/commerce-provider-readiness.js?v=1.39.0"></script><?php endif; ?>
 <script type="module" src="assets/commerce-agent-briefing.js?v=1.40.0"></script>
-<?php if($admin): ?><script type="module" src="assets/shop-merch-v156.js?v=1.56.0"></script><?php endif; ?>
+<?php if($admin): ?><script type="module" src="assets/shop-merch-v156.js?v=1.56.0"></script><?php endif; ?><?php if($admin): ?><script src="assets/shop-homepage-quick.js?v=1.57.0" defer></script><?php endif; ?>
 </body></html>

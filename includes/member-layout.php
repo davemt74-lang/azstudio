@@ -8,7 +8,7 @@ function az_render_member_nav_links(string $page, array $user): void
 {
     $admin = az_has_role($user, 'admin');
     $liveEditor = $admin || az_has_role($user, 'editor');
-    $adminPage = in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','commerce','accounts','admin','creator-club-admin'], true) || ($admin && $page==='creator-analytics');
+    $adminPage = in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','commerce','shop-homepage-editor','accounts','admin','creator-club-admin'], true) || ($admin && $page==='creator-analytics');
     $contributor = $admin || az_has_role($user, 'editor') || az_has_role($user, 'model') || az_has_role($user, 'professional');
     $links = [
         ['dashboard.php', 'Overview', 'dashboard', '⌂'],
@@ -48,6 +48,7 @@ function az_render_member_nav_links(string $page, array $user): void
         ['creator-analytics.php', 'Creator analytics', 'creator-analytics', '▥'],
         ['publishing.php', 'Publishing & Growth', 'publishing', '◈'],
         ['commerce.php', 'Commerce & Affiliates', 'commerce', '◆'],
+        ['shop-homepage-editor.php', 'Shop Homepage Editor', 'shop-homepage-editor', '✎'],
         ['accounts.php', 'Manage accounts', 'accounts', '◈'],
         ['admin.php', 'AI settings', 'admin', '✳'],
     ];
@@ -56,7 +57,7 @@ function az_render_member_nav_links(string $page, array $user): void
         'classes'=>'Classes','appointments'=>'Spa & appointments','my-work'=>'My assignments','my-videos'=>'My Videos',
         'my-camera'=>'Phone camera','productions'=>'Productions','director'=>'Production Director','library'=>'Interviews','my-media'=>'My media gallery','my-editor'=>'Video editor',
         'interview'=>'Recording room','editor'=>'Video editor','profiles'=>'Models',
-        'questionnaires'=>'Questionnaires','casting'=>'Casting CRM','videos'=>'Finished videos','user-submissions'=>'User Submissions','publishing'=>'Publishing & Growth','commerce'=>'Commerce & Affiliates','accounts'=>'Manage accounts',
+        'questionnaires'=>'Questionnaires','casting'=>'Casting CRM','videos'=>'Finished videos','user-submissions'=>'User Submissions','publishing'=>'Publishing & Growth','commerce'=>'Commerce & Affiliates','shop-homepage-editor'=>'Shop Homepage Editor','accounts'=>'Manage accounts',
         'creator-analytics'=>'Video performance','creator-clubs'=>'Creator Clubs','creator-club'=>'Creator Club','creator-club-admin'=>'Membership reviews','admin'=>'AI settings',
     ][$page] ?? 'My workspace';
     // Details and nested routes retain the corresponding navigation highlight.
@@ -99,7 +100,7 @@ function az_render_member_layout_open(string $page, array $user): void
     <div id="azh-side-navigation"><?php az_render_member_nav_links($page, $user); ?></div>
   </aside>
   <div class="azh-member-canvas" id="azh-page-canvas">
-    <div class="azh-canvas-topline"><span>AZHOTTIE <span class="azh-canvas-slash">/</span> <?= az_h($page === 'my-media' ? 'My media gallery' : ('dashboard' === $page ? 'Overview' : ucwords(str_replace('-', ' ', $page)))) ?></span><span class="azh-canvas-member-pill"><span aria-hidden="true">✳</span> <?= in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','commerce','accounts','admin'], true) ? 'ADMIN STUDIO' : 'MEMBER AREA' ?></span></div>
+    <div class="azh-canvas-topline"><span>AZHOTTIE <span class="azh-canvas-slash">/</span> <?= az_h($page === 'my-media' ? 'My media gallery' : ('dashboard' === $page ? 'Overview' : ucwords(str_replace('-', ' ', $page)))) ?></span><span class="azh-canvas-member-pill"><span aria-hidden="true">✳</span> <?= in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','commerce','shop-homepage-editor','accounts','admin'], true) ? 'ADMIN STUDIO' : 'MEMBER AREA' ?></span></div>
 <?php
 }
 
