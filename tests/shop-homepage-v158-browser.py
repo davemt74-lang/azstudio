@@ -6,12 +6,14 @@ storefront markup, live accounts, provider calls, or production data are used.
 """
 import copy
 import importlib.util
+import json
 import os
 import shutil
 import socket
 import subprocess
 import tempfile
 import time
+import traceback
 import urllib.request
 from pathlib import Path
 
@@ -319,7 +321,18 @@ def full_lifecycle(browser, base):
             phone = frame(page).evaluate(SNAPSHOT)
             assert phone['position'] == '73% 19%' and phone['height'] == '690px' and phone['headingSize'] == '43px', phone
             assert phone['alignment'] == 'left' and phone['placement'] == 'flex-start' and IMAGE_C in phone['heroImage'], phone
-            assert '0.1' in phone['overlay'], phone
+            # Strength adds tint to the gradient's base stops; computed alpha
+            # values may be quantized by the browser. Verify the rendered
+            # gradient responds to the control and restores exactly instead
+            # of looking for the raw strength inside a serialized color.
+            original_overlay = phone['overlay']
+            assert original_overlay != 'none', phone
+            field(page, 'mobileOverlayStrength', 60)
+            until_preview(page, '(original)=>getComputedStyle(document.querySelector(".azh-hero-overlay")).backgroundImage !== original', original_overlay)
+            assert frame(page).evaluate('Number(getComputedStyle(document.querySelector("#azh-shop")).getPropertyValue("--az-mobile-overlay"))') == 0.6
+            field(page, 'mobileOverlayStrength', 10)
+            until_preview(page, '(original)=>getComputedStyle(document.querySelector(".azh-hero-overlay")).backgroundImage === original', original_overlay)
+            assert frame(page).evaluate('Number(getComputedStyle(document.querySelector("#azh-shop")).getPropertyValue("--az-mobile-overlay"))') == 0.1
             fixture_module.assert_image_decodes(frame(page), fixture_module.image_url(frame(page), '[data-section=hero]'),
                                                 base + 'shop-homepage-media.php?id=' + IMAGE_C)
     field(page, 'mobileHeroImage', 'inherit')
@@ -423,6 +436,40 @@ def subdirectory_smoke(browser, base):
     print('Actual /studio editor, preview API and protected image URL resolution PASS', flush=True)
 
 
+def capture_failure(browser, exception):
+    """Keep fixture-only screenshots and diagnostics without hiding the failure."""
+    diagnostics = {'error': str(exception), 'traceback': traceback.format_exc(), 'pages': []}
+    for context_index, context in enumerate(browser.contexts):
+        for page_index, page in enumerate(context.pages):
+            if page.is_closed():
+                continue
+            name = 'failure_context_' + str(context_index) + '_page_' + str(page_index)
+            detail = {'name': name, 'url': page.url, 'frames': []}
+            diagnostics['pages'].append(detail)
+            try:
+                page.screenshot(path=str(OUT / (name + '.png')), full_page=False, timeout=5000)
+            except Exception as capture_error:
+                detail['screenshotError'] = str(capture_error)
+            for document in page.frames:
+                try:
+                    detail['frames'].append(document.evaluate('''() => {
+                        const hero=document.querySelector('[data-section=hero]'),root=document.querySelector('#azh-shop');
+                        const overlay=document.querySelector('.azh-hero-overlay');
+                        const status=document.querySelector('#azh-shop-editor-status'),preview=document.querySelector('#azh-shop-preview-status');
+                        return {url:location.href,viewport:[innerWidth,innerHeight],scroll:[scrollX,scrollY],
+                            documentSize:[document.documentElement.scrollWidth,document.documentElement.scrollHeight],
+                            editorStatus:status?{state:status.dataset.state,text:status.textContent}:null,
+                            previewStatus:preview?{state:preview.dataset.state,text:preview.textContent}:null,
+                            heading:document.querySelector('#azh-hero-heading')?.textContent,
+                            hero:hero?{image:getComputedStyle(hero).backgroundImage,position:getComputedStyle(hero).backgroundPosition,height:getComputedStyle(hero).minHeight}:null,
+                            overlay:overlay?getComputedStyle(overlay).backgroundImage:null,
+                            mobileOverlay:root?getComputedStyle(root).getPropertyValue('--az-mobile-overlay'):null};
+                    }'''))
+                except Exception as capture_error:
+                    detail['frames'].append({'url': document.url, 'diagnosticError': str(capture_error)})
+    (OUT / 'failure-details.json').write_text(json.dumps(diagnostics, indent=2), encoding='utf8')
+
+
 def run():
     assert shutil.which('php'), 'PHP with PDO SQLite is required for the real editor acceptance test.'
     with tempfile.TemporaryDirectory(prefix='azh-shop-editor-') as temp:
@@ -453,9 +500,17 @@ def run():
                 with sync_playwright() as pw:
                     executable = next((shutil.which(name) for name in ['chromium','google-chrome','chromium-browser'] if shutil.which(name)), None)
                     browser = pw.chromium.launch(executable_path=executable, headless=True, args=['--no-sandbox'])
-                    full_lifecycle(browser, origin + '/')
-                    subdirectory_smoke(browser, origin + '/studio/')
-                    browser.close()
+                    try:
+                        full_lifecycle(browser, origin + '/')
+                        subdirectory_smoke(browser, origin + '/studio/')
+                    except Exception as error:
+                        try:
+                            capture_failure(browser, error)
+                        except Exception as capture_error:
+                            print('Could not capture all failure diagnostics: ' + str(capture_error), flush=True)
+                        raise
+                    finally:
+                        browser.close()
             finally:
                 server.terminate()
                 try:

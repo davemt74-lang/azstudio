@@ -170,7 +170,7 @@ jobs:
             ${{ runner.temp }}/azh_live_v151_browser/*.png
             ${{ runner.temp }}/azh_live_shop_v141/*.png
             ${{ runner.temp }}/azh_shop_v157_browser/*.png
-            ${{ runner.temp }}/azh_shop_v158_browser/*.png
+            ${{ runner.temp }}/azh_shop_v158_browser/
             ${{ runner.temp }}/azh_shop_v1571_browser/*.png
             ${{ runner.temp }}/azh_admin_navigation_v1571/*.png
             ${{ runner.temp }}/azh_campaign_v153_browser/*.png
