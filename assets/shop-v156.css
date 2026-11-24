@@ -1,0 +1,73 @@
+/* AZHottie v1.56: editorial shop, responsive browsing, no nested page scroll. */
+.azh-shop{max-width:1320px;margin:0 auto;padding:clamp(14px,2.6vw,42px);box-sizing:border-box;color:#302531;min-width:0}
+.azh-shop *{box-sizing:border-box}
+.azh-shop [hidden]{display:none!important}
+.azh-shop-hero{background:#fcf6f8;border:1px solid #efe2e8;border-radius:26px;min-height:260px;padding:clamp(25px,4vw,60px);display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:13px;position:relative;overflow:hidden}
+.azh-shop-hero::after{content:'✳';font-family:Georgia,serif;position:absolute;right:1%;top:-100px;font-size:clamp(180px,35vw,460px);color:#f1dfe6;opacity:.8;pointer-events:none;transform:rotate(-10deg)}
+.azh-shop-hero>*{z-index:1;position:relative;max-width:660px}
+.azh-shop-hero .azh-shop-eyebrow,.azh-shop-card-kicker{font-size:11px;text-transform:uppercase;font-weight:850;letter-spacing:.17em;color:#985772}
+.azh-shop-hero h1{margin:0;letter-spacing:-.047em;color:#352733;font-size:clamp(36px,6.2vw,72px);line-height:1.02}
+.azh-shop-hero h1 em{font-family:Georgia,serif;font-weight:400;color:#ac5276}
+.azh-shop-hero p{line-height:1.65;color:#675260;font-size:clamp(14px,1.3vw,17px);margin:0}
+.azh-shop-hero-link,.azh-shop a.azh-shop-details{color:#843c5a;text-decoration:underline;text-underline-offset:4px;font-weight:750}
+.azh-shop-tools{padding:26px 0 18px}
+.azh-shop-tools-title{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+.azh-shop-tools-title h2{font-size:clamp(24px,3vw,37px);letter-spacing:-.035em;margin:0;color:#342836}
+.azh-shop-tools-title span{font-size:13px;color:#7d6974;font-variant-numeric:tabular-nums}
+.azh-shop-tool-row{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;margin-bottom:16px}
+.azh-shop-tool-row label{display:grid;gap:5px;font-size:12px;color:#6d5668;font-weight:750}
+.azh-shop-tool-row :is(input,select){width:100%;min-width:0;background:#fff;border:1px solid #d7ccd3;border-radius:11px;min-height:45px;padding:11px 14px;color:#392d3b;font:inherit;font-size:15px}
+.azh-shop-filters{display:flex;flex-wrap:wrap;gap:8px}
+.azh-shop .azh-shop-filters button{border:1px solid #e7dbe2;background:#fff;color:#795567;min-height:40px;border-radius:999px;padding:9px 17px;font-size:13px;white-space:normal}
+.azh-shop .azh-shop-filters button.is-current{background:#342835;color:white;border-color:#342835}
+.azh-shop-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,275px),1fr));gap:18px;align-items:stretch;min-width:0}
+.azh-shop .azh-shop-card{padding:0;margin:0;display:flex;flex-direction:column;overflow:hidden;border:1px solid #eadfe5;border-radius:17px;box-shadow:0 9px 23px #44283b0e;min-width:0}
+.azh-shop-card-media{aspect-ratio:4/4.1;background:#f5eaf0;position:relative;overflow:hidden;min-height:195px}
+.azh-shop-card-media>a,.azh-shop-card-media>a>img{width:100%;height:100%;display:block}
+.azh-shop-card-media img{object-fit:cover;transition:transform .18s ease}
+@media(hover:hover){.azh-shop-card-media>a:hover img{transform:scale(1.03)}}
+.azh-shop-card-category,.azh-shop-card-featured{position:absolute;left:13px;bottom:13px;border-radius:7px;padding:7px 10px;background:#fffefa;color:#593d50;font-weight:750;font-size:11px;box-shadow:0 1px 4px #281b260f}
+.azh-shop-card-featured{left:auto;right:13px;top:13px;bottom:auto;background:#482d42;color:white}
+.azh-shop-card-placeholder{height:100%;width:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;background:#f5ecf1;color:#a87f93}
+.azh-shop-card-placeholder span{font-size:clamp(58px,8vw,95px);font-family:Georgia,serif;line-height:1}
+.azh-shop-card-placeholder small{letter-spacing:.29em;font-size:10px;font-weight:850}
+.azh-shop-card-body{padding:19px;display:flex;flex-direction:column;flex:1;min-width:0}
+.azh-shop .azh-shop-card h2{font-size:clamp(20px,2.1vw,25px);line-height:1.15;margin:9px 0;color:#392d38;letter-spacing:-.03em}
+.azh-shop .azh-shop-card .azh-shop-card-tagline{margin:0 0 10px;color:#965d76;font-size:14px;font-weight:680;line-height:1.4}
+.azh-shop .azh-shop-card .azh-shop-card-description{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;font-size:13px;line-height:1.55;margin:0 0 10px;color:#685b66}
+.azh-shop-creator{background:#faf5f7;border-radius:9px;padding:9px 11px;color:#78556b;font-size:12px!important;line-height:1.4!important}
+.azh-shop .azh-shop-creator a{font-weight:750;color:#954e6a}
+.azh-shop-bundle{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;border:1px solid #f0e3e9;border-radius:11px;background:#fffafc;margin-bottom:12px}
+.azh-shop-bundle strong{font-size:13px}.azh-shop-bundle a{font-size:12px;border-radius:5px;color:#794c62}
+.azh-shop-bundle small{flex-basis:100%;color:#75626c;font-size:11px;line-height:1.5}
+.azh-shop .azh-shop-details{display:inline-block;font-size:13px;margin:8px 0 15px}
+.azh-shop .azh-commerce-card-footer{margin-top:auto;padding-top:15px;border-top:1px solid #f0e8ee;display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.azh-shop .azh-commerce-card-footer>strong{font-size:24px;letter-spacing:-.03em;color:#382935}
+.azh-shop .azh-commerce-card-footer .azh-shipping-product-summary p{font-size:12px;line-height:1.5;margin:4px 0;white-space:normal}
+.azh-shop .azh-commerce-card-footer form{width:100%}
+.azh-shop .azh-commerce-card-footer .azh-commerce-cta{width:100%;display:block;text-align:center;background:#3f2d3e;color:#fff;border-radius:10px;padding:13px 11px;min-height:45px;font-size:13px;line-height:1.3}
+.azh-shop-bottom-links{padding-top:20px}
+.azh-shop-empty{border:1px dashed #e6ced9;border-radius:13px;background:#faf4f7;padding:24px;text-align:center;color:#74556a;line-height:1.55;grid-column:1/-1}
+.azh-shop-crumb{font-size:13px;margin:0 0 16px}
+.azh-shop-detail{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(20px,3vw,44px);align-items:start}
+.azh-shop-gallery,.azh-shop-detail-copy{min-width:0}
+.azh-shop-gallery-main{width:100%;aspect-ratio:1/1.05;border-radius:18px;overflow:hidden;background:#f3e7ed}
+.azh-shop-gallery-main>img{width:100%;height:100%;display:block;object-fit:cover}
+.azh-shop-thumbnails{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px;margin-top:12px}
+.azh-shop .azh-shop-thumbnails button{padding:0;aspect-ratio:1;border:2px solid transparent;border-radius:9px;background:#fff;overflow:hidden}
+.azh-shop .azh-shop-thumbnails button[aria-pressed=true]{border-color:#9e5779}
+.azh-shop-thumbnails img{width:100%;height:100%;object-fit:cover}
+.azh-shop-detail-copy h1{font-size:clamp(30px,4.2vw,55px);letter-spacing:-.035em;line-height:1.08;margin:11px 0 14px;color:#352638}
+.azh-shop-detail-tagline{font-size:18px;color:#a04a70;font-weight:700;margin:0 0 14px}
+.azh-shop-detail-description{font-size:15px;color:#665362;line-height:1.7;overflow-wrap:anywhere}
+.azh-shop-detail-checkout{box-shadow:none;padding:18px;margin-top:23px}
+.azh-shop-detail-checkout .azh-commerce-card-footer{display:flex;flex-direction:column;align-items:stretch;gap:12px;margin:0}
+.azh-shop-related{margin-top:54px}.azh-shop-related h2{font-size:24px;letter-spacing:-.02em}
+.azh-shop-related-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}
+.azh-shop-related-grid>a{background:#fff;border:1px solid #ece0e6;border-radius:13px;overflow:hidden;display:flex;flex-direction:column;text-decoration:none;gap:5px;padding-bottom:12px;min-width:0}
+.azh-shop-related-grid img,.azh-shop-related-grid .azh-shop-card-placeholder{aspect-ratio:4/3.4;object-fit:cover;width:100%;height:auto}
+.azh-shop-related-grid strong,.azh-shop-related-grid small{padding:0 12px;color:#524054;font-size:13px;overflow-wrap:anywhere}
+.azh-shop-related-grid small{font-size:12px;color:#795e70}
+.azh-shop :focus-visible{outline:3px solid #9e5173;outline-offset:3px}
+@media(max-width:800px){.azh-shop-detail{grid-template-columns:minmax(0,1fr)}.azh-shop-related-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.azh-shop{padding:12px}.azh-shop-hero{padding:26px 19px;min-height:240px}.azh-shop-hero::after{right:-25%;top:0;font-size:205px}.azh-shop-tool-row{grid-template-columns:1fr}.azh-shop-filters{gap:6px}.azh-shop .azh-shop-filters button{font-size:12px;padding:9px 13px}.azh-shop-grid{grid-template-columns:1fr}.azh-shop-card-media{aspect-ratio:4/3.3}.azh-shop-detail-copy h1{font-size:36px}.azh-shop-related-grid{gap:9px}}
