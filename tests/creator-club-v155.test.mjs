@@ -47,5 +47,6 @@ test('New creator club links and schema migration are installed',()=>{
  assert.match(read('user.php'),/creator-club\.php\?creator=/);
  assert.match(read('includes/member-layout.php'),/creator-club-admin\.php/);
  assert.match(read('includes/member-layout.php'),/creator-clubs\.php/);
- const [major,minor]=JSON.parse(read('package.json')).version.split('.').map(Number);\n assert.ok(major>1 || (major===1 && minor>=55),'Creator Clubs remains installed in this or newer release');
+ const [major,minor]=JSON.parse(read('package.json')).version.split('.').map(Number);
+ assert.ok(major>1 || (major===1 && minor>=55),'Creator Clubs remains installed in this or newer release');
 });
