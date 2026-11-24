@@ -66,6 +66,7 @@ jobs:
           php tests/live-triage-v148.php
           php tests/live-viewer-order-v149.php
           php tests/creator-analytics-v150.php
+          php tests/publishing-campaign-v153.php
 
   fixtures:
     name: SQLite permissions and migration fixtures
@@ -122,6 +123,7 @@ jobs:
           python tests/live-triage-browser.py
           python tests/live-v149-browser.py
           python tests/live-v151-browser.py
+          python tests/publishing-campaign-v153-browser.py
           python tests/live-shopping-v141-browser.py
       - uses: actions/upload-artifact@v4
         if: always()
@@ -149,6 +151,7 @@ jobs:
             ${{ runner.temp }}/azh_live_v149_browser/*.png
             ${{ runner.temp }}/azh_live_v151_browser/*.png
             ${{ runner.temp }}/azh_live_shop_v141/*.png
+            ${{ runner.temp }}/azh_campaign_v153_browser/*.png
           if-no-files-found: ignore
           retention-days: 14
 
