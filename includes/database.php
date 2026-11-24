@@ -27,7 +27,8 @@ function az_connect_database(array $configuration): PDO
 function az_db(): PDO
 {
     if (isset($GLOBALS['az_database'])) {
-        return $GLOBALS['az_database'];
+        if (function_exists('az_upgrade_publishing_campaign_schema') && az_schema_version($GLOBALS['az_database']) >= 48) { az_upgrade_publishing_campaign_schema($GLOBALS['az_database']); }
+    return $GLOBALS['az_database'];
     }
     $config = az_config();
     if (!isset($config['database'])) {
@@ -159,6 +160,7 @@ function az_create_schema(PDO $db): void
     if (function_exists('az_upgrade_admin_action_schema') && az_schema_version($db) >= 45) { az_upgrade_admin_action_schema($db); }
     if (function_exists('az_upgrade_live_acceptance_schema') && az_schema_version($db) >= 46) { az_upgrade_live_acceptance_schema($db); }
     if (function_exists('az_upgrade_creator_analytics_schema') && az_schema_version($db) >= 47) { az_upgrade_creator_analytics_schema($db); }
+    if (function_exists('az_upgrade_publishing_campaign_schema') && az_schema_version($db) >= 48) { az_upgrade_publishing_campaign_schema($db); }
 }
 
 
