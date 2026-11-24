@@ -69,6 +69,7 @@ jobs:
           php tests/publishing-campaign-v153.php
           php tests/talent-pipeline-v154.php
           php tests/creator-club-v155.php
+          php tests/shop-v156.php
 
   fixtures:
     name: SQLite permissions and migration fixtures
@@ -128,6 +129,7 @@ jobs:
           python tests/publishing-campaign-v153-browser.py
           python tests/talent-pipeline-v154-browser.py
           python tests/creator-club-v155-browser.py
+          python tests/shop-v156-browser.py
           python tests/live-shopping-v141-browser.py
       - uses: actions/upload-artifact@v4
         if: always()
