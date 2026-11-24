@@ -7,6 +7,9 @@ try{
     $action=is_string($_POST['action']??null)?$_POST['action']:'';
     $creator=filter_var($_POST['creator']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]])?:0;
     if($action==='follow'||$action==='unfollow'){
+        $target=az_social_target(null,$creator);
+        if(!$target || !az_social_visible(az_social_row($creator),$user,$target))
+            throw new AzHttpError(404,'Creator profile unavailable.','not_found');
         az_creator_club_follow($user,$creator,$action==='follow');
     }elseif($action==='tier'){
         if($creator!==(int)$user['id'])throw new AzHttpError(403,'Creator only.','forbidden');
