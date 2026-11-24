@@ -19,6 +19,11 @@ function az_db():PDO{return $GLOBALS['shop_test_db'];}
 function az_schema_version(PDO $db):int{return (int)$db->query('SELECT version FROM studio_schema WHERE id=1')->fetchColumn();}
 require_once __DIR__.'/../includes/shop-homepage.php';
 function ok(bool $pass,string $label):void{if(!$pass)throw new RuntimeException('Shop 2.1 test failed: '.$label);}
+// Match the request shape produced by az_json_body: only the outer object is
+// converted to an array, while design and its visibility maps remain objects.
+function request_body(array $body):array{
+    return get_object_vars(json_decode(json_encode($body,JSON_THROW_ON_ERROR),false,64,JSON_THROW_ON_ERROR));
+}
 if(!in_array('sqlite',PDO::getAvailableDrivers(),true)){fwrite(STDERR,"PHP PDO SQLite required.\n");exit(2);}
 $db=new PDO('sqlite::memory:');$GLOBALS['shop_test_db']=$db;$db->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);$db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE,PDO::FETCH_ASSOC);
 $db->exec('CREATE TABLE studio_schema (id INTEGER PRIMARY KEY,version INTEGER NOT NULL);INSERT INTO studio_schema VALUES(1,52)');
@@ -28,13 +33,18 @@ $admin=['id'=>1,'status'=>'active','roles'=>['admin']];$fan=['id'=>2,'status'=>'
 $state=az_shop_homepage_admin_state($admin,$db);ok($state['revision']===1,'initial revision');
 ok($state['published']['sampleEnabled']===false,'sample data off by default');
 ok($state['published']['storeEnabled']===true,'shop on by default');
+ok($state['published']['sections']['hero']===true&&$state['draft']['sections']['hero']===true,'hero enabled in default public and draft layouts');
+ok($state['published']['heroImage']==='default'&&$state['draft']['heroImage']==='default','editorial image selected by default');
 try{az_shop_homepage_admin_state($fan,$db);throw new RuntimeException('Unauthorized read succeeded');}catch(AzHttpError $e){ok($e->status===403,'role-scope read');}
 try{az_shop_homepage_toggle($fan,['key'=>'sampleEnabled','enabled'=>true,'revision'=>1],$db);throw new RuntimeException('Unauthorized toggle succeeded');}catch(AzHttpError $e){ok($e->status===403,'role-scope write');}
 $draft=$state['draft'];$draft['heading']='Alluring new collection';$draft['sections']['featured']=false;$draft['categories']['candy']=false;$draft['order']=array_reverse($draft['order']);
-$saved=az_shop_homepage_save($admin,['revision'=>1,'action'=>'saveDraft','design'=>$draft],$db);
+$request=request_body(['revision'=>1,'action'=>'saveDraft','design'=>$draft]);
+ok($request['design'] instanceof stdClass&&$request['design']->sections instanceof stdClass,'HTTP design and visibility maps are nested objects');
+$saved=az_shop_homepage_save($admin,$request,$db);
 ok($saved['revision']===2,'save draft revision');$state=az_shop_homepage_admin_state($admin,$db);
 ok($state['published']['heading']!==$draft['heading']&&$state['draft']['heading']===$draft['heading'],'draft not visible publicly');
 ok($state['published']['sections']['featured']===true,'draft section hidden but public still shown');
+ok($state['draft']['sections']['hero']===true&&$state['draft']['categories']['apparel']===true,'saving JSON preserves enabled defaults');
 try{az_shop_homepage_save($admin,['revision'=>1,'action'=>'publish','design'=>$draft],$db);throw new RuntimeException('Stale publish succeeded');}catch(AzHttpError $e){ok($e->status===409,'revision conflict');}
 $invalid=$draft;$invalid['heroImage']='https://evil.invalid/evil.svg';
 try{az_shop_homepage_save($admin,['revision'=>2,'action'=>'publish','design'=>$invalid],$db);throw new RuntimeException('External image accepted');}catch(AzHttpError $e){ok($e->status===400,'reject arbitrary image url');}
@@ -43,12 +53,18 @@ try{az_shop_homepage_save($admin,['revision'=>2,'action'=>'publish','design'=>$i
 $invalid=$draft;$invalid['ctaHref']='javascript:alert(1)';
 try{az_shop_homepage_save($admin,['revision'=>2,'action'=>'publish','design'=>$invalid],$db);throw new RuntimeException('Script href accepted');}catch(AzHttpError $e){ok($e->status===400,'internal links only');}
 $invalid=$draft;$invalid['sections']['hero']='off';
-try{az_shop_homepage_save($admin,['revision'=>2,'action'=>'publish','design'=>$invalid],$db);throw new RuntimeException('String on/off accepted');}catch(AzHttpError $e){ok($e->status===400,'strict boolean categories');}
+try{az_shop_homepage_save($admin,request_body(['revision'=>2,'action'=>'publish','design'=>$invalid]),$db);throw new RuntimeException('String on/off accepted');}catch(AzHttpError $e){ok($e->status===400&&$e->errorCode==='invalid_visibility','JSON visibility values remain strict booleans');}
+$invalid=$draft;$invalid['categories']=['apparel','fitness'];
+try{az_shop_homepage_save($admin,request_body(['revision'=>2,'action'=>'publish','design'=>$invalid]),$db);throw new RuntimeException('Visibility list accepted');}catch(AzHttpError $e){ok($e->status===400&&$e->errorCode==='invalid_visibility','visibility lists rejected');}
+$invalid=$draft;$invalid['sections']['unexpected']=true;
+try{az_shop_homepage_save($admin,request_body(['revision'=>2,'action'=>'publish','design'=>$invalid]),$db);throw new RuntimeException('Unknown visibility key accepted');}catch(AzHttpError $e){ok($e->status===400&&$e->errorCode==='invalid_visibility','unknown JSON visibility keys rejected');}
+try{az_shop_homepage_save($admin,request_body(['revision'=>2,'action'=>'publish','design'=>'not a design']),$db);throw new RuntimeException('Invalid design type accepted');}catch(AzHttpError $e){ok($e->status===400&&$e->errorCode==='invalid_design','design scalar rejected');}
 $invalid=$draft;$invalid['order']=['hero','hero'];
 try{az_shop_homepage_save($admin,['revision'=>2,'action'=>'publish','design'=>$invalid],$db);throw new RuntimeException('Invalid reorder accepted');}catch(AzHttpError $e){ok($e->status===400,'reorder whitelist');}
-$pub=az_shop_homepage_save($admin,['revision'=>2,'action'=>'publish','design'=>$draft],$db);ok($pub['published']&&$pub['revision']===3,'publish committed');
+$pub=az_shop_homepage_save($admin,request_body(['revision'=>2,'action'=>'publish','design'=>$draft]),$db);ok($pub['published']&&$pub['revision']===3,'JSON publish committed');
 $live=az_shop_homepage_public($db);ok($live['heading']==='Alluring new collection'&&!$live['categories']['candy']&&!$live['sections']['featured'],'public reflects published section/category');
 ok($live['order'][0]==='support','custom section order');
+ok($live['sections']['hero']===true&&$live['categories']['apparel']===true,'publish preserves enabled sections and categories');
 $demo=az_shop_homepage_demo_products();ok(count($demo)===8,'eight demo products');
 foreach($demo as $item)ok(str_starts_with($item['id'],'demo-')&&isset($item['images'][0]['src'])&&isset($item['priceCents']),'demo not a saleable product ID');
 $toggled=az_shop_homepage_toggle($admin,['key'=>'sampleEnabled','enabled'=>true,'revision'=>3],$db);
@@ -66,3 +82,4 @@ ok(az_shop_homepage_image_access($id,$fan,$db)['id']===$id,'published image visi
 try{az_shop_homepage_image_delete($admin,$id,$db);throw new RuntimeException('Published image deleted');}catch(AzHttpError $e){ok($e->status===409,'published image deletion blocked');}
 @unlink(AZ_STORAGE.'/schema-migration.lock');@rmdir(AZ_STORAGE);
 echo "shop homepage v1.57 PDO SQLite: PASS\n";
+

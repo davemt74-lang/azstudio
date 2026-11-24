@@ -123,6 +123,7 @@ function az_shop_homepage_validate(array $body, PDO $db): array
     }
     foreach(['sections'=>az_shop_homepage_sections(),'categories'=>az_shop_categories()] as $key=>$keys){
         $incoming=$body[$key]??null;
+        if($incoming instanceof stdClass)$incoming=get_object_vars($incoming);
         if(!is_array($incoming)||array_keys($incoming)!==array_keys($keys))
             throw new AzHttpError(400,'Invalid visibility settings.','invalid_visibility');
         foreach($incoming as $slug=>$enabled){
@@ -157,8 +158,12 @@ function az_shop_homepage_save(array $user,array $body,?PDO $db=null):array
     if($state['revision']!==$revision)throw new AzHttpError(409,'Homepage changed in another tab. Reload to continue.','revision_conflict');
     if($mode==='resetDraft')$draft=$state['published_json'];
     else {
-        if(!is_array($body['design']??null))throw new AzHttpError(400,'Invalid design payload.','invalid_design');
-        $draft=az_shop_homepage_validate($body['design'],$db);
+        // az_json_body keeps nested JSON objects as stdClass. Normalize the
+        // expected design object here; its fields still pass strict validation.
+        $design=$body['design']??null;
+        if($design instanceof stdClass)$design=get_object_vars($design);
+        if(!is_array($design))throw new AzHttpError(400,'Invalid design payload.','invalid_design');
+        $draft=az_shop_homepage_validate($design,$db);
     }
     $encoded=json_encode($draft,JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
     $date=az_now();

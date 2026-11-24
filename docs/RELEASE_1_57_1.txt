@@ -1,0 +1,54 @@
+AZHottie Studio v1.57.1
+Shop hero image repair and admin navigation categories
+
+SHOP HOMEPAGE
+The hero image was selected and its section was enabled, but the storefront
+stylesheet resolved relative CSS image URLs from the assets directory. This
+could request assets/assets/shop-editorial-hero-v157.webp instead of the
+packaged image. Uploaded hero and background URLs had the same problem.
+
+Hero and page background URLs now use the application's installation path,
+so both root and subdirectory installations load their images correctly in
+the storefront and private draft preview. The default hero remains enabled.
+
+The editor previously cleared its checkbox containers before reading their
+state. Opening or rebuilding the controls could silently clear visibility
+choices. It now renders saved state explicitly and captures pending choices
+before reordering. Deliberately disabled sections and categories stay disabled.
+
+Save and Publish now normalize the nested JSON objects returned by the actual
+request parser before applying the existing strict design validation. Admin
+authorization, CSRF, optimistic revisions, image IDs, and field checks remain.
+
+ADMIN NAVIGATION
+Account: My profile, Account settings, Manage accounts.
+Content: Live Director, Saved live productions, Productions, Interviews,
+Models, Casting CRM, Questionnaires, Video library, User Submissions,
+Creator analytics, Publishing & Growth.
+Commerce: Commerce & Affiliates, Shop Homepage Editor, Membership reviews.
+Agentic: Agent chat, Commerce Agent briefing.
+Platform Settings: Admin overview, AI settings.
+
+Categories use native accessible disclosure controls with keyboard support.
+The current page's group opens automatically; opening another group closes
+the previous one. Existing non-admin role restrictions remain in place.
+Workspace header routing recognizes the editor and related admin pages,
+preventing an additional hidden floating sidebar from being rendered.
+
+VALIDATION
+Release gates include PHP syntax and rule tests; JavaScript regressions;
+SQLite permission/migration fixtures; real PHP-rendered hero loading with
+external CSS/images at root and subdirectory paths; default and uploaded
+images in published and authenticated draft views; editor visibility and
+JSON save/publish regressions; and admin accordion navigation on desktop
+and mobile. Deployment packages exclude tests, private data, and credentials.
+
+DEPLOYMENT
+Overlay the contents of azhottie-studio onto the existing installation.
+Preserve storage/config.php, the database, uploaded images, and private media.
+Do not rerun install.php. Schema remains 53 for existing v1.57.0 sites.
+Refresh the admin page after updating. An already enabled hero with an image
+selected needs no re-upload or re-selection.
+
+Automated release checks run against isolated fixtures. HostGator deployment
+and confirmation on the live site are separate from those automated checks.

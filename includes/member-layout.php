@@ -4,11 +4,17 @@ declare(strict_types=1);
  * Shared signed-in AZHottie shell. Existing page content remains in the right
  * canvas; a private member chat composer opens the agent canvas when submitted.
  */
+function az_is_admin_workspace_page(string $page, array $user): bool
+{
+    return in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','commerce','shop-homepage-editor','accounts','admin','creator-club-admin'], true)
+        || (az_has_role($user, 'admin') && in_array($page, ['creator-analytics','agent-chat','account','user','settings'], true));
+}
+
 function az_render_member_nav_links(string $page, array $user): void
 {
     $admin = az_has_role($user, 'admin');
     $liveEditor = $admin || az_has_role($user, 'editor');
-    $adminPage = in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','commerce','shop-homepage-editor','accounts','admin','creator-club-admin'], true) || ($admin && $page==='creator-analytics');
+    $adminPage = az_is_admin_workspace_page($page, $user);
     $contributor = $admin || az_has_role($user, 'editor') || az_has_role($user, 'model') || az_has_role($user, 'professional');
     $links = [
         ['dashboard.php', 'Overview', 'dashboard', '⌂'],
@@ -33,24 +39,38 @@ function az_render_member_nav_links(string $page, array $user): void
         ['my-editor.php', 'Video editor', 'my-editor', '✂'],
         ['my-camera.php', 'Phone camera', 'my-camera', '◎'],
     ];
-    $adminLinks = [
-        ['admin-studio.php', 'Admin overview', 'admin-studio', '⌂'],
-        ['live-director.php', 'Live Director', 'live-director', '●'],
-        ['live-productions.php', 'Saved live productions', 'live-productions', '▣'],
-        ['productions.php', 'Productions', 'productions', '▥'],
-        ['library.php', 'Interviews', 'library', '▣'],
-        ['profiles.php', 'Models', 'profiles', '♧'],
-        ['casting.php', 'Casting CRM', 'casting', '✧'],
-        ['creator-club-admin.php', 'Membership reviews', 'creator-club-admin', '♡'],
-        ['questionnaires.php', 'Questionnaires', 'questionnaires', '☷'],
-        ['videos.php', 'Video library', 'videos', '▸'],
-        ['user-submissions.php', 'User Submissions', 'user-submissions', '▤'],
-        ['creator-analytics.php', 'Creator analytics', 'creator-analytics', '▥'],
-        ['publishing.php', 'Publishing & Growth', 'publishing', '◈'],
-        ['commerce.php', 'Commerce & Affiliates', 'commerce', '◆'],
-        ['shop-homepage-editor.php', 'Shop Homepage Editor', 'shop-homepage-editor', '✎'],
-        ['accounts.php', 'Manage accounts', 'accounts', '◈'],
-        ['admin.php', 'AI settings', 'admin', '✳'],
+    $adminGroups = [
+        'account' => ['Account', '◌', [
+            ['user.php', 'My profile', 'user', '◌'],
+            ['account-settings.php', 'Account settings', 'settings', '⚙'],
+            ['accounts.php', 'Manage accounts', 'accounts', '◈'],
+        ]],
+        'content' => ['Content', '▣', [
+            ['live-director.php', 'Live Director', 'live-director', '●'],
+            ['live-productions.php', 'Saved live productions', 'live-productions', '▣'],
+            ['productions.php', 'Productions', 'productions', '▥'],
+            ['library.php', 'Interviews', 'library', '▣'],
+            ['profiles.php', 'Models', 'profiles', '♧'],
+            ['casting.php', 'Casting CRM', 'casting', '✧'],
+            ['questionnaires.php', 'Questionnaires', 'questionnaires', '☷'],
+            ['videos.php', 'Video library', 'videos', '▸'],
+            ['user-submissions.php', 'User Submissions', 'user-submissions', '▤'],
+            ['creator-analytics.php', 'Creator analytics', 'creator-analytics', '▥'],
+            ['publishing.php', 'Publishing & Growth', 'publishing', '◈'],
+        ]],
+        'commerce' => ['Commerce', '◇', [
+            ['commerce.php', 'Commerce & Affiliates', 'commerce', '◆'],
+            ['shop-homepage-editor.php', 'Shop Homepage Editor', 'shop-homepage-editor', '✎'],
+            ['creator-club-admin.php', 'Membership reviews', 'creator-club-admin', '♡'],
+        ]],
+        'agentic' => ['Agentic', '✧', [
+            ['agent-chat.php', 'Agent chat', 'agent-chat', '✧'],
+            ['commerce.php?tab=agent', 'Commerce Agent briefing', 'commerce-agent', '◆'],
+        ]],
+        'platform' => ['Platform Settings', '⚙', [
+            ['admin-studio.php', 'Admin overview', 'admin-studio', '⌂'],
+            ['admin.php', 'AI settings', 'admin', '✳'],
+        ]],
     ];
     $label = [
         'dashboard'=>'Overview','live'=>'Live AZHottie','admin-studio'=>'Admin overview','live-director'=>'Live Director','live-productions'=>'Saved live productions','agent-chat'=>'Agent chat','account'=>'My profile','user'=>'My profile','settings'=>'Account settings','calendar'=>'Private calendar',
@@ -61,7 +81,8 @@ function az_render_member_nav_links(string $page, array $user): void
         'creator-analytics'=>'Video performance','creator-clubs'=>'Creator Clubs','creator-club'=>'Creator Club','creator-club-admin'=>'Membership reviews','admin'=>'AI settings',
     ][$page] ?? 'My workspace';
     // Details and nested routes retain the corresponding navigation highlight.
-    $highlight = ['director'=>'productions','interview'=>'library','editor'=>'library'][$page] ?? $page;
+    $highlight = ['director'=>'productions','interview'=>'library','editor'=>'library','account'=>'user'][$page] ?? $page;
+    if ($admin && $page === 'commerce' && ($_GET['tab'] ?? '') === 'agent') $highlight = 'commerce-agent';
     $render = static function(array $entries) use ($highlight): void {
         foreach ($entries as [$url, $text, $route, $glyph]) {
             $active = $route === $highlight;
@@ -70,12 +91,25 @@ function az_render_member_nav_links(string $page, array $user): void
             echo '><span class="azh-side-glyph" aria-hidden="true">' . az_h($glyph) . '</span><span>' . az_h($text) . '</span></a>';
         }
     };
+    // Native disclosure controls work with a keyboard and without JavaScript.
+    // A distinct name per navigation prevents shared-header copies interfering.
+    static $navigationInstance = 0;
+    $accordionName = 'azh-admin-categories-' . ++$navigationInstance;
     ?>
     <div class="azh-side-navigation">
-      <nav aria-label="Member sections">
+      <nav aria-label="<?= $adminPage ? 'Admin sections' : 'Member sections' ?>">
       <?php if ($adminPage): ?>
         <p class="azh-side-label">ADMIN WORKSPACE</p>
-        <?php if ($admin): $render($adminLinks); else: $render([['admin-studio.php','Admin overview','admin-studio','⌂'],['live-director.php','Live Director','live-director','●'],['live-productions.php','Saved live productions','live-productions','▣']]); endif; ?>
+        <?php foreach ($adminGroups as $key => [$title, $glyph, $entries]):
+            if (!$admin) $entries = array_values(array_filter($entries, static fn(array $entry): bool => in_array($entry[2], ['admin-studio','live-director','live-productions'], true)));
+            if (!$entries) continue;
+            $activeGroup = in_array($highlight, array_column($entries, 2), true);
+        ?>
+        <details class="azh-side-group<?= $activeGroup ? ' is-current-group' : '' ?>" name="<?= az_h($accordionName) ?>" data-side-group="<?= az_h($key) ?>"<?= $activeGroup ? ' open' : '' ?>>
+          <summary><span class="azh-side-glyph" aria-hidden="true"><?= az_h($glyph) ?></span><span><?= az_h($title) ?></span><span class="azh-side-group-chevron" aria-hidden="true"></span></summary>
+          <div class="azh-side-group-links"><?php $render($entries); ?></div>
+        </details>
+        <?php endforeach; ?>
         <p class="azh-side-label">RETURN</p>
         <?php $render([['dashboard.php','Member workspace','dashboard','←']]); ?>
       <?php else: ?>
@@ -95,12 +129,13 @@ function az_render_member_nav_links(string $page, array $user): void
 function az_render_member_layout_open(string $page, array $user): void
 {
     ?>
+<link rel="stylesheet" href="assets/member-layout.css?v=1.57.1">
 <div class="azh-member-layout" id="azh-member-layout">
   <aside class="azh-member-sidebar" aria-label="Member workspace navigation">
     <div id="azh-side-navigation"><?php az_render_member_nav_links($page, $user); ?></div>
   </aside>
   <div class="azh-member-canvas" id="azh-page-canvas">
-    <div class="azh-canvas-topline"><span>AZHOTTIE <span class="azh-canvas-slash">/</span> <?= az_h($page === 'my-media' ? 'My media gallery' : ('dashboard' === $page ? 'Overview' : ucwords(str_replace('-', ' ', $page)))) ?></span><span class="azh-canvas-member-pill"><span aria-hidden="true">✳</span> <?= in_array($page, ['admin-studio','live-director','live-productions','productions','director','library','interview','editor','profiles','casting','questionnaires','videos','user-submissions','publishing','commerce','shop-homepage-editor','accounts','admin'], true) ? 'ADMIN STUDIO' : 'MEMBER AREA' ?></span></div>
+    <div class="azh-canvas-topline"><span>AZHOTTIE <span class="azh-canvas-slash">/</span> <?= az_h($page === 'my-media' ? 'My media gallery' : ('dashboard' === $page ? 'Overview' : ucwords(str_replace('-', ' ', $page)))) ?></span><span class="azh-canvas-member-pill"><span aria-hidden="true">✳</span> <?= az_is_admin_workspace_page($page, $user) ? 'ADMIN STUDIO' : 'MEMBER AREA' ?></span></div>
 <?php
 }
 
@@ -119,7 +154,7 @@ function az_render_member_layout_close(bool $withAgent = true): void
     <?php endif; ?>
   </div>
 </div>
-<script defer src="assets/member-layout.js"></script>
+<script defer src="assets/member-layout.js?v=1.57.1"></script>
 <?php if ($withAgent): ?>
 <link rel="stylesheet" href="assets/agent-chat.css?v=1.29.2">
 <script type="module" src="assets/agent-chat.js?v=1.29.2"></script>

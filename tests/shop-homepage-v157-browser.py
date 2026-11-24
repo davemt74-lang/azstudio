@@ -107,19 +107,45 @@ def run():
   print('status ready',page.locator('#azh-shop-editor-status').inner_text(),flush=True)
   assert page.locator('[data-category-enable]').count()==11
   assert page.locator('[data-section-enable]').count()==5
+  assert page.locator('[data-section-enable]:checked').count()==5,'Initial render must preserve default enabled sections'
+  assert page.locator('[data-category-enable]:checked').count()==11,'Initial render must preserve default enabled categories'
   page.locator('input[name="heading"]').fill('Fresh boutique style')
   page.locator('[data-category-enable="candy"]').uncheck()
   page.locator('[data-section-enable="featured"]').uncheck()
+  page.get_by_role('button',name='Move Hero banner down',exact=True).click()
+  assert page.locator('#azh-edit-section-list > .azh-shop-edit-choice').first.get_attribute('data-slug')=='categories'
+  assert page.locator('[data-section-enable="hero"]').is_checked(),'Reorder must keep the hero enabled'
+  assert not page.locator('[data-section-enable="featured"]').is_checked(),'Reorder must keep intentionally disabled sections off'
+  assert page.locator('[data-category-enable="apparel"]').is_checked(),'Reorder must keep enabled categories on'
+  assert not page.locator('[data-category-enable="candy"]').is_checked(),'Reorder must keep intentionally disabled categories off'
   page.locator('[data-action="save"]').click()
   page.wait_for_function("document.getElementById('azh-shop-editor-status')?.textContent.includes('Draft saved')",timeout=8000)
   assert page.evaluate("window.__settings.published.heading")=='Discover your next','Draft must not auto publish'
   assert page.evaluate("window.__settings.draft.heading")=='Fresh boutique style'
   assert not page.evaluate("window.__settings.draft.categories.candy"),'Category visibility not saved'
   assert not page.evaluate("window.__settings.draft.sections.featured"),'Section visibility not saved'
+  assert page.evaluate("window.__settings.draft.sections.hero"),'Saving other edits must not disable the hero'
+  assert page.evaluate("window.__settings.draft.categories.apparel"),'Saving other edits must not disable unrelated categories'
+  assert page.evaluate("window.__settings.draft.order.slice(0,2)")==['categories','hero']
+  assert page.locator('[data-section-enable]:checked').count()==4,'Reload after saving must preserve enabled and disabled sections'
+  assert page.locator('[data-category-enable]:checked').count()==10,'Reload after saving must preserve enabled and disabled categories'
   page.locator('[data-action="publish"]').click()
   page.wait_for_function("document.getElementById('azh-shop-editor-status')?.textContent.includes('published')",timeout=8000)
   assert page.evaluate("window.__settings.published.heading")=='Fresh boutique style'
+  assert page.evaluate("window.__settings.published.sections.hero"),'Publishing must retain the default hero'
+  assert not page.evaluate("window.__settings.published.sections.featured"),'Publishing must respect intentionally hidden sections'
+  assert page.evaluate("window.__settings.published.categories.apparel")
+  assert not page.evaluate("window.__settings.published.categories.candy")
+  assert page.locator('[data-section-enable]:checked').count()==4
+  assert page.locator('[data-category-enable]:checked').count()==10
   assert page.evaluate("window.__posts.every(x=>x.body.revision===1||x.body.revision===2)")
+  # Defaults must not override a deliberate choice to hide the hero.
+  page.locator('[data-section-enable="hero"]').uncheck()
+  page.locator('[data-action="save"]').click()
+  page.wait_for_function("document.getElementById('azh-shop-editor-status')?.textContent.includes('Draft saved')",timeout=8000)
+  assert not page.evaluate("window.__settings.draft.sections.hero")
+  assert not page.locator('[data-section-enable="hero"]').is_checked(),'Reload must respect an explicitly disabled hero'
+  assert page.evaluate("window.__settings.published.sections.hero"),'Hiding a draft hero must not change the published hero'
   assert not errors,errors
   page.screenshot(path=str(OUT/'shop21_admin_1440.png'),full_page=True)
   page.close()
@@ -127,3 +153,4 @@ def run():
   print('Admin draft, category/section switches, publish, CSRF, responsive browser: PASS')
 
 if __name__=='__main__':run()
+

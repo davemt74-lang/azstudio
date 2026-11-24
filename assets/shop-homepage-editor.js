@@ -21,8 +21,14 @@ if(editor){
       'textColor','accentColor','buttonColor','backgroundColor'])draft[key]=form.elements.namedItem(key).value;
     for(const key of ['heroHeight','headingSize','overlayStrength'])draft[key]=Number(form.elements.namedItem(key).value);
     for(const key of ['storeEnabled','sampleEnabled'])draft[key]=form.elements.namedItem(key).checked;
-    for(const section of Object.keys(state.sections))draft.sections[section]=Boolean(form.querySelector(`[data-section-enable="${section}"]`)?.checked);
-    for(const category of Object.keys(state.categories))draft.categories[category]=Boolean(form.querySelector(`[data-category-enable="${category}"]`)?.checked);
+    for(const section of Object.keys(state.sections)){
+      const input=form.querySelector(`[data-section-enable="${section}"]`);
+      if(input)draft.sections[section]=input.checked;
+    }
+    for(const category of Object.keys(state.categories)){
+      const input=form.querySelector(`[data-category-enable="${category}"]`);
+      if(input)draft.categories[category]=input.checked;
+    }
     return draft;
   }
   function messagePreview(){
@@ -65,15 +71,15 @@ if(editor){
         const btn=document.createElement('button');btn.type='button';btn.textContent=symbol;btn.setAttribute('aria-label',delta<0?'Move '+title+' up':'Move '+title+' down');
         btn.addEventListener('click',()=>{
           const i=order.indexOf(slug),next=i+delta;if(next<0||next>=order.length)return;
-          [order[i],order[next]]=[order[next],order[i]];dirty=true;renderChoices();status('Section order changed — draft not saved.');messagePreview();
+          const current=fields();
+          [order[i],order[next]]=[order[next],order[i]];dirty=true;renderChoices(current);status('Section order changed — draft not saved.');messagePreview();
         });group.append(btn);
       }row.append(group);
     }
     return row;
   }
-  function renderChoices(){
+  function renderChoices(current){
     const sections=$('azh-edit-section-list'),categories=$('azh-edit-category-list');sections.replaceChildren();categories.replaceChildren();
-    const current=(()=>{try{return fields();}catch{return state.draft;}})();
     for(const key of order)sections.append(createChoice('section',key,state.sections[key],Boolean(current.sections[key])));
     for(const [key,name] of Object.entries(state.categories))categories.append(createChoice('category',key,name,Boolean(current.categories[key])));
   }
@@ -83,7 +89,7 @@ if(editor){
       'featuredTitle','catalogTitle','heroPosition','heroAlignment','fontStyle','textColor','accentColor','buttonColor','backgroundColor',
       'heroHeight','headingSize','overlayStrength'])form.elements.namedItem(key).value=state.draft[key];
     for(const key of ['storeEnabled','sampleEnabled'])form.elements.namedItem(key).checked=Boolean(state.draft[key]);
-    imageOptions();renderChoices();messagePreview();
+    imageOptions();renderChoices(state.draft);messagePreview();
   }
   async function reload(){state=await api('state');render();dirty=false;status('Ready · published revision '+state.publishedRevision);}
   async function save(mode){

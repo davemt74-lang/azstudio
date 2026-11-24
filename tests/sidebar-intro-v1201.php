@@ -23,7 +23,8 @@ foreach ([['dashboard', $member, 'MEMBERSHIP'], ['admin-studio', $admin, 'ADMIN 
     foreach (['YOUR AZHOTTIE','My space','Private member area','Production administration'] as $text) {
         check(strpos($html,$text) === false, "$page contains '$text'");
     }
-    check(strpos($html,'<nav aria-label="Member sections">')!==false, "$page nav missing");
+    $navLabel = $page === 'admin-studio' ? 'Admin sections' : 'Member sections';
+    check(strpos($html,'<nav aria-label="' . $navLabel . '">')!==false, "$page nav missing");
     check(strpos($html,$section)!==false, "$page nav section missing");
     check(strpos($html,'Sign out')!==false, "$page sign out missing");
     check(strpos($html,'Public site')!==false, "$page public site link missing");
@@ -39,3 +40,4 @@ check(strpos($header,'AZHOTTIE<span aria-hidden="true">.</span>')!==false, 'Glob
 ob_start(); az_render_universal_header('watch', null); $guestHeader = (string) ob_get_clean();
 check(strpos($guestHeader,'azh-floating-sidebar')===false, 'Guest public page should have no member sidebar');
 echo "Sidebar PHP rendering tests passed (member, admin, signed-in public, guest).\n";
+

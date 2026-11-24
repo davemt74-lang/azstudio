@@ -7,7 +7,8 @@ test('shared sidebar removes redundant intro for all roles and routes', () => {
   const php=read('includes/member-layout.php');
   assert.doesNotMatch(php,/azh-side-intro|YOUR AZHOTTIE|My space|Private member area|Production administration/);
   assert.match(php,/function az_render_member_nav_links/);
-  assert.match(php,/<div class="azh-side-navigation">\s*<nav aria-label="Member sections">/);
+  assert.match(php,/<div class="azh-side-navigation">\s*<nav aria-label=/);
+  assert.match(php,/\$adminPage \? 'Admin sections' : 'Member sections'/);
   assert.match(php,/ADMIN WORKSPACE/);
   assert.match(php,/MEMBERSHIP/);
   assert.match(php,/User Submissions/);
@@ -29,3 +30,4 @@ test('styles have no unused introduction selectors and put first nav label near 
   assert.match(header,/\.azh-floating-sidebar \.azh-side-label/);
   assert.match(header,/\.azh-floating-sidebar nav > \.azh-side-label:first-child/);
 });
+

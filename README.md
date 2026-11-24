@@ -1,3 +1,9 @@
+# AZHottie Studio — v1.57.1
+
+**Shop hero image repair and organized admin navigation.** The default editorial hero and custom hero/background images now load in the published storefront and private draft preview, including subdirectory installations. Homepage section/category choices survive opening, reordering, saving, and publishing. Admin navigation is organized into **Account, Content, Commerce, Agentic, and Platform Settings** accordion groups, with the current page's category open. Open **Commerce → Shop Homepage Editor** to edit the storefront. This update retains schema 53. See `docs/RELEASE_1_57_1.txt` and `UPGRADE.txt`.
+
+---
+
 # AZHottie Studio — v1.37.0
 
 **Provider-Guarded Returns & Creator Payouts:** Staff-approved Stripe refund initiation, EasyPost return-label purchasing, and Stripe Connect transfers to existing verified creator accounts. All irreversible actions are disabled by default, require exact evidence and approval, and use GET-only reconciliation after timeouts. A Connect platform transfer is not a confirmed bank deposit. Schema 42 to 43. See docs/RELEASE_1_37_0.txt.

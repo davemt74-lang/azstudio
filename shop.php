@@ -19,6 +19,10 @@ $categoryImages=['apparel'=>'shop-category-apparel-v157.webp','fitness'=>'shop-c
 'spa'=>'shop-category-spa-v157.webp','accessories'=>'shop-demo-tote-v157.webp','bundles'=>'shop-demo-bundle-v157.webp','gifts'=>'shop-demo-gift-v157.webp','other'=>'shop-demo-candles-v157.webp'];
 $stripe=az_stripe_public_status();$sections=az_shop_homepage_sections();$order=array_flip($layout['order']);
 $hero=az_shop_homepage_image_src($layout['heroImage']);$background=az_shop_homepage_image_src($layout['backgroundImage']);
+// CSS variables are consumed by assets/shop-v157.css. Anchor image URLs to the
+// installation path so CSS does not request assets/assets or assets/media.php.
+if($hero!=='')$hero=az_url($hero);
+if($background!=='')$background=az_url($background);
 $height=(int)$layout['heroHeight'];$fontSize=(int)$layout['headingSize'];$overlay=(int)$layout['overlayStrength'];
 $style='--az-accent:'.az_h($layout['accentColor']).';--az-button:'.az_h($layout['buttonColor']).';--az-hero-text:'.az_h($layout['textColor']).';--az-shop-bg:'.az_h($layout['backgroundColor']).';--az-hero-height:'.$height.'px;--az-hero-size:'.$fontSize.'px;--az-overlay:'.($overlay/100).';';
 if($background!=='')$style.='--az-shop-backdrop:url(\''.az_h($background).'\');';
@@ -26,7 +30,7 @@ if($background!=='')$style.='--az-shop-backdrop:url(\''.az_h($background).'\');'
 <meta name="theme-color" content="#fffafc"><meta name="description" content="AZHottie creator-curated lifestyle products and collections."><title>Shop · AZHottie</title>
 <link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css"><link rel="stylesheet" href="assets/universal-header.css?v=1.18.1">
 <link rel="stylesheet" href="assets/commerce.css?v=1.36.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0"><link rel="stylesheet" href="assets/commerce-shipping-checkout.css?v=1.35.0">
-<link rel="stylesheet" href="assets/shop-v156.css?v=1.56.0"><link rel="stylesheet" href="assets/shop-v157.css?v=1.57.0"></head>
+<link rel="stylesheet" href="assets/shop-v156.css?v=1.56.0"><link rel="stylesheet" href="assets/shop-v157.css?v=1.57.1"></head>
 <body data-page="shop" data-local-csrf="<?= az_h(az_csrf_token()) ?>" data-shop-preview="<?= $preview?'1':'0' ?>">
 <?php az_render_universal_header('shop',$user); ?>
 <main class="azh-commerce azh-commerce-public azh-shop azh-shop-v157" id="azh-shop" data-font="<?= az_h($layout['fontStyle']) ?>" data-hero-align="<?= az_h($layout['heroAlignment']) ?>" style="<?= $style ?>">
@@ -106,6 +110,6 @@ if($count===0&&!in_array($slug,$core,true))continue; ?>
 <?php if($layout['sections']['support']): ?><section class="azh-shop-section azh-shop-support" data-section="support" style="order:<?= (int)$order['support'] ?>"><div><strong>Curated by AZHottie.</strong><p>Explore products and creator collections with a personal touch.</p></div><div class="azh-commerce-actions"><button type="button" class="azh-commerce-small" data-local-status>Check a cash order</button><a href="returns.php">Returns &amp; exchanges →</a></div></section><?php endif; ?>
 <?php endif; ?>
 </div></main>
-<script type="module" src="assets/shop-v156.js?v=1.56.0"></script><script src="assets/shop-v157.js?v=1.57.0" defer></script>
+<script type="module" src="assets/shop-v156.js?v=1.56.0"></script><script src="assets/shop-v157.js?v=1.57.1" defer></script>
 <?php if(!$preview): ?><script type="module" src="assets/commerce-checkout.js?v=1.35.0"></script><script type="module" src="assets/commerce-shipping-checkout.js?v=1.35.0"></script><script type="module" src="assets/commerce-local.js?v=1.32.0"></script><?php endif; ?>
 </body></html>

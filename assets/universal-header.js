@@ -9,7 +9,7 @@
    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&menu)menu.open=false});
    // The shared sidebar script is also used on public pages viewed while logged in.
    if(document.querySelector('.azh-floating-sidebar')){
-     const script=document.createElement('script');script.src='assets/member-layout.js';script.defer=true;document.head.append(script);
+     const script=document.createElement('script');script.src='assets/member-layout.js?v=1.57.1';script.defer=true;document.head.append(script);
    }
    return;
  }
