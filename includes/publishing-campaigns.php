@@ -128,7 +128,7 @@ function az_campaign_list(int $adminId): array
 {
     $q=az_db()->prepare('SELECT c.*,p.headline,p.copy_text,v.title FROM publishing_campaigns c
         JOIN publishing_agent_promotions p ON p.id=c.promotion_id JOIN model_videos v ON v.id=c.video_id
-        ORDER BY c.created_at DESC LIMIT 120');$q->execute();
+        ORDER BY c.created_at DESC,c.id DESC LIMIT 120');$q->execute();
     $rows=$q->fetchAll();
     $ids=array_column($rows,'id');$clicks=[];$last7=[];$prior7=[];
     if($ids){
