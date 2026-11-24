@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8');
 test('storefront keeps prior checkout and stock controls; no invented cart or instant-pay mutations',()=>{
- const src=read('shop.php'),detail=read('shop-product.php');
+ const src=(read('shop.php')+read('includes/shop-homepage-view.php')),detail=read('shop-product.php');
  for(const v of [src,detail]){
   assert.match(v,/data-stripe-checkout/);assert.match(v,/data-local-order/);
   assert.match(v,/data-channel="shop"/);assert.match(v,/fulfillment/);
@@ -39,9 +39,10 @@ test('search/gallery controls and admin tools are wired and accessible',()=>{
  assert.match(merch,/FormData/);assert.match(merch,/X-CSRF-Token/);
  assert.match(merch,/save storefront settings|Save storefront settings/i.test(read('commerce.php'))? /api\('save'/ : /FormData/);
  assert.match(read('commerce.php'),/id="azh-shop-merch"/);
- assert.match(read('shop.php'),/azh-shop-no-matches/);
+ assert.match((read('shop.php')+read('includes/shop-homepage-view.php')),/azh-shop-no-matches/);
  const version=JSON.parse(read('package.json')).version;
  assert.equal(typeof version,'string');
  assert.ok(read('live.php').includes('live-viewer.js?v='+version));
  assert.ok(read('live-director.php').includes('live-director.js?v='+version));
 });
+

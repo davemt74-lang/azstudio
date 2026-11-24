@@ -1,3 +1,9 @@
+# AZHottie Studio — v1.58.0
+
+**Shop 2.2: responsive homepage editing and curated collections.** The editor and published shop now share one renderer. Preview every image, section, category, and product change before saving, with desktop, tablet, phone, and expanded views. Set separate desktop/mobile hero images, crops, text positions, heights, overlays, and heading sizes. Rename and reorder collection cards, choose their images, hide empty collections, and select/reorder featured products. Existing hidden sections, catalog settings, and saved drafts survive the upgrade. Open **Commerce → Shop Homepage Editor**. This update retains schema 53. See `docs/RELEASE_1_58_0.txt` and `UPGRADE.txt`.
+
+---
+
 # AZHottie Studio — v1.57.1
 
 **Shop hero image repair and organized admin navigation.** The default editorial hero and custom hero/background images now load in the published storefront and private draft preview, including subdirectory installations. Homepage section/category choices survive opening, reordering, saving, and publishing. Admin navigation is organized into **Account, Content, Commerce, Agentic, and Platform Settings** accordion groups, with the current page's category open. Open **Commerce → Shop Homepage Editor** to edit the storefront. This update retains schema 53. See `docs/RELEASE_1_57_1.txt` and `UPGRADE.txt`.

@@ -18,12 +18,14 @@ function az_commerce_row(string $id):array {
     $q=az_db()->prepare('SELECT * FROM commerce_products WHERE id=?');$q->execute([$id]);
     $row=$q->fetch(PDO::FETCH_ASSOC);if(!$row)throw new AzHttpError(404,'Missing product');return $row;
 }
-function az_commerce_public_products():array {
+function az_commerce_public_products(?array $productIds=null):array {
     $q=az_db()->query("SELECT id,title,description,price_cents FROM commerce_products WHERE state='active' ORDER BY id");
+    $rows=$q->fetchAll(PDO::FETCH_ASSOC);
+    if($productIds!==null)$rows=array_values(array_filter($rows,static fn($row)=>in_array($row['id'],$productIds,true)));
     return array_map(static fn($row)=>['id'=>$row['id'],'title'=>$row['title'],
        'description'=>$row['description'],'priceCents'=>(int)$row['price_cents'],
        'fulfillment'=>['inStock'=>true],'stripeReady'=>false,'checkoutMode'=>'external',
-       'checkoutUrl'=>'https://example.test/order','localEnabled'=>false],$q->fetchAll(PDO::FETCH_ASSOC));
+       'checkoutUrl'=>'https://example.test/order','localEnabled'=>false],$rows);
 }
 require_once __DIR__.'/../includes/shop-catalog.php';
 function check(bool $ok,string $name):void {if(!$ok)throw new RuntimeException('Shop fixture: '.$name);}
@@ -69,6 +71,9 @@ check($public[0]['id']===$ids[0]&&$public[0]['featured'],'featured placement');
 check($public[0]['category']==='apparel'&&count($public[0]['images'])===1,'category and image');
 check($public[0]['recommendation']['credit']==='Public model stage','approved public creator credit');
 check(count($public[0]['bundleContents'])===1,'curated set with one active linked product');
+$selectedBundle=az_shop_public_products([$ids[0]]);
+check(count($selectedBundle)===1&&count($selectedBundle[0]['bundleContents'])===1,'Exact product lookup preserves eligible bundle contents.');
+check($selectedBundle[0]['bundleContents'][0]['id']===$ids[1],'Bundle lookup resolves a component outside the selected ID list.');
 error_code(static fn()=>az_shop_image_access(str_repeat('2',32),$fan),404);
 check(az_shop_image_access(str_repeat('1',32),$fan)['product_id']===$ids[0],'public active media allowed');
 check(az_shop_image_access(str_repeat('2',32),$admin)['product_id']===$ids[3],'staff draft image preview');
@@ -80,3 +85,4 @@ error_code(static fn()=>az_shop_image_input_check(['tmp_name'=>'/tmp/nonupload',
 $state=az_shop_catalog_state($admin);check(count($state['products'])===4,'admin can manage all product states');
 @unlink(AZ_STORAGE.'/schema-migration.lock');@rmdir(AZ_STORAGE);
 echo "Shop v1.56 SQLite security, merchandising and migrations PASS\n";
+

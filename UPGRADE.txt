@@ -1,3 +1,13 @@
+AZHottie Studio v1.58.0 — Shop 2.2 Responsive Homepage Editor & Merchandising
+Deploy the contents of azhottie-studio over your current installation. Preserve storage/config.php, the database, uploaded images, and private media. Do NOT rerun install.php.
+No new schema migration: existing v1.57.x installations remain at schema 53. The new layout fields are added to existing saved designs automatically while preserving deliberately hidden sections and categories.
+Open Commerce → Shop Homepage Editor. The preview updates every design change without saving or publishing. Use Desktop, Tablet, Mobile, or Expand preview to inspect the actual responsive layout.
+Hero controls now include separate mobile image, focal position, height, headline size, alignment, vertical text placement, and overlay. Mobile image defaults to using the desktop image.
+Collection cards support custom titles/images, ordering, visibility, and hiding empty collections. Featured products support manual selection/order and a display count, including active products beyond the first catalog page.
+Save Draft keeps changes private; Publish homepage updates the public storefront. Preview and sample-product actions cannot start checkout. Sample data remains an explicit reversible setting.
+Refresh the editor and shop after uploading the complete application. Verify the selected hero in an administrator preview and a signed-out public window on your host after publishing.
+See docs/RELEASE_1_58_0.txt for release checks and the remaining live-host verification boundary.
+
 AZHottie Studio v1.57.1 — Hero Image Fix & Organized Admin Navigation
 Deploy the contents of azhottie-studio over your current installation. Preserve storage/config.php, the database, uploaded images, and private media. Do NOT rerun install.php.
 No new schema migration: v1.57.0 installations remain at schema 53.

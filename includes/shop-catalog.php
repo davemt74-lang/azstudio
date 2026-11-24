@@ -70,9 +70,9 @@ function az_shop_image_rows(string $id,?PDO $db=null):array
         'id'=>$r['id'],'alt'=>$r['alt_text'],'src'=>'shop-media.php?id='.$r['id']
     ],$q->fetchAll(PDO::FETCH_ASSOC));
 }
-function az_shop_public_products(): array
+function az_shop_public_products(?array $productIds=null): array
 {
-    $products=az_commerce_public_products(); if(!$products)return [];
+    $products=$productIds===null?az_commerce_public_products():az_commerce_public_products($productIds); if(!$products)return [];
     $db=az_db();$ids=array_column($products,'id');$marks=implode(',',array_fill(0,count($ids),'?'));
     $catalog=[];$q=$db->prepare("SELECT * FROM commerce_product_catalog WHERE product_id IN ($marks)");
     $q->execute($ids);foreach($q->fetchAll(PDO::FETCH_ASSOC) as $row)$catalog[$row['product_id']]=$row;
@@ -95,13 +95,24 @@ function az_shop_public_products(): array
             'videoTitle'=>$row['video_title'],'url'=>'watch.php?id='.$row['video_id']];
     }
     $components=[];
-    $q=$db->prepare("SELECT c.bundle_id,c.component_id,p.title,p.state FROM commerce_bundle_components c
-        JOIN commerce_products p ON p.id=c.component_id WHERE c.bundle_id IN ($marks) ORDER BY c.position,c.component_id");
-    $q->execute($ids);foreach($q->fetchAll(PDO::FETCH_ASSOC) as $row){
-        if($row['state']==='active' && in_array($row['component_id'],$ids,true))
-            $components[$row['bundle_id']][]=['id'=>$row['component_id'],'title'=>$row['title'],'url'=>'shop-product.php?id='.$row['component_id']];
-    }
     $categories=az_shop_categories();
+    $q=$db->prepare("SELECT c.bundle_id,c.component_id,p.title,p.state,COALESCE(pc.category,'lifestyle') AS category FROM commerce_bundle_components c
+        JOIN commerce_products p ON p.id=c.component_id LEFT JOIN commerce_product_catalog pc ON pc.product_id=p.id
+        WHERE c.bundle_id IN ($marks) ORDER BY c.position,c.component_id");
+    $q->execute($ids);$componentRows=$q->fetchAll(PDO::FETCH_ASSOC);
+    $eligible=array_fill_keys($ids,true);
+    $missing=[];foreach($componentRows as $row)if($row['state']==='active'&&!isset($eligible[$row['component_id']]))$missing[$row['component_id']]=true;
+    // A bundle's components can fall outside this catalog page or exact-ID
+    // selection. Resolve their public eligibility without recursively hydrating
+    // bundles or treating an active but unpurchasable record as a public product.
+    foreach(array_chunk(array_keys($missing),24) as $chunk)
+        foreach(az_commerce_public_products($chunk) as $component)$eligible[$component['id']]=true;
+    foreach($componentRows as $row){
+        if($row['state']==='active'&&isset($eligible[$row['component_id']]))
+            $components[$row['bundle_id']][]=['id'=>$row['component_id'],'title'=>$row['title'],
+                'category'=>isset($categories[$row['category']])?$row['category']:'other',
+                'url'=>'shop-product.php?id='.$row['component_id']];
+    }
     foreach($products as &$product){
         $id=$product['id'];$c=$catalog[$id]??az_shop_catalog_default();
         $category=array_key_exists($c['category'],$categories)?$c['category']:'other';

@@ -1,6 +1,8 @@
 /** v1.56: presentation only. Product checkout still uses existing verified commerce modules. */
-const shop=document.getElementById('azh-shop');
-if(shop){
+const initializedShops=new WeakSet();
+function initializeShop(shop){
+  if(!shop||initializedShops.has(shop))return;
+  initializedShops.add(shop);
   const items=[...shop.querySelectorAll('[data-shop-product]')];
   const grid=shop.querySelector('#azh-shop-products');
   const query=shop.querySelector('#azh-shop-query');
@@ -34,6 +36,10 @@ if(shop){
     }
     update();
   });
+  for(const tile of shop.querySelectorAll('[data-shop-category-jump]'))tile.addEventListener('click',()=>{
+    const target=[...shop.querySelectorAll('[data-shop-filter]')].find(button=>button.dataset.shopFilter===tile.dataset.shopCategoryJump);
+    target?.click();
+  });
   query?.addEventListener('input',update);
   sort?.addEventListener('change',update);
   update();
@@ -44,3 +50,6 @@ if(shop){
     for(const other of shop.querySelectorAll('[data-gallery-src]'))other.setAttribute('aria-pressed',other===button?'true':'false');
   });
 }
+
+initializeShop(document.getElementById('azh-shop'));
+document.addEventListener('azh-shop-rendered',()=>initializeShop(document.getElementById('azh-shop')));

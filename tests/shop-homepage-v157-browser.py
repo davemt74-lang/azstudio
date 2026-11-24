@@ -6,7 +6,7 @@ from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 OUT=Path(os.environ.get('RUNNER_TEMP','/tmp'))/'azh_shop_v157_browser'
 OUT.mkdir(parents=True,exist_ok=True)
-SHOP=(ROOT/'shop.php').read_text(encoding='utf8')
+SHOP=(ROOT/'shop.php').read_text(encoding='utf8')+(ROOT/'includes/shop-homepage-view.php').read_text(encoding='utf8')
 ADMIN=(ROOT/'shop-homepage-editor.php').read_text(encoding='utf8')
 for needle in ('data-section="featured"','data-section="catalog"','data-shop-category-jump','az_shop_homepage_image_src','azh-shop-featured-grid','SAMPLE · NOT FOR SALE'):
     assert needle in SHOP, ('Shop template missing',needle)
@@ -49,21 +49,44 @@ def admin_fixture():
     assert 'fixture-csrf' in s
     return '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><base href="https://azhottie.test/"></head><body>'+s+'</body></html>'
 
+def reveal(locator):
+    locator.evaluate('''element => {
+        for (let parent=element.parentElement;parent;parent=parent.parentElement) {
+            if(parent.tagName==='DETAILS')parent.open=true;
+        }
+    }''')
+    return locator
+
 STUB=r'''
-window.confirm=()=>true; window.__posts=[];
+window.confirm=()=>true; window.__posts=[]; window.__previewPosts=[];
 window.__settings={revision:1,publishedRevision:1,publishedAt:'2026-11-24',
  draft:{storeEnabled:true,sampleEnabled:false,eyebrow:'CURATED FOR THE CURIOUS',heading:'Discover your next',accent:'favorite.',description:'Product preview',ctaText:'Shop',ctaHref:'#shop-products',
  categoriesTitle:'Shop by Collection',featuredTitle:'Trending Now',catalogTitle:'Explore the Collection',heroImage:'default',backgroundImage:'none',heroPosition:'center',heroAlignment:'left',
  heroHeight:440,headingSize:65,fontStyle:'modern',textColor:'#251d28',accentColor:'#cf2167',buttonColor:'#d82676',backgroundColor:'#ffffff',overlayStrength:5,
+ heroFocalX:50,heroFocalY:50,heroTextPosition:'center',mobileHeroImage:'inherit',mobileHeroFocalX:65,mobileHeroFocalY:50,
+ mobileHeroHeight:510,mobileHeadingSize:44,mobileHeroAlignment:'left',mobileHeroTextPosition:'top',mobileOverlayStrength:30,
+ featuredMode:'automatic',featuredProductIds:[],featuredCount:8,showEmptyCategories:true,
  sections:{hero:true,categories:true,featured:true,catalog:true,support:true},categories:{apparel:true,fitness:true,lifestyle:true,digital:true,candy:true,photography:true,spa:true,accessories:true,bundles:true,gifts:true,other:true},order:['hero','categories','featured','catalog','support']},
  published:{},images:[],sections:{hero:'Hero banner',categories:'Category tiles',featured:'Trending products',catalog:'Shop all / filters',support:'Customer service links'},
  categories:{apparel:'Clothing',fitness:'Fitness',lifestyle:'Adult Lifestyle',digital:'Digital Entertainment',candy:'Candy',photography:'Photography',spa:'Day Spa',accessories:'Accessories',bundles:'Bundles',gifts:'Gift Cards',other:'Other'}};
+window.__settings.draft.categoryOrder=Object.keys(window.__settings.categories);
+window.__settings.draft.categoryCards=Object.fromEntries(Object.entries(window.__settings.categories).map(([slug,title])=>[slug,{title,image:'default'}]));
+window.__settings.categoryImages=Object.fromEntries(Object.keys(window.__settings.categories).map(slug=>[slug,'assets/shop-category-apparel-v157.webp']));
+window.__settings.products=[{id:'11111111111111111111111111111111',title:'Studio sweatshirt',category:'apparel',priceCents:4900,imageSrc:'',demo:false,featured:true},
+ {id:'demo-hoodie',title:'AZHottie Crop Hoodie',category:'apparel',priceCents:4999,imageSrc:'assets/shop-demo-hoodie-v157.webp',demo:true,featured:true}];
 window.__settings.published=structuredClone(window.__settings.draft);
 window.fetch=async(input,options={})=>{
  const a=new URL(input,document.baseURI).searchParams.get('action');
  if(a==='state')return new Response(JSON.stringify({ok:true,data:window.__settings}),{status:200,headers:{'Content-Type':'application/json'}});
  if(options.headers?.['X-CSRF-Token']!=='fixture-csrf')throw Error('Missing admin CSRF');
- const body=JSON.parse(options.body);window.__posts.push({a,body});
+ const body=JSON.parse(options.body);
+ // This legacy fixture isolates form persistence. Real preview markup, images,
+ // authorization and rendering are verified in shop-homepage-v158-browser.py.
+ if(a==='preview'){
+   window.__previewPosts.push(body);
+   return new Response(JSON.stringify({ok:true,data:{html:'<main id="azh-shop" class="azh-shop"></main>'}}),{status:200,headers:{'Content-Type':'application/json'}});
+ }
+ window.__posts.push({a,body});
  if(a==='save'){
    if(body.revision!==window.__settings.revision)throw Error('Invalid version in test');
    window.__settings.revision++;
@@ -110,7 +133,7 @@ def run():
   assert page.locator('[data-section-enable]:checked').count()==5,'Initial render must preserve default enabled sections'
   assert page.locator('[data-category-enable]:checked').count()==11,'Initial render must preserve default enabled categories'
   page.locator('input[name="heading"]').fill('Fresh boutique style')
-  page.locator('[data-category-enable="candy"]').uncheck()
+  reveal(page.locator('[data-category-enable="candy"]')).uncheck()
   page.locator('[data-section-enable="featured"]').uncheck()
   page.get_by_role('button',name='Move Hero banner down',exact=True).click()
   assert page.locator('#azh-edit-section-list > .azh-shop-edit-choice').first.get_attribute('data-slug')=='categories'
@@ -139,6 +162,7 @@ def run():
   assert page.locator('[data-section-enable]:checked').count()==4
   assert page.locator('[data-category-enable]:checked').count()==10
   assert page.evaluate("window.__posts.every(x=>x.body.revision===1||x.body.revision===2)")
+  assert page.evaluate("window.__posts.every(x=>x.a==='save')"),'Private rendering must not be counted as a save'
   # Defaults must not override a deliberate choice to hide the hero.
   page.locator('[data-section-enable="hero"]').uncheck()
   page.locator('[data-action="save"]').click()

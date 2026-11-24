@@ -1,0 +1,86 @@
+AZHottie Studio v1.58.0
+Shop 2.2 — Responsive Homepage Editor and Merchandising
+
+WHY THIS RELEASE
+The previous editor could update individual text and color properties, but
+image, visibility, and merchandising changes did not all refresh immediately.
+The size of the embedded editor pane could also trigger a mobile storefront
+layout while the preview was labelled Desktop. This release uses the same
+renderer for the public shop and private previews, with explicit viewport sizes.
+
+LIVE DESIGN PREVIEW
+- Every design control participates in the private unsaved preview, including
+  images, section switches/order, category cards, samples, and featured products.
+- Preview requests validate the design and render HTML without saving settings,
+  incrementing revisions, or publishing. Only active administrators with valid
+  CSRF tokens can use the preview endpoint.
+- Debounced requests and sequence acknowledgments prevent an older response
+  from replacing a newer design. Loading and error states are visible.
+- Desktop, tablet, and phone previews have actual layout widths and scale to fit
+  the editor pane. Content height grows and shrinks with the rendered sections.
+- Expanded preview supports keyboard dismissal and restores focus afterward.
+- Save Draft, Publish, image uploads, and reset operations protect against
+  overlapping edits. Saved, unsaved, and published states remain explicit.
+
+HERO AND BACKGROUND
+- The editorial hero remains the default for new installations. Existing
+  deliberate on/off selections are preserved during upgrade.
+- Desktop and mobile have independent focal coordinates, hero height, heading
+  size, text alignment, vertical placement, and overlay strength.
+- A mobile image can inherit the desktop image, use the default editorial image,
+  use an uploaded image, or show no image.
+- Selected-image feedback covers desktop, mobile, background, and category use.
+- Uploaded mobile and collection images use the same permission-controlled
+  endpoint as existing hero/background images. Draft-only images remain private;
+  published references make images publicly available. In-use images cannot be
+  deleted. Unreferenced images can be removed.
+
+COLLECTION CARDS
+- Rename each collection card, select its image, hide/show it, and reorder it.
+- Choose the packaged image, no image, or an uploaded image for a collection.
+- Hide empty collections when desired. Product filters and visible collection
+  titles use the same configuration as the collection cards.
+- Collection links and hero buttons avoid anchors to disabled sections.
+- Hiding categories does not delete products, images, stock, or stored settings.
+
+FEATURED PRODUCTS
+- Choose automatic or manually curated featured products.
+- Search active products and available sample choices; select, remove, and
+  reorder up to 24 saved choices. Set the displayed count from 1 to 12.
+- The picker includes all active products. Manually selected real products are
+  resolved even when older than the shop's first catalog page.
+- Hidden categories, inactive/ineligible products, and disabled sample data
+  remain excluded from the rendered selection. Manual order is preserved.
+- Sample products remain labelled and cannot create orders or payments.
+
+PUBLISHED SHOP AND NAVIGATION
+- shop.php and the preview API call the shared shop-homepage-view.php renderer.
+- Published checkout behavior remains in the existing commerce flows.
+- Preview actions are read-only, including products, seller checkout, and forms.
+- Admin navigation retains the Account, Content, Commerce, Agentic, and
+  Platform Settings accordion groups. The editor is under Commerce.
+
+COMPATIBILITY AND VALIDATION
+- Schema remains 53. New fields are stored in existing design JSON.
+- Older designs receive new defaults without losing explicit false switches.
+- Existing heroPosition values map to focal coordinates when those coordinates
+  have not previously been saved.
+- Server validation checks all field types/ranges, exact category membership,
+  ordering permutations, allowed image IDs, and ordered unique product IDs.
+- Existing role, CSRF, and revision-conflict checks apply to saved edits.
+- The release workflow runs JavaScript regressions; PHP syntax and rules;
+  SQLite permissions/migrations; real PHP/browser acceptance; and safe archive
+  construction. New acceptance exercises unsaved previews, responsive hero
+  controls, merchandising, image access, and save/reopen/publish behavior.
+- Browser screenshots are retained as CI artifacts for visual review.
+
+DEPLOYMENT
+Overlay the contents of azhottie-studio onto the existing installation.
+Preserve storage/config.php, the database, uploaded images, and private media.
+Do not rerun install.php. Refresh the editor and shop after uploading all files.
+After publishing, check the live public shop while signed out on desktop and
+phone. Automated checks use isolated test data; they do not prove that a
+HostGator upload or a live provider transaction has occurred.
+
+This release does not activate recurring creator billing or change payment
+provider configuration. Paid creator subscriptions remain a separate phase.
