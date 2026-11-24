@@ -82,6 +82,7 @@ function az_db(): PDO
     if (function_exists('az_upgrade_creator_analytics_schema') && az_schema_version($GLOBALS['az_database']) >= 47) { az_upgrade_creator_analytics_schema($GLOBALS['az_database']); }
     if (function_exists('az_upgrade_publishing_campaign_schema') && az_schema_version($GLOBALS['az_database']) >= 48) { az_upgrade_publishing_campaign_schema($GLOBALS['az_database']); }
     if (function_exists('az_upgrade_talent_pipeline_schema') && az_schema_version($GLOBALS['az_database']) >= 49) { az_upgrade_talent_pipeline_schema($GLOBALS['az_database']); }
+    if (function_exists('az_upgrade_creator_memberships_schema') && az_schema_version($GLOBALS['az_database']) >= 50) { az_upgrade_creator_memberships_schema($GLOBALS['az_database']); }
     return $GLOBALS['az_database'];
 }
 
@@ -164,6 +165,7 @@ function az_create_schema(PDO $db): void
     if (function_exists('az_upgrade_creator_analytics_schema') && az_schema_version($db) >= 47) { az_upgrade_creator_analytics_schema($db); }
     if (function_exists('az_upgrade_publishing_campaign_schema') && az_schema_version($db) >= 48) { az_upgrade_publishing_campaign_schema($db); }
     if (function_exists('az_upgrade_talent_pipeline_schema') && az_schema_version($db) >= 49) { az_upgrade_talent_pipeline_schema($db); }
+    if (function_exists('az_upgrade_creator_memberships_schema') && az_schema_version($db) >= 50) { az_upgrade_creator_memberships_schema($db); }
 }
 
 

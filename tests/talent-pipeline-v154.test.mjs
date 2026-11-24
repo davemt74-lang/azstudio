@@ -20,7 +20,7 @@ test('Updated migrations run on installed first boot and app version safely bust
  const db=read('includes/database.php');const first=db.slice(db.indexOf('function az_db()'),db.indexOf('function az_create_schema('));
  assert.match(first,/az_upgrade_talent_pipeline_schema\(\$GLOBALS\['az_database'\]\)/);
  assert.match(db,/az_upgrade_talent_pipeline_schema\(\$db\)/);
- const version=JSON.parse(read('package.json')).version;assert.equal(version,'1.54.0');
+ const version=JSON.parse(read('package.json')).version;assert.ok(Number(version.split('.')[1])>=54,'v1.54+ keeps this migration available');
  assert.ok(read('live.php').includes('live-viewer.js?v='+version));
  assert.ok(read('live-director.php').includes('live-director.js?v='+version));
 });
