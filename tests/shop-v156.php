@@ -36,11 +36,11 @@ $db=new PDO('sqlite::memory:');$db->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_
 $db->exec('PRAGMA foreign_keys=ON');$GLOBALS['dbh']=$db;
 $db->exec("CREATE TABLE studio_schema(id INTEGER PRIMARY KEY,version INTEGER);INSERT INTO studio_schema VALUES(1,51);
 CREATE TABLE users(id INTEGER PRIMARY KEY,status TEXT);INSERT INTO users VALUES(1,'active');
-CREATE TABLE commerce_products(id CHAR(32) PRIMARY KEY,title TEXT,state TEXT,description TEXT,price_cents INTEGER,checkout_url TEXT,checkout_mode TEXT,currency TEXT);
+CREATE TABLE commerce_products(id CHAR(32) PRIMARY KEY,title TEXT,state TEXT,description TEXT,price_cents INTEGER,checkout_url TEXT,checkout_mode TEXT,currency TEXT,updated_at TEXT);
 CREATE TABLE model_videos(id CHAR(32) PRIMARY KEY,user_id INTEGER,title TEXT,public_credit TEXT,status TEXT,revision INTEGER,rights_confirmed INTEGER,published_at TEXT);
 CREATE TABLE commerce_promotions(id CHAR(32) PRIMARY KEY,product_id CHAR(32),model_id INTEGER,video_id CHAR(32),state TEXT,video_revision INTEGER,updated_at TEXT);");
 $ids=[str_repeat('a',32),str_repeat('b',32),str_repeat('c',32),str_repeat('d',32)];
-foreach($ids as $index=>$id){$state=$index===3?'archived':'active';$q=$db->prepare('INSERT INTO commerce_products VALUES(?,?,?,?,?,?,?,?)');$q->execute([$id,'Product '.$index,$state,'Visible description',1500+$index*100,'https://example.test/order','external','USD']);}
+foreach($ids as $index=>$id){$state=$index===3?'archived':'active';$q=$db->prepare('INSERT INTO commerce_products VALUES(?,?,?,?,?,?,?,?,?)');$q->execute([$id,'Product '.$index,$state,'Visible description',1500+$index*100,'https://example.test/order','external','USD','2026-11-24T00:00:00Z']);}
 $admin=['status'=>'active','roles'=>['admin'],'id'=>1];$fan=['status'=>'active','roles'=>['fan'],'id'=>2];
 az_upgrade_shop_catalog_schema($db);check(az_schema_version($db)===52,'upgrade to schema 52');az_upgrade_shop_catalog_schema($db);check(az_schema_version($db)===52,'idempotent upgrade');
 error_code(static fn()=>az_shop_catalog_state($fan),403);
