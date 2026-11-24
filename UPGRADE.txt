@@ -1,3 +1,10 @@
+AZHottie Studio v1.54.0 — Talent Pipeline & follow-through
+
+Back up database, settings and media. Deploy over v1.53 without rerunning install.php.
+Schema 49→50 adds staff-owned casting follow-up tasks and an append-only action audit.
+New Talent Pipeline tab reuses applications, approved invitations, model onboarding and existing creator analytics.
+No automated applicant scoring, messages, approvals or production assignments. Only administrators can view notes.
+
 AZHottie v1.53.0 — Publishing & Growth 2.0
 
 Backup code, database, storage and media. Deploy over existing installation; do not rerun install.php.

@@ -243,6 +243,12 @@ function az_agent_casting_briefing(array $user,array $assignOptions=[]): array
     if($pending)$cards[]=['kind'=>'onboarding','title'=>$pending.' model onboarding checklist(s) need attention',
       'detail'=>'Review incomplete profile, availability, orientation, and production-readiness steps.',
       'href'=>'casting.php?tab=onboarding','priority'=>2,'action'=>null];
+    if(function_exists('az_talent_due_count')&&az_schema_version(az_db())>=50){
+        $followupsDue=az_talent_due_count();
+        if($followupsDue)$cards[]=['kind'=>'casting','title'=>'Casting follow-ups due',
+            'detail'=>$followupsDue.' staff-owned casting follow-up(s) need a human response. No applicants were contacted.',
+            'href'=>'casting.php?tab=pipeline','priority'=>1,'action'=>null];
+    }
     $matches=az_agent_casting_matches($user,$assignOptions);
     if($matches)$cards[]=['kind'=>'matching','title'=>'Eligible roster members available for review',
       'detail'=>count($matches).' production match suggestion(s) based on existing roster eligibility and onboarding status. Confirm availability and suitability before assigning.',

@@ -4,13 +4,14 @@ declare(strict_types=1);
 const AZ_ROOT = __DIR__ . '/..';
 const AZ_STORAGE = AZ_ROOT . '/storage';
 const AZ_CONFIG_FILE = AZ_STORAGE . '/config.php';
-const AZ_VERSION = '1.53.0';
+const AZ_VERSION = '1.54.0';
 
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/production.php';
 require_once __DIR__ . '/accounts.php';
 require_once __DIR__ . '/casting.php';
 require_once __DIR__ . '/agent-casting.php';
+require_once __DIR__ . '/talent-pipeline.php';
 require_once __DIR__ . '/agent-scheduling.php';
 require_once __DIR__ . '/personal-media.php';
 require_once __DIR__ . '/model-videos.php';
