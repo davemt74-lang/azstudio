@@ -30,12 +30,13 @@ v155_ok((int)$db->query('SELECT COUNT(*) FROM creator_club_follows')->fetchColum
 v155_denied(fn()=>az_creator_club_follow($creator,1,true,$db),400,'no self follow');
 az_creator_club_follow($fan,1,false,$db);v155_ok(!az_creator_club_is_following($fan,1,$db),'unfollow');
 $media=str_repeat('a',32);$db->prepare('INSERT INTO personal_media VALUES(?,?,?,?,?)')->execute([$media,1,'clip.bin','clip.mp4','video/mp4']);
-$post=az_creator_club_post($creator,$t['id'],$media,'Model one private footage','A behind-the-scenes look',$db);
+$post=az_creator_club_post($creator,$t['id'],$media,'Model one private footage','A behind-the-scenes look',$db,true);
 v155_ok($post['state']==='pending','submitted post pending');
+v155_denied(fn()=>az_creator_club_post($creator,$t['id'],null,'Unconfirmed post','Text',$db,false),400,'rights confirmation required');
 v155_ok(!az_creator_club_posts(1,$fan,$db),'private post details invisible');
 v155_denied(fn()=>az_creator_club_post_row($post['id'],$fan,$db),404,'direct post lookup denied');
-v155_denied(fn()=>az_creator_club_post($fan,$t['id'],null,'Bad actor','Data',$db),403,'fan cannot post as model');
-v155_denied(fn()=>az_creator_club_post($creator,$t['id'],str_repeat('b',32),'Bad media','Data',$db),404,'creator cannot link forged private media');
+v155_denied(fn()=>az_creator_club_post($fan,$t['id'],null,'Bad actor','Data',$db,true),403,'fan cannot post as model');
+v155_denied(fn()=>az_creator_club_post($creator,$t['id'],str_repeat('b',32),'Bad media','Data',$db,true),404,'creator cannot link forged private media');
 v155_denied(fn()=>az_creator_club_review($staff,'post',$post['id'],2,'approve',$db),409,'stale version fails');
 $v=az_creator_club_review($staff,'post',$post['id'],1,'approve',$db);v155_ok($v['state']==='approved','admin approves content');
 v155_ok(!az_creator_club_posts(1,$fan,$db),'approval does not grant access');
