@@ -40,6 +40,9 @@ COLLECTION CARDS
 - Choose the packaged image, no image, or an uploaded image for a collection.
 - Hide empty collections when desired. Product filters and visible collection
   titles use the same configuration as the collection cards.
+- Collection tiles stay within their grid columns at desktop and phone widths.
+  Packaged reference images are framed to avoid baked-in labels and borders;
+  custom uploaded images retain the standard cover fit.
 - Collection links and hero buttons avoid anchors to disabled sections.
 - Hiding categories does not delete products, images, stock, or stored settings.
 

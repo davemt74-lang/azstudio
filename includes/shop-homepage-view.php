@@ -95,8 +95,9 @@ function az_shop_homepage_render(array $layout, bool $preview=false, bool $isAdm
 <div class="azh-category-grid">
 <?php foreach($categoryLabels as $slug=>$label):
 $image=az_shop_homepage_category_image_src($slug,$layout['categoryCards'][$slug]['image']);
+$defaultImage=$layout['categoryCards'][$slug]['image']==='default';
 $tag=$showCatalog?'a':'div'; ?>
-<<?= $tag ?> class="azh-category-tile" data-category-card="<?= az_h($slug) ?>"<?php if($showCatalog): ?> href="#shop-browse" data-shop-category-jump="<?= az_h($slug) ?>"<?php endif; ?>>
+<<?= $tag ?> class="azh-category-tile" data-category-card="<?= az_h($slug) ?>"<?php if($defaultImage): ?> data-default-category-image<?php endif; ?><?php if($showCatalog): ?> href="#shop-browse" data-shop-category-jump="<?= az_h($slug) ?>"<?php endif; ?>>
 <?php if($image!==''): ?><img src="<?= az_h(az_url($image)) ?>" alt="" loading="lazy" decoding="async"><?php endif; ?><span class="azh-category-title"><?= az_h($label) ?></span></<?= $tag ?>>
 <?php endforeach; ?>
 <?php if(!$categoryLabels): ?><p class="azh-shop-empty">Collections will appear here when products are available.</p><?php endif; ?>

@@ -121,6 +121,40 @@ def assert_frame_fits(page, expected_width):
     assert geometry['width'] <= geometry['parent'] + 2, ('Preview is not scaled to its container', geometry)
 
 
+def assert_collection_geometry(view, expected_width):
+    geometry = view.locator('.azh-category-grid').evaluate('''grid => {
+        const bounds = node => {
+            const box=node.getBoundingClientRect();
+            return {left:box.left,right:box.right,top:box.top,bottom:box.bottom,width:box.width,height:box.height};
+        };
+        return {width:innerWidth,grid:bounds(grid),tiles:[...grid.querySelectorAll('[data-category-card]')].map(tile=>({
+            ...bounds(tile),category:tile.dataset.categoryCard,image:tile.querySelector('img')?.src||''}))};
+    }''')
+    assert geometry['width'] == expected_width, geometry
+    grid, tiles = geometry['grid'], geometry['tiles']
+    assert len(tiles) >= 2, ('Collection geometry needs multiple rendered tiles', geometry)
+    tolerance = 0.5
+    for tile in tiles:
+        assert tile['width'] > 0 and tile['height'] > 0, ('Collection tile has no area', expected_width, tile)
+        assert (tile['left'] >= grid['left'] - tolerance
+                and tile['right'] <= grid['right'] + tolerance
+                and tile['top'] >= grid['top'] - tolerance
+                and tile['bottom'] <= grid['bottom'] + tolerance), ('Collection tile escapes its grid', expected_width, grid, tile)
+    # An aspect ratio combined with a minimum height must not enlarge tiles
+    # beyond their allocated grid columns. Check real rendered boxes instead
+    # of inferring the result from CSS declarations or document scroll width.
+    for index, tile in enumerate(tiles):
+        row = sorted((other for other in tiles[index + 1:]
+                      if abs(other['top'] - tile['top']) <= tolerance), key=lambda other: other['left'])
+        if not row:
+            continue
+        right_neighbor = row[0]
+        gap = right_neighbor['left'] - tile['right']
+        assert gap > tolerance, ('Collection neighbors overlap or touch', expected_width, tile, right_neighbor, gap)
+    custom = next(tile for tile in tiles if tile['category'] == 'fitness')
+    assert IMAGE_D in custom['image'], ('Custom collection image changed during responsive layout', expected_width, custom)
+
+
 def open_editor(context, base):
     response = context.request.post(base + '_shop-fixture-login.php')
     assert response.status == 204, response.text()
@@ -386,12 +420,16 @@ def full_lifecycle(browser, base):
     anonymous = browser.new_context(viewport={'width':1440,'height':1000})
     storefront = anonymous.new_page()
     assert storefront.goto(base + 'shop.php', wait_until='networkidle').status == 200
-    for width, button in [(1440, '#azh-edit-desktop'), (390, '#azh-edit-phone')]:
-        page.locator(button).click()
-        assert_frame_fits(page, width)
+    for width in [1440, 768, 390, 320]:
         storefront.set_viewport_size({'width':width,'height':1000})
-        assert frame(page).evaluate(SNAPSHOT) == storefront.evaluate(SNAPSHOT), ('Preview and published layout diverged', width)
+        storefront.evaluate('window.scrollTo(0,0)')
+        assert_collection_geometry(storefront, width)
+        if width in [1440, 390]:
+            page.locator('#azh-edit-desktop' if width == 1440 else '#azh-edit-phone').click()
+            assert_frame_fits(page, width)
+            assert frame(page).evaluate(SNAPSHOT) == storefront.evaluate(SNAPSHOT), ('Preview and published layout diverged', width)
         storefront.screenshot(path=str(OUT / ('published_' + str(width) + '.png')), full_page=False)
+        storefront.locator('.azh-shop-category-section').screenshot(path=str(OUT / ('collections_' + str(width) + '.png')))
     for image_id in [IMAGE_A, IMAGE_B, IMAGE_C, IMAGE_D]:
         assert anonymous.request.get(base + 'shop-homepage-media.php?id=' + image_id).status == 200
     detail = anonymous.new_page()
