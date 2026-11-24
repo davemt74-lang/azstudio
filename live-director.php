@@ -205,5 +205,5 @@ $user=az_live_require_editor();header('Cache-Control: no-store');header('X-Robot
   </nav>
   <p id="live-status" class="azh-live-message azh-director-toast" role="status" aria-live="polite" hidden></p>
 </main>
-<script src="assets/qr.js"></script><script type="module" src="assets/live-director.js?v=1.55.0"></script><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/live-acceptance.js?v=1.48.0"></script><?php endif; ?><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/commerce-director.js?v=1.41.0"></script><?php endif; ?>
+<script src="assets/qr.js"></script><script type="module" src="assets/live-director.js?v=1.56.0"></script><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/live-acceptance.js?v=1.48.0"></script><?php endif; ?><?php if(az_has_role($user,'admin')): ?><script type="module" src="assets/commerce-director.js?v=1.41.0"></script><?php endif; ?>
 </body></html>

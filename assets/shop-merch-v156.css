@@ -1,0 +1,14 @@
+#azh-shop-merch{display:grid;gap:15px}
+#azh-shop-merch [hidden]{display:none!important}
+#azh-shop-merch :is(input,select){font-size:14px;min-width:0}
+#azh-shop-merch-form{display:grid;gap:13px}
+#azh-shop-merch-form>label,#azh-shop-merch-upload>label{display:grid;gap:6px;min-width:0}
+#azh-shop-merch .azh-shop-merch-check{display:flex!important;gap:8px;align-items:center;font-size:12px;font-weight:600;line-height:1.4}
+#azh-shop-merch .azh-shop-merch-check input{width:19px;height:19px;min-width:19px}
+#azh-shop-merch-components{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:8px;margin:8px 0}
+#azh-shop-merch-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px;margin:14px 0}
+.azh-shop-merch-image{display:grid;gap:7px;padding:10px;border:1px solid #e6d7df;border-radius:12px;min-width:0}
+.azh-shop-merch-image>img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;background:#f3e7ec}
+#azh-shop-merch .azh-shop-merch-image button{font-size:11px;padding:8px 10px;white-space:normal}
+#azh-shop-merch-upload{display:grid;gap:10px;border-top:1px solid #e9dce4;padding-top:17px}
+#azh-shop-merch-status[data-error=true]{color:#9e294f}

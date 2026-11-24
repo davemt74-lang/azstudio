@@ -1,3 +1,12 @@
+AZHottie Studio v1.56.0 — Shopping Experience 2.0
+Back up site, database and media before updating. Deploy over the existing installation; preserve storage and uploads. DO NOT rerun install.php.
+Schema upgrade on authenticated boot: 51 → 52 adds optional product collection labels, galleries and curated bundle component metadata.
+Existing checkout, product prices, creator commissions, refund controls, and inventory reservations remain unchanged.
+New merchandising panel: Commerce → Products → Product galleries & collections. Manage photos, select category and featured position, and optionally tag a separately stocked SKU as a bundle containing approved products.
+Product photos are kept in private storage/product-images and served through permission-checked shop-media.php; the server validates MIME, dimensions and 4 MB cap, and does not accept SVG.
+Bundles are separately priced and stocked SKUs. This version does not debit component item stock automatically, combine different vendors into one checkout, or infer discounts.
+Storefront includes search, category filters, sorting, product galleries, curated sets, and approved creator video links. Real transactions, live-site and mobile-device acceptance remain separately required.
+
 AZHottie Studio v1.54.0 — Talent Pipeline & follow-through
 
 Back up database, settings and media. Deploy over v1.53 without rerunning install.php.

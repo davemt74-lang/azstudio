@@ -32,6 +32,7 @@ require_once __DIR__ . '/live-acceptance.php';
 require_once __DIR__ . '/live-triage.php';
 require_once __DIR__ . '/live.php';
 require_once __DIR__ . '/commerce.php';
+require_once __DIR__ . '/shop-catalog.php';
 require_once __DIR__ . '/commerce-stripe.php';
 require_once __DIR__ . '/commerce-analytics.php';
 require_once __DIR__ . '/commerce-live-analytics.php';

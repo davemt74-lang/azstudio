@@ -16,7 +16,8 @@ $admin=az_has_role($user,'admin');
 <link rel="stylesheet" href="assets/commerce.css?v=1.36.0"><link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0">
 <link rel="stylesheet" href="assets/commerce-returns.css?v=1.36.0">
 <link rel="stylesheet" href="assets/commerce-providers.css?v=1.39.0">
-<link rel="stylesheet" href="assets/commerce-agent.css?v=1.40.0"></head>
+<link rel="stylesheet" href="assets/commerce-agent.css?v=1.40.0">
+<?php if($admin): ?><link rel="stylesheet" href="assets/shop-merch-v156.css?v=1.56.0"><?php endif; ?></head>
 <body data-page="commerce"><?php az_render_universal_header('commerce',$user);az_render_member_layout_open('commerce',$user); ?>
 <main class="azh-commerce" id="azh-commerce" data-role="<?= $admin?'admin':'model' ?>" data-csrf="<?= az_h(az_csrf_token()) ?>">
   <header class="azh-commerce-hero"><div><p class="azh-eyebrow">AZHOTTIE · COMMERCE AGENT</p><h1>Commerce<span>.</span></h1>
@@ -122,6 +123,28 @@ $admin=az_has_role($user,'admin');
         <label>Visibility<select name="state"><option value="draft">Draft</option><option value="active">Active</option><option value="archived">Archived</option></select></label>
         <div class="azh-commerce-actions"><button type="submit">Save product</button><button type="reset" data-reset-product>New product</button></div>
       </form></div><?php endif; ?>
+    <?php if($admin): ?><section class="azh-commerce-editor" id="azh-shop-merch" data-csrf="<?= az_h(az_csrf_token()) ?>" aria-labelledby="azh-shop-merch-title">
+      <div><p class="azh-eyebrow">STORE DISPLAY &amp; CURATION</p><h2 id="azh-shop-merch-title">Product galleries &amp; collections</h2>
+      <p>Manage photos, browse categories, featured placement, and curated sets for existing products. Checkout, product pricing and inventory are managed separately above.</p></div>
+      <label>Saved product<select id="azh-shop-merch-product"><option value="">Loading products…</option></select></label>
+      <p id="azh-shop-merch-status" role="status" aria-live="polite">Loading storefront information…</p>
+      <form id="azh-shop-merch-form" hidden>
+        <input type="hidden" id="azh-shop-merch-revision" value="0">
+        <div class="azh-commerce-row"><label>Collection<select id="azh-shop-merch-category">
+          <?php foreach(az_shop_categories() as $key=>$label): ?><option value="<?= az_h($key) ?>"><?= az_h($label) ?></option><?php endforeach; ?>
+        </select></label><label>Short product tagline<input id="azh-shop-merch-tagline" maxlength="180" placeholder="Studio-approved product highlight"></label></div>
+        <label class="azh-commerce-checkbox"><input type="checkbox" id="azh-shop-merch-featured"> Feature product first on the storefront</label>
+        <div><strong>Bundle contents (optional)</strong><p class="azh-commerce-hint">Select up to four active items. The bundle is sold through its own product SKU, price, stock and shipping configuration. Component stock is not reserved automatically.</p><div id="azh-shop-merch-components"></div></div>
+        <div class="azh-commerce-actions"><button id="azh-shop-merch-save" type="submit">Save storefront settings</button><a class="azh-commerce-link" href="shop.php">Preview public shop ↗</a></div>
+      </form>
+      <form id="azh-shop-merch-upload" enctype="multipart/form-data" hidden>
+        <h3>Product photos</h3><p class="azh-commerce-hint" id="azh-shop-merch-image-note">Maximum six photos</p>
+        <label>Photo (JPEG, PNG or WebP)<input type="file" id="azh-shop-merch-photo" name="photo" accept="image/jpeg,image/png,image/webp" required></label>
+        <label>Photo description for accessibility<input name="alt" maxlength="180" placeholder="Describe the product and visible detail" required></label>
+        <button type="submit" id="azh-shop-merch-add-photo">Upload photo</button>
+        <div id="azh-shop-merch-gallery" aria-label="Uploaded product photos"></div>
+      </form>
+    </section><?php endif; ?>
     <div class="azh-commerce-list" id="commerce-products-list"></div>
   </section>
   <section class="azh-commerce-panel" data-panel="briefs" aria-label="Creator briefs" hidden>
@@ -285,4 +308,5 @@ $admin=az_has_role($user,'admin');
 <script type="module" src="assets/commerce-provider-actions.js?v=1.37.0"></script>
 <?php if($admin): ?><script type="module" src="assets/commerce-provider-readiness.js?v=1.39.0"></script><?php endif; ?>
 <script type="module" src="assets/commerce-agent-briefing.js?v=1.40.0"></script>
+<?php if($admin): ?><script type="module" src="assets/shop-merch-v156.js?v=1.56.0"></script><?php endif; ?>
 </body></html>
