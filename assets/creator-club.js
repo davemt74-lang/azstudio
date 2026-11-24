@@ -40,7 +40,10 @@
       const buttons = Array.from(form.querySelectorAll('button[type="submit"], button:not([type])'));
       buttons.forEach(button => {button.disabled = true;});
       try {
-        const response = await fetch(form.action, {method: 'POST', body: data, credentials: 'same-origin', headers: {'Accept': 'application/json'}});
+        // Hidden input name=action shadows the form.action property in browsers.
+        const endpoint = new URL(form.getAttribute('action') || '', document.baseURI);
+        if (endpoint.origin !== location.origin) throw new Error('The form destination is invalid. Refresh the page.');
+        const response = await fetch(endpoint.href, {method: 'POST', body: data, credentials: 'same-origin', headers: {'Accept': 'application/json'}});
         const type = response.headers.get('content-type') || '';
         if (!type.includes('application/json')) throw new Error('Your session may have expired. Refresh the page and try again.');
         const result = await response.json();

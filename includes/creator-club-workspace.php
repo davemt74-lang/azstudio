@@ -237,7 +237,11 @@ function az_creator_club_history(array $actor,?int $creator=null,?PDO $db=null):
 {
     $db??=az_db();az_creator_club_require_active($actor,$db);
     if(!az_has_role($actor,'admin')){$creator??=(int)$actor['id'];az_creator_club_require_creator($actor,$creator,$db);}
-    $q=$db->prepare("SELECT e.*,u.name AS actor_name,COALESCE(t.creator_id,p.creator_id,a.creator_id) AS creator_id,COALESCE(t.title,p.title,'Temporary access') AS object_title FROM creator_club_review_events e JOIN users u ON u.id=e.actor_id LEFT JOIN creator_club_tiers t ON e.object_type='tier' AND t.id=e.object_id LEFT JOIN creator_club_posts p ON e.object_type='post' AND p.id=e.object_id LEFT JOIN creator_club_entitlements a ON e.object_type='access' AND a.id=e.object_id".($creator!==null?' WHERE COALESCE(t.creator_id,p.creator_id,a.creator_id)=?':'').' ORDER BY e.created_at DESC,e.id DESC LIMIT 100');$q->execute($creator!==null?[$creator]:[]);return $q->fetchAll(PDO::FETCH_ASSOC);
+    $q=$db->prepare("SELECT e.*,u.name AS actor_name,COALESCE(t.creator_id,p.creator_id,a.creator_id) AS creator_id,COALESCE(t.title,p.title,'Temporary access') AS object_title FROM creator_club_review_events e JOIN users u ON u.id=e.actor_id LEFT JOIN creator_club_tiers t ON e.object_type='tier' AND t.id=e.object_id LEFT JOIN creator_club_posts p ON e.object_type='post' AND p.id=e.object_id LEFT JOIN creator_club_entitlements a ON e.object_type='access' AND a.id=e.object_id".($creator!==null?' WHERE COALESCE(t.creator_id,p.creator_id,a.creator_id)=?':'').' ORDER BY e.created_at DESC,e.id DESC LIMIT 100');
+    // COALESCE has no SQLite column affinity: bind an integer explicitly so the
+    // creator scope matches integer IDs instead of comparing them to SQL text.
+    if($creator!==null)$q->bindValue(1,$creator,PDO::PARAM_INT);
+    $q->execute();return $q->fetchAll(PDO::FETCH_ASSOC);
 }
 /** Current facts only; fans receive no staff or production work data. */
 function az_creator_club_briefing(array $user,?PDO $db=null):array

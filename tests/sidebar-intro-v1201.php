@@ -3,6 +3,7 @@ declare(strict_types=1);
 /* Self-contained rendering regression: no application DB or production secrets. */
 function az_has_role(array $user, string $role): bool { return in_array($role, $user['roles'] ?? [], true); }
 function az_h(string $text): string { return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+function az_agent_activity_available(array $user): bool { return ($user['status'] ?? 'active') === 'active' && (az_has_role($user, 'admin') || az_has_role($user, 'model') || az_has_role($user, 'fan')); }
 function az_csrf_token(): string { return 'fixture-token'; }
 function az_is_installed(): bool { return false; }
 function az_social_empty(int $userId): array { return []; }

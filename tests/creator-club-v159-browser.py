@@ -48,8 +48,12 @@ def visit(page, base, path):
 
 
 def submit(page, button):
-    with page.expect_navigation(wait_until='networkidle', timeout=20000):
-        button.click()
+    try:
+        with page.expect_navigation(wait_until='networkidle', timeout=20000):
+            button.click()
+    except Exception as error:
+        messages = page.locator('.club-form-message:not([hidden])').all_text_contents()
+        raise AssertionError(f'Expected a saved club change at {page.url}; visible form errors: {messages}') from error
     expect(page.locator('.club-success')).to_have_text('Your change was saved.')
 
 

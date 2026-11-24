@@ -30,7 +30,7 @@ test('social profile starts with its cover directly under the universal header',
 test('profile header keeps account menu, but shows no useless mobile sidebar button',()=>{
  const header=read('includes/universal-header.php');
  assert.match(header,/if \(\$current !== 'user' \&\& \$current !== 'live-director'/);
- const code=`function az_has_role($u,$r){return in_array($r,$u['roles'],true);}function az_h($v){return htmlspecialchars((string)$v,ENT_QUOTES);}function az_is_installed(){return false;}function az_social_empty($id){return ['avatar_storage_name'=>null];}function az_url($p=''){return $p;}function az_csrf_token(){return 'fixture-token';}require ${JSON.stringify(new URL('includes/universal-header.php',root).pathname)}; $v=['id'=>10,'name'=>'Model Example','roles'=>['model']];ob_start();az_render_universal_header('user',$v);$social=ob_get_clean();ob_start();az_render_universal_header('dashboard',$v);$workspace=ob_get_clean();echo json_encode(['social'=>$social,'workspace'=>$workspace]);`;
+ const code=`function az_has_role($u,$r){return in_array($r,$u['roles'],true);}function az_agent_activity_available($u){return ($u['status']??'active')==='active'&&(az_has_role($u,'admin')||az_has_role($u,'model')||az_has_role($u,'fan'));}function az_h($v){return htmlspecialchars((string)$v,ENT_QUOTES);}function az_is_installed(){return false;}function az_social_empty($id){return ['avatar_storage_name'=>null];}function az_url($p=''){return $p;}function az_csrf_token(){return 'fixture-token';}require ${JSON.stringify(new URL('includes/universal-header.php',root).pathname)}; $v=['id'=>10,'name'=>'Model Example','roles'=>['model']];ob_start();az_render_universal_header('user',$v);$social=ob_get_clean();ob_start();az_render_universal_header('dashboard',$v);$workspace=ob_get_clean();echo json_encode(['social'=>$social,'workspace'=>$workspace]);`;
  const result=spawnSync('php',['-d','display_errors=1','-r',code],{encoding:'utf8'});
  assert.equal(result.status,0,result.stderr||result.stdout);
  const rendered=JSON.parse(result.stdout);
@@ -40,3 +40,4 @@ test('profile header keeps account menu, but shows no useless mobile sidebar but
  assert.doesNotMatch(rendered.social,/class="azh-floating-sidebar"/);
  assert.match(rendered.workspace,/id="azh-member-menu-button"/);
 });
+
