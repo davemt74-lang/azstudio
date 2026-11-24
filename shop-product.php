@@ -3,14 +3,15 @@ declare(strict_types=1);
 require_once __DIR__.'/includes/bootstrap.php';require_once __DIR__.'/includes/universal-header.php';
 header('Cache-Control: no-store');header('X-Content-Type-Options: nosniff');
 $id=is_string($_GET['id']??null)?$_GET['id']:'';$user=az_is_installed()?az_current_user():null;
-$products=az_is_installed()?az_shop_public_products():[];$p=null;
+$home=az_shop_homepage_public();
+$products=$home['storeEnabled'] && az_is_installed()?array_values(array_filter(az_shop_public_products(),static fn($p)=>!empty($home['categories'][$p['category']]??false))):[];$p=null;
 if(az_valid_id($id))foreach($products as $candidate){if($candidate['id']===$id){$p=$candidate;break;}}
 if(!$p){http_response_code(404);}
 $stripe=az_stripe_public_status();
 ?><!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fffafc">
 <title><?= $p?az_h($p['title']).' · ':'' ?>Shop · AZHottie</title><link rel="icon" href="assets/favicon.svg"><link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/universal-header.css?v=1.18.1"><link rel="stylesheet" href="assets/commerce.css?v=1.36.0">
-<link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0"><link rel="stylesheet" href="assets/commerce-shipping-checkout.css?v=1.35.0"><link rel="stylesheet" href="assets/shop-v156.css?v=1.56.0"></head>
+<link rel="stylesheet" href="assets/commerce-local.css?v=1.32.0"><link rel="stylesheet" href="assets/commerce-shipping-checkout.css?v=1.35.0"><link rel="stylesheet" href="assets/shop-v156.css?v=1.56.0"><link rel="stylesheet" href="assets/shop-v157.css?v=1.57.0"></head>
 <body data-page="shop" data-local-csrf="<?= az_h(az_csrf_token()) ?>"><?php az_render_universal_header('shop',$user); ?>
 <main class="azh-commerce azh-commerce-public azh-shop" id="azh-shop"><p class="azh-shop-crumb"><a href="shop.php">← All products</a></p>
 <?php if(!$p): ?><section class="azh-shop-empty"><h1>Product unavailable</h1><p>This product may have been removed or is no longer available for purchase.</p><a href="shop.php">Return to shop</a></section>

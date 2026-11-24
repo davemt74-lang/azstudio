@@ -1,3 +1,11 @@
+AZHottie Studio v1.57.0 — Shop 2.1 & Homepage Editor
+Back up code, DB, config and media, then deploy over v1.56. Do NOT rerun installer. Preserve private storage and uploaded files.
+Schema 52→53 adds draft/published homepage settings and private homepage image metadata.
+Commerce → Products → Homepage Editor: edit hero, backgrounds, typography, colors, layout, section visibility/order, and category visibility.
+Save Draft, Preview Draft, Publish; conflicting edits are rejected.
+Commerce admin includes instant explicit toggles for storefront visibility and non-purchasable demo data, both off/on reversible. Demo catalog defaults OFF.
+Real checkout, sales, stock, orders and provider integrations remain unchanged.
+
 AZHottie Studio v1.56.0 — Shopping Experience 2.0
 Back up site, database and media before updating. Deploy over the existing installation; preserve storage and uploads. DO NOT rerun install.php.
 Schema upgrade on authenticated boot: 51 → 52 adds optional product collection labels, galleries and curated bundle component metadata.

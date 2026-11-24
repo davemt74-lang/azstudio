@@ -3,8 +3,10 @@ declare(strict_types=1);
 /** AZHottie 1.56 storefront merchandising: separate from charging and inventory. */
 function az_shop_categories(): array
 {
-    return ['apparel'=>'Clothing','fitness'=>'Fitness','accessories'=>'Accessories',
-        'candy'=>'Candy','digital'=>'Digital','lifestyle'=>'Lifestyle','other'=>'Other'];
+    return ['apparel'=>'Clothing','fitness'=>'Fitness','lifestyle'=>'Adult Lifestyle',
+        'digital'=>'Digital Entertainment','candy'=>'Candy','photography'=>'Photography',
+        'spa'=>'Day Spa','accessories'=>'Accessories','bundles'=>'Bundles',
+        'gifts'=>'Gift Cards','other'=>'Other'];
 }
 function az_upgrade_shop_catalog_schema(PDO $db): void
 {

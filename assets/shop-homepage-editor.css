@@ -1,0 +1,54 @@
+.azh-shop-edit{box-sizing:border-box;max-width:1750px;padding:clamp(16px,2.5vw,36px);color:#35283b;min-width:0}
+.azh-shop-edit *{box-sizing:border-box}
+.azh-shop-edit [hidden]{display:none!important}
+.azh-shop-edit-header{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:17px}
+.azh-shop-edit-header h1{font-size:clamp(27px,3vw,40px);letter-spacing:-.04em;margin:3px 0 8px;color:#302134}
+.azh-shop-edit-header p{color:#736070;line-height:1.45;margin:0;max-width:760px}
+.azh-shop-edit-header a{color:#ad2c6c;font-weight:750}
+.azh-shop-edit-kicker{letter-spacing:.16em;color:#bc2d72!important;font-size:11px;font-weight:850}
+.azh-shop-edit-toolbar{display:flex;gap:12px;align-items:center;justify-content:space-between;background:#fff;border:1px solid #eadde5;padding:13px 15px;border-radius:13px;margin-bottom:16px;flex-wrap:wrap}
+.azh-shop-edit-actions{display:flex;gap:7px;flex-wrap:wrap}
+.azh-shop-edit button{cursor:pointer;background:#fff;border:1px solid #d8cbd3;border-radius:9px;padding:10px 13px;font-size:13px;color:#544252;font-weight:750}
+.azh-shop-edit button:hover{background:#faf1f5}
+.azh-shop-edit button:disabled{opacity:.5;cursor:not-allowed}
+.azh-shop-edit .azh-shop-edit-publish{background:#ca2167;color:white;border-color:#ca2167}
+.azh-shop-edit-layout{display:grid;grid-template-columns:minmax(310px,450px) minmax(0,1fr);gap:18px;align-items:start;min-width:0}
+.azh-shop-edit-controls{display:flex;flex-direction:column;gap:12px;min-width:0}
+.azh-shop-edit-controls details{border:1px solid #eadde5;background:#fff;border-radius:12px;overflow:hidden}
+.azh-shop-edit-controls summary{cursor:pointer;padding:17px;font-size:14px;font-weight:800;color:#382c3e;list-style-position:inside}
+.azh-shop-edit-controls details[open] summary{border-bottom:1px solid #f0e6eb;background:#fff8fb}
+.azh-shop-edit-fields{padding:14px 17px 18px;display:grid;gap:13px}
+.azh-shop-edit-fields label{display:grid;gap:5px;font-size:12px;color:#6e566b;font-weight:750;min-width:0}
+.azh-shop-edit-fields :is(input:not([type="checkbox"]):not([type="color"]):not([type="range"]),select,textarea){width:100%;min-width:0;border:1px solid #ded0d8;border-radius:8px;background:#fff;color:#2f2832;padding:10px;font:inherit;font-size:14px}
+.azh-shop-edit-fields textarea{resize:vertical}
+.azh-shop-edit-fields p{font-size:12px;color:#7b6676;line-height:1.5;margin:0}
+.azh-shop-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.azh-shop-edit-fields input[type="color"]{height:42px;width:100%;border:1px solid #e6d3dc;background:#fff;border-radius:8px}
+.azh-shop-edit-fields input[type="range"]{width:100%;accent-color:#c42467}
+.azh-shop-edit-choice-list{display:grid;gap:7px}
+.azh-shop-edit-choice{display:flex;align-items:center;gap:9px;min-width:0;border:1px solid #f0e5eb;border-radius:9px;padding:10px;background:#fff}
+.azh-shop-edit-choice label{display:flex;gap:9px;align-items:center;flex:1;min-width:0;font-size:13px;color:#453245;font-weight:700}
+.azh-shop-edit-choice input[type="checkbox"]{width:18px;height:18px;accent-color:#ca2167}
+.azh-shop-edit-choice button{padding:5px 7px;font-size:12px}
+.azh-shop-edit-choice .azh-choice-controls{display:flex;gap:3px}
+.azh-shop-edit-switch{display:flex!important;align-items:center;gap:10px!important;font-size:14px!important}
+.azh-shop-edit-switch input{accent-color:#ca2167;width:20px;height:20px}
+.azh-shop-edit-image-samples img{width:100%;max-width:500px;border-radius:10px;aspect-ratio:2.5;object-fit:cover}
+.azh-shop-edit-upload{border:1px solid #e8d8e0;background:#fffafb;border-radius:10px;padding:13px;display:grid;gap:10px}
+.azh-shop-edit-upload strong{font-size:13px}
+#azh-edit-upload-list{display:flex;gap:7px;flex-wrap:wrap}
+#azh-edit-upload-list .azh-edit-image-preview{width:88px;position:relative}
+#azh-edit-upload-list img{width:88px;height:62px;object-fit:cover;border-radius:6px}
+#azh-edit-upload-list .azh-edit-image-preview button{width:100%;font-size:10px;padding:5px;margin-top:3px}
+.azh-shop-edit-preview{background:white;border:1px solid #eadce6;border-radius:13px;overflow:hidden;min-width:0;position:sticky;top:12px}
+.azh-shop-preview-header{display:flex;align-items:center;justify-content:space-between;gap:9px;background:#faf3f6;padding:13px 15px;flex-wrap:wrap}
+.azh-shop-preview-header strong{font-size:14px}.azh-shop-preview-header small{display:block;font-size:11px;color:#796b79;margin-top:3px}
+.azh-shop-preview-header>div:last-child{display:flex;gap:5px}
+.azh-shop-preview-header button[aria-pressed="true"]{background:#cb2a71;color:white;border-color:#cb2a71}
+.azh-shop-preview-frame-wrap{padding:12px;background:#f3eef1;min-width:0;display:flex;justify-content:center}
+.azh-shop-preview-frame-wrap iframe{height:760px;width:100%;border:1px solid #e3d9e0;background:#fff;border-radius:7px}
+.azh-shop-preview-frame-wrap.is-phone iframe{max-width:390px}
+.azh-shop-preview-foot{font-size:12px;color:#756878;padding:0 14px 14px;line-height:1.5}
+#azh-shop-editor-status[data-error="true"]{color:#aa1f45;font-weight:700}
+@media(max-width:1100px){.azh-shop-edit-layout{grid-template-columns:1fr}.azh-shop-edit-preview{position:static}}
+@media(max-width:520px){.azh-shop-edit{padding:12px}.azh-shop-edit-actions button{flex:1}.azh-shop-edit-grid{grid-template-columns:1fr}.azh-shop-preview-frame-wrap iframe{height:640px}}
