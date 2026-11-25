@@ -50,14 +50,40 @@ Manual and automatic checks have distinct health records. Health uses observed
 timestamps, errors and blocked work; manual checks never prove a cron is active.
 
 HOST SCHEDULER SETUP
-For timely releases, configure a host cron once per minute:
+For this HostGator shared-host deployment, use a 15-minute host cron:
 
-  * * * * * /path/to/php-cli /absolute/path/to/azhottie/includes/creator-club-cron.php
+  */15 * * * * /path/to/php-cli /absolute/path/to/azhottie/includes/creator-club-cron.php
 
 Replace both paths with this host's PHP CLI and installed application path.
+HostGator's published WordPress cron setup guidance recommends no interval below
+15 minutes. This deployment uses that interval. Use a shorter interval only after
+the host confirms it is permitted for this account.
+Provider reference, checked November 24, 2026 (America/Phoenix):
+https://www.hostgator.com/help/article/how-to%20-replace-wordpress-cron-with-a-real-cron-job
+
+Approved posts release on the next successful check after their requested time.
+With a healthy 15-minute job and no blockers or backlog, the usual polling delay
+is up to 15 minutes. Exact-minute publication is not guaranteed. Failures and
+backlog can extend the delay; unapproved content never becomes eligible.
+
+The private expected interval defaults to 15 minutes. To match a different
+permitted host cadence, add or update this top-level entry inside the existing
+returned array in storage/config.php, preserving all other entries:
+
+  'creator_club' => ['publish_interval_minutes' => 15],
+
+Use an integer from 1 through 60. Invalid settings fall back to 15. This setting
+controls health reporting only; it does not create, enable or change a host task.
+For a host-confirmed every-minute task, use 1. If relying only on the existing
+private hourly agent-followthrough cron, use 60. That fallback also handles due
+Club posts, but releases only when its next successful check runs.
+
+Completed automatic runs become stale after two expected intervals plus five
+minutes of grace, with a minimum of ten minutes. The default threshold is 35
+minutes. A job still running after ten minutes is treated as stale independently
+of the expected interval. Manual runs never refresh the automatic heartbeat.
 The script is CLI-only; includes/ is denied to web requests. Uploading the ZIP
-does not create a host task. The existing private hourly agent-followthrough
-cron also handles due Club posts, but cannot promise minute-level release.
+does not create a host task.
 In Commerce → Membership reviews, confirm a recent automatic completed check.
 Publish due posts now checks only already approved, due schedules and records
 a manual run. Missing/delayed host tasks delay release and never bypass review.

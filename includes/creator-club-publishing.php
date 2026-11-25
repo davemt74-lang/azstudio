@@ -232,11 +232,22 @@ function az_creator_club_publish_due(?PDO $db=null,int $limit=50,string $scope='
         throw $error;
     }
 }
+/** Private configuration describes the host task; it never creates or runs one. */
+function az_creator_club_publish_interval_minutes():int
+{
+    $club=az_config()['creator_club']??[];
+    $value=is_array($club)?($club['publish_interval_minutes']??15):15;
+    if(!is_int($value)&&!(is_string($value)&&ctype_digit($value)))return 15;
+    $interval=(int)$value;
+    return $interval>=1&&$interval<=60?$interval:15;
+}
 /** Reads never run the publisher; a manual check never supplies a cron heartbeat. */
 function az_creator_club_publish_status(?PDO $db=null):array
 {
     $db??=az_db();$empty=['status'=>'not_run','startedAt'=>null,'completedAt'=>null,'errorAt'=>null,'checked'=>0,'published'=>0,'blocked'=>0,'skipped'=>0,'errors'=>0,'truncated'=>false];
-    if(!az_creator_club_publishing_enabled($db))return $empty+['manual'=>$empty];
+    $interval=az_creator_club_publish_interval_minutes();$staleAfter=max(600,2*$interval*60+300);
+    $cadence=['expectedIntervalMinutes'=>$interval,'staleAfterSeconds'=>$staleAfter];
+    if(!az_creator_club_publishing_enabled($db))return $empty+$cadence+['manual'=>$empty];
     $rows=$db->query('SELECT * FROM creator_club_publish_runs')->fetchAll(PDO::FETCH_ASSOC);$statuses=[];
     foreach($rows as $row){
         $status=$empty;$status['startedAt']=$row['started_at'];$status['completedAt']=$row['completed_at'];$status['errorAt']=$row['error_at'];
@@ -245,9 +256,10 @@ function az_creator_club_publish_status(?PDO $db=null):array
         if((int)$row['running']===1)$status['status']=$row['started_at']!==null&&strtotime($row['started_at'])<$now-600?'stale':'running';
         elseif($row['error_at']!==null)$status['status']='attention';
         elseif($row['completed_at']!==null){
-            $status['status']=strtotime($row['completed_at'])<$now-600?'stale':(($status['blocked']||$status['errors']||$status['truncated'])?'attention':'ok');
+            $completedStaleAfter=$row['scope']==='cron'?$staleAfter:600;
+            $status['status']=strtotime($row['completed_at'])<$now-$completedStaleAfter?'stale':(($status['blocked']||$status['errors']||$status['truncated'])?'attention':'ok');
         }
         $statuses[$row['scope']]=$status;
     }
-    return ($statuses['cron']??$empty)+['manual'=>$statuses['manual']??$empty];
+    return ($statuses['cron']??$empty)+$cadence+['manual'=>$statuses['manual']??$empty];
 }
