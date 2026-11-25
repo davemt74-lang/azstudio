@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
-// Private CLI entry point for a once-per-minute scheduled task.
+// Private CLI entry point: use a 15-minute host task by default. A faster task
+// requires provider confirmation and matching creator_club.publish_interval_minutes.
 if(PHP_SAPI!=='cli'){http_response_code(404);exit;}
 require_once __DIR__.'/bootstrap.php';
 try{

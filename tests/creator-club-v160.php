@@ -246,6 +246,50 @@ c160_denied(fn()=>az_creator_club_post_row($freshMedia['id'],$fan,$db),404,'medi
 $mediaFeed=az_creator_club_feed_page($fan,[],$db);
 c160_ok($mediaFeed['posts']===[]&&$mediaFeed['unreadCount']===0,'changed published media disappears from eligible feed and unread count');
 
+// The automatic heartbeat follows the configured host cadence; manual runs cannot make it healthy.
+$db=c160_db();
+$health=az_creator_club_publish_status($db);
+c160_ok($health['expectedIntervalMinutes']===15&&$health['staleAfterSeconds']===2100,'default host cadence is fifteen minutes with a thirty-five-minute completion threshold');
+az_creator_club_publish_due($db,50,'manual');$health=az_creator_club_publish_status($db);
+c160_ok($health['status']==='not_run'&&$health['completedAt']===null&&!empty($health['manual']['completedAt']),'manual completion leaves an unverified automatic heartbeat unverified');
+az_creator_club_publish_due($db,50,'cron');
+$completeRunAgo=static function(int $seconds)use($db):string{
+    $completedAt=gmdate('Y-m-d\TH:i:s\Z',time()-$seconds);
+    $db->prepare("UPDATE creator_club_publish_runs SET running=0,started_at=?,completed_at=?,error_at=NULL WHERE scope='cron'")->execute([$completedAt,$completedAt]);
+    return $completedAt;
+};
+$completeRunAgo(12*60);
+c160_ok(az_creator_club_publish_status($db)['status']==='ok','a real twelve-minute-old cron completion remains healthy under the default fifteen-minute schedule');
+$completeRunAgo(34*60);
+c160_ok(az_creator_club_publish_status($db)['status']==='ok','default cadence does not become stale before its thirty-five-minute allowance');
+$completeRunAgo(36*60);
+c160_ok(az_creator_club_publish_status($db)['status']==='stale','default cadence reports a completion older than thirty-five minutes as stale');
+foreach([[1,1,600,9*60,12*60],['1',1,600,9*60,12*60],[60,60,7500,120*60,126*60],['60',60,7500,120*60,126*60]] as [$configured,$minutes,$threshold,$healthyAge,$staleAge]){
+    $GLOBALS['az_config_cache']['creator_club']=['publish_interval_minutes'=>$configured];
+    $completeRunAgo($healthyAge);$health=az_creator_club_publish_status($db);
+    c160_ok($health['expectedIntervalMinutes']===$minutes&&$health['staleAfterSeconds']===$threshold&&$health['status']==='ok','integer and integer-string cadence '.$configured.' preserves a timely completed job');
+    $completeRunAgo($staleAge);
+    c160_ok(az_creator_club_publish_status($db)['status']==='stale','configured cadence '.$configured.' still detects a genuinely overdue completion');
+}
+$completeRunAgo(12*60);
+foreach([0,61,-1,true,false,[],['minutes'=>1],1.0,1.5,'1.0','1e1','invalid','',null] as $invalidCadence){
+    $GLOBALS['az_config_cache']['creator_club']=['publish_interval_minutes'=>$invalidCadence];
+    $health=az_creator_club_publish_status($db);
+    c160_ok($health['expectedIntervalMinutes']===15&&$health['staleAfterSeconds']===2100&&$health['status']==='ok','invalid cadence '.json_encode($invalidCadence).' falls back to the safe fifteen-minute default');
+}
+foreach([true,'invalid',60] as $invalidSection){
+    $GLOBALS['az_config_cache']['creator_club']=$invalidSection;$health=az_creator_club_publish_status($db);
+    c160_ok($health['expectedIntervalMinutes']===15&&$health['status']==='ok','malformed creator_club configuration safely uses the default cadence');
+}
+$GLOBALS['az_config_cache']['creator_club']=['publish_interval_minutes'=>60];
+$db->prepare("UPDATE creator_club_publish_runs SET running=1,started_at=? WHERE scope='cron'")->execute([gmdate('Y-m-d\TH:i:s\Z',time()-9*60)]);
+c160_ok(az_creator_club_publish_status($db)['status']==='running','a recently started hourly job is reported as running');
+$db->prepare("UPDATE creator_club_publish_runs SET started_at=? WHERE scope='cron'")->execute([gmdate('Y-m-d\TH:i:s\Z',time()-11*60)]);
+c160_ok(az_creator_club_publish_status($db)['status']==='stale','a stuck job becomes stale after ten minutes even when scheduled hourly');
+$GLOBALS['az_config_cache']['creator_club']=['publish_interval_minutes'=>1];$staleCompletion=$completeRunAgo(12*60);
+az_creator_club_publish_due($db,50,'manual');$health=az_creator_club_publish_status($db);
+c160_ok($health['status']==='stale'&&$health['completedAt']===$staleCompletion&&$health['manual']['status']==='ok','a fresh successful manual check never refreshes or hides a stale automatic heartbeat');
+
 // Production defaults never turn test access or billing on while adding the new workflows.
 $db=c160_db();$tier=az_creator_club_tier($creator,'Disabled test tier','No active checkout',1200,$db);az_creator_club_review($admin,'tier',$tier['id'],1,'approve',$db);
 c160_denied(fn()=>az_creator_club_test_grant($admin,2,1,$tier['id'],7,$db),403,'test grants remain disabled by default');
