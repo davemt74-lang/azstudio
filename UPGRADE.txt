@@ -1,3 +1,13 @@
+AZHottie Studio v1.60.0 — Creator Club Feed, Discovery & Publishing
+Back up code, database, config and private media. Upload the contents of azhottie-studio over the existing application, preserving storage/config.php, database files and uploaded media. Do NOT rerun install.php.
+Automatic schema upgrades: 55→56 adds actual publication times, requested schedules, publication feedback and runner health; 56→57 adds account-owned post read state. Existing approved posts retain their historical review/publication date. Existing tiers, posts, follows and access records remain.
+Open My Clubs for All updates / Unread, creator filters, explicit Mark read / Mark unread and older posts. Opening a post or notification does not mark it read. Explore clubs supports displayed-name/tagline search and Following filters with pagination.
+Creators use Save draft, Preview and Submit for review. Incomplete drafts are private. Only a validated submitted version reaches staff review. Future approved posts remain Scheduled until the runner releases them; if the requested time has passed, approval releases the post immediately.
+For timely releases, add a once-per-minute host cron running the appropriate PHP CLI executable and the absolute path to includes/creator-club-cron.php. Do not call this script through a browser URL. Existing hourly follow-through cron also handles due releases at its next run.
+Commerce → Membership reviews shows automatic-runner status and an explicit Publish due posts now action. Manual checks have their own status and never prove that the recurring host task is running. Blocked approved schedules remain private and show feedback for correction.
+After deployment, check draft → submit → approve → scheduled release → fan feed with the host task running. Verify My Clubs, discovery, private video access and read status as fan/model/admin. Automated checks do not certify your live host or real subscription payments.
+See docs/RELEASE_1_60_0.txt. Paid recurring Club billing remains disabled.
+
 AZHottie Studio v1.59.0 — Creator Clubs Workspace & Homepage Recovery
 Deploy the contents of azhottie-studio over the existing installation after backing up code, database, config and private media. Preserve storage/config.php, database files and uploaded media. Do NOT rerun install.php.
 Automatic schema upgrades: 53→54 adds retained homepage versions; 54→55 adds Creator Club audiences, review notes, tier archival and follower notification preferences. Existing tiers, posts, follows and access records are preserved. Back up the database before downgrading because v1.59 introduces nullable post tier IDs for follower posts.

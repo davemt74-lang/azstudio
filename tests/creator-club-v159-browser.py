@@ -139,7 +139,7 @@ def run():
                         form.get_by_label('Post title', exact=True).fill('Fresh follower update')
                         form.get_by_label('Update', exact=True).fill('A new studio update for our free followers.')
                         form.locator('[name="rights_confirmed"]').check()
-                        submit(model, form.get_by_role('button', name='Send post for staff review', exact=True))
+                        submit(model, form.get_by_role('button', name='Submit for review', exact=True))
                         post = sql(app, "SELECT * FROM creator_club_posts WHERE title='Fresh follower update'")[0]
                         assert post['state'] == 'pending' and post['audience'] == 'followers' and post['tier_id'] is None
                         visit(fan, base, 'creator-club.php?creator=2')

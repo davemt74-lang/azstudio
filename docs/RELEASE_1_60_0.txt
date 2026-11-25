@@ -1,0 +1,88 @@
+AZHottie Studio v1.60.0 — Creator Club Feed, Discovery & Publishing
+Release date: 2026-11-24 (America/Phoenix)
+
+MY CLUBS FEED
+Approved, released posts from followed creators and currently accessible tiers
+appear together, ordered by actual publication time and stable ID. All updates,
+Unread and creator filters apply before pagination; locked or unavailable posts
+cannot crowd older eligible updates out of a page.
+Mark read and Mark unread are explicit, reversible, account-owned changes.
+Loading a feed, opening a post or dismissing an alert does not mark posts read.
+A newly approved publication revision becomes unread again. Unread counts
+include only currently eligible posts. Following, access and moderation changes
+are rechecked on subsequent page and protected media requests.
+Continuation cursors are scoped to the account and filters. Follows, notification
+preferences and access history remain below the feed. Post read status is
+separate from notification read status.
+
+DISCOVERY AND HISTORY
+Search the displayed creator name or tagline. A private account name is not
+searched behind an active stage name. All creators and Following filters apply
+active-model and profile-visibility rules before pagination. Discovery and
+individual Club histories continue beyond the previous 80-creator/60-post caps.
+
+PRIVATE DRAFTS AND PREVIEW
+Save draft accepts incomplete text, an omitted tier and an unchecked rights
+confirmation. Any referenced media or tier must still belong to the creator.
+Preview safely renders entered text and uses only authorized personal media;
+it performs no save, submission or publication.
+Submit for review validates title/content, audience, owned video, the approved
+tier when relevant, rights and participant consent. Saving a pending item as a
+draft removes it from review. Published or scheduled posts must be withdrawn
+before editing and reviewed again. Stale revisions cannot overwrite newer work.
+
+SCHEDULED PUBLICATION
+The selected IANA time zone converts a local release time to UTC. Invalid dates,
+nonexistent clock times and ambiguous repeated hours are rejected explicitly.
+Drafts and pending items never publish merely because a date passes. Future
+approved posts wait in Scheduled state. Approval after the requested time
+releases the approved version at the actual approval time.
+The publisher locks and rechecks the persisted post, revision, active creator,
+visible profile, audience, rights, tier and owned media. Attached videos are
+pinned to their selected revision; later edits require fresh review before
+publication or fan access. Source state, actual
+release timestamp, audit and recipient outbox events commit together. Repeated
+or overlapping checks cannot release the same version twice. Delivery retries
+through the existing shared activity outbox.
+Blocked schedules remain private with actionable feedback. Bounded batches
+rotate checked blocked rows so newer work is not permanently starved.
+Manual and automatic checks have distinct health records. Health uses observed
+timestamps, errors and blocked work; manual checks never prove a cron is active.
+
+HOST SCHEDULER SETUP
+For timely releases, configure a host cron once per minute:
+
+  * * * * * /path/to/php-cli /absolute/path/to/azhottie/includes/creator-club-cron.php
+
+Replace both paths with this host's PHP CLI and installed application path.
+The script is CLI-only; includes/ is denied to web requests. Uploading the ZIP
+does not create a host task. The existing private hourly agent-followthrough
+cron also handles due Club posts, but cannot promise minute-level release.
+In Commerce → Membership reviews, confirm a recent automatic completed check.
+Publish due posts now checks only already approved, due schedules and records
+a manual run. Missing/delayed host tasks delay release and never bypass review.
+
+MIGRATION AND DEPLOYMENT
+55→56 adds publication fields and runner records. Approved legacy posts gain
+their reviewed_at or created_at fallback, not migration time. 56→57 adds post
+reads keyed by user/post and the read revision. SQLite changes are transactional;
+MySQL DDL is replay-safe. Existing content and relationships remain.
+Back up code, database, config and media. Upload application contents while
+preserving storage/config.php, database files and uploaded media. Do not rerun
+install.php. Refresh Club pages and configure/verify the host scheduler.
+Paid recurring billing remains disabled; internal test access is default-off.
+Previous shop hero, homepage editor/history, sample switches and admin accordions
+remain included.
+
+RELEASE GATES
+JavaScript regression, PHP syntax/integration, SQLite permissions/migrations,
+real browser journeys and safe archive creation must pass. New coverage checks
+read ownership, authorization before pagination, histories beyond prior limits,
+draft/schedule transitions, time zones, stale writes, notification deduplication,
+retry and runner health. Browser tests use actual authenticated PHP forms at
+desktop/mobile sizes, including private preview, review, publication and media.
+Native validation/conflict pages retain entered fields and the original revision;
+JavaScript errors also preserve entries without overwriting saved work.
+These checks cover release behavior; live HostGator and physical-device
+acceptance remain installation checks. After upload, verify one approved
+scheduled post reaches an authorized fan through the automatic host runner.

@@ -1,3 +1,15 @@
+# AZHottie Studio — v1.60.0
+
+**Creator Club feed, discovery and publishing.** **My Clubs** brings authorized updates together with All/Unread views, creator filters, explicit account-saved read status and older-update pagination. **Explore clubs** searches the displayed creator name or tagline, filters followed creators and continues beyond the first page. Individual Club pages expose older posts.
+
+Creators can **Save draft**, **Preview**, and **Submit for review** separately. A draft may be incomplete and remains private. Choose a release date and IANA time zone; staff approval is still required. Future approved posts wait as Scheduled, then publish once through the private scheduler. Past-due submissions publish only when approved. Actual release time orders the fan feed.
+
+**Scheduled publishing needs a recurring host task.** Run includes/creator-club-cron.php with the host's PHP CLI once per minute. The existing hourly follow-through task also processes due posts as a fallback. The admin page shows the automatic runner's last check separately from **Publish due posts now**; a manual run never claims automatic scheduling is configured. Blocked releases stay private with a reason. See docs/RELEASE_1_60_0.txt.
+
+Schema **55 → 56 → 57** preserves existing records and adds publication metadata and per-account post reads. Preserve private storage and do not rerun install.php. Paid recurring memberships remain disabled. Previous shop, hero, homepage history and admin accordion features remain included.
+
+---
+
 # AZHottie Studio — v1.59.0
 
 **Creator Clubs workspace and homepage recovery.** Fans can manage free follows, post notifications, recent available updates and their own access history in **My Clubs**. Creators can submit updates for free followers or an approved tier, revise drafts after feedback, withdraw published posts, and archive tiers without silently removing existing access. **Commerce → Membership reviews** includes review notes and access history. Club activity uses the existing notification bell, History, Brain and private Agent Chat; fan context is isolated from production and administrator information. Recurring Club payments remain disabled.

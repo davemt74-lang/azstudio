@@ -87,6 +87,8 @@ function az_db(): PDO
     if (function_exists('az_upgrade_shop_homepage_schema') && az_schema_version($GLOBALS['az_database']) >= 52) { az_upgrade_shop_homepage_schema($GLOBALS['az_database']); }
     if (function_exists('az_upgrade_shop_homepage_history_schema') && az_schema_version($GLOBALS['az_database']) >= 53) { az_upgrade_shop_homepage_history_schema($GLOBALS['az_database']); }
     if (function_exists('az_upgrade_creator_club_workspace_schema') && az_schema_version($GLOBALS['az_database']) >= 54) { az_upgrade_creator_club_workspace_schema($GLOBALS['az_database']); }
+    if (function_exists('az_upgrade_creator_club_publishing_schema') && az_schema_version($GLOBALS['az_database']) >= 55) { az_upgrade_creator_club_publishing_schema($GLOBALS['az_database']); }
+    if (function_exists('az_upgrade_creator_club_feed_schema') && az_schema_version($GLOBALS['az_database']) >= 56) { az_upgrade_creator_club_feed_schema($GLOBALS['az_database']); }
     return $GLOBALS['az_database'];
 }
 
@@ -174,6 +176,8 @@ function az_create_schema(PDO $db): void
     if (function_exists('az_upgrade_shop_homepage_schema') && az_schema_version($db) >= 52) { az_upgrade_shop_homepage_schema($db); }
     if (function_exists('az_upgrade_shop_homepage_history_schema') && az_schema_version($db) >= 53) { az_upgrade_shop_homepage_history_schema($db); }
     if (function_exists('az_upgrade_creator_club_workspace_schema') && az_schema_version($db) >= 54) { az_upgrade_creator_club_workspace_schema($db); }
+    if (function_exists('az_upgrade_creator_club_publishing_schema') && az_schema_version($db) >= 55) { az_upgrade_creator_club_publishing_schema($db); }
+    if (function_exists('az_upgrade_creator_club_feed_schema') && az_schema_version($db) >= 56) { az_upgrade_creator_club_feed_schema($db); }
 }
 
 

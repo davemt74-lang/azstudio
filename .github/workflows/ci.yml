@@ -28,7 +28,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: sqlite3, pdo_sqlite
+          extensions: sqlite3, pdo_sqlite, mbstring
           coverage: none
       - name: Lint PHP application and test files
         run: |
@@ -75,6 +75,7 @@ jobs:
           php tests/shop-homepage-v159.php
           php tests/creator-club-v159.php
           php tests/agent-clubs-v159.php
+          php tests/creator-club-v160.php
           php tests/admin-navigation-v1571.php
 
   fixtures:
@@ -145,6 +146,7 @@ jobs:
           python tests/shop-homepage-v158-browser.py
           python tests/shop-homepage-v159-browser.py
           python tests/creator-club-v159-browser.py
+          python tests/creator-club-v160-browser.py
           python tests/shop-hero-v1571-browser.py
           python tests/admin-navigation-v1571-browser.py
           python tests/live-shopping-v141-browser.py
@@ -178,6 +180,7 @@ jobs:
             ${{ runner.temp }}/azh_shop_v158_browser/
             ${{ runner.temp }}/azh_shop_v159_browser/
             ${{ runner.temp }}/azh_club_v159_browser/
+            ${{ runner.temp }}/azh_club_v160_browser/
             ${{ runner.temp }}/azh_shop_v1571_browser/*.png
             ${{ runner.temp }}/azh_admin_navigation_v1571/*.png
             ${{ runner.temp }}/azh_campaign_v153_browser/*.png
