@@ -107,7 +107,9 @@ def run():
             port = sock.getsockname()[1]
         base = f'http://127.0.0.1:{port}/'
         with (OUT / 'php-server.log').open('w+') as log:
-            server = subprocess.Popen(['php', '-d', 'session.save_path=' + str(sessions), '-S',
+            # This fixture rewrites config.php during the journey. The cli-server SAPI
+            # otherwise caches the old flag even when opcache.enable_cli is disabled.
+            server = subprocess.Popen(['php', '-d', 'opcache.enable=0', '-d', 'session.save_path=' + str(sessions), '-S',
                                        f'127.0.0.1:{port}', '-t', str(app)], stdout=log, stderr=log)
             try:
                 deadline = time.monotonic() + 10
