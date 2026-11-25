@@ -74,7 +74,8 @@ function az_creator_club_creator(int $id, ?PDO $db=null):array
 {
     if($id<1)throw new AzHttpError(404,'Creator not found.','creator_missing');
     $db??=az_db();
-    $q=$db->prepare("SELECT u.id,u.name FROM users u JOIN user_roles r ON r.user_id=u.id WHERE u.id=? AND u.status='active' AND r.role='model' LIMIT 1");
+    $current=$db->inTransaction()&&$db->getAttribute(PDO::ATTR_DRIVER_NAME)==='mysql'?' FOR UPDATE':'';
+    $q=$db->prepare("SELECT u.id,u.name FROM users u JOIN user_roles r ON r.user_id=u.id WHERE u.id=? AND u.status='active' AND r.role='model' LIMIT 1".$current);
     $q->execute([$id]);$row=$q->fetch(PDO::FETCH_ASSOC);
     if(!$row)throw new AzHttpError(404,'Creator not found.','creator_missing');
     return $row;
@@ -118,10 +119,10 @@ function az_creator_club_review(array $actor,string $kind,string $id,int $revisi
         throw new AzHttpError(400,'Invalid review request.','invalid_review');
     $modern=az_creator_club_workspace_enabled($db);
     if(strlen($note)>1000||($modern&&$decision==='reject'&&$note===''))throw new AzHttpError(400,'Explain the changes needed in up to 1,000 characters.','review_note_required');
-    $table=$kind==='tier'?'creator_club_tiers':'creator_club_posts';
+    $table=$kind==='tier'?'creator_club_tiers':'creator_club_posts';$publishing=$kind==='post'&&function_exists('az_creator_club_publishing_enabled')&&az_creator_club_publishing_enabled($db);
     $lookup=$db->prepare('SELECT creator_id FROM '.$table.' WHERE id=?');$lookup->execute([$id]);$creator=(int)($lookup->fetchColumn()?:0);
     if(!$creator)throw new AzHttpError(404,'Item not found.','not_found');
-    return az_creator_club_write($db,function()use($db,$actor,$kind,$id,$revision,$decision,$note,$modern,$table,$creator){
+    return az_creator_club_write($db,function()use($db,$actor,$kind,$id,$revision,$decision,$note,$modern,$table,$creator,$publishing){
         // Take the creator lock before any transactional snapshot read. Tier archival
         // and creator edits use the same order, including on MySQL REPEATABLE READ.
         $db->prepare('UPDATE users SET status=status WHERE id=?')->execute([$creator]);
@@ -132,22 +133,26 @@ function az_creator_club_review(array $actor,string $kind,string $id,int $revisi
         // Deactivation prevents publication, but staff can still clear a pending
         // item with feedback instead of leaving an unresolvable queue entry.
         if($decision==='approve')az_creator_club_creator($creator,$db);
-        if($kind==='post'&&$decision==='approve'){
+        if($kind==='post'&&$decision==='approve'&&$publishing)az_creator_club_validate_stored_post($db,$row);
+        elseif($kind==='post'&&$decision==='approve'){
             if(($row['audience']??'tier')==='tier'){
                 $t=$db->prepare("SELECT 1 FROM creator_club_tiers WHERE id=? AND creator_id=? AND state='approved'".($modern?' AND archived=0':'').$current);$t->execute([$row['tier_id'],$creator]);
                 if(!$t->fetchColumn())throw new AzHttpError(409,'The tier is not active and approved.','tier_not_approved');
             }elseif(($row['audience']??'')!=='followers')throw new AzHttpError(409,'The post audience is invalid.','invalid_audience');
             if((int)($row['rights_confirmed']??0)!==1)throw new AzHttpError(409,'Creator rights confirmation is missing.','rights_not_confirmed');
-            if($row['media_id']!==null)az_personal_media_row((string)$row['media_id'],$creator);
+            if($row['media_id']!==null)az_creator_club_validate_media($db,(string)$row['media_id'],$creator);
         }
         $next=$decision==='approve'?'approved':'rejected';$now=az_now();
-        $sql='UPDATE '.$table.' SET state=?,revision=revision+1,reviewed_at=?,reviewed_by=?,updated_at=?'.($modern?',review_note=?':'')." WHERE id=? AND revision=? AND state='pending'";
-        $args=[$next,$now,(int)$actor['id'],$now];if($modern)$args[]=$note;$args[]=$id;$args[]=$revision;
+        if($publishing&&$decision==='approve'&&$row['publish_at']!==null&&$row['publish_at']>$now)$next='scheduled';
+        if($publishing&&$next==='approved')az_creator_club_validate_publish_visibility($db,$creator);
+        $publishedAt=$next==='approved'?$now:null;
+        $sql='UPDATE '.$table.' SET state=?,revision=revision+1,reviewed_at=?,reviewed_by=?,updated_at=?'.($modern?',review_note=?':'').($publishing?",published_at=?,publish_error_code='',publish_error='',publish_checked_at=?":'')." WHERE id=? AND revision=? AND state='pending'";
+        $args=[$next,$now,(int)$actor['id'],$now];if($modern)$args[]=$note;if($publishing){$args[]=$publishedAt;$args[]=$now;}$args[]=$id;$args[]=$revision;
         $q=$db->prepare($sql);$q->execute($args);if($q->rowCount()!==1)throw new AzHttpError(409,'Review changed.','stale_review');
         if($modern){
             az_creator_club_audit($db,$kind,$id,(int)$actor['id'],$next,$note);
-            az_creator_club_queue($db,'decision:'.$kind.':'.$id.':'.($revision+1),(int)$actor['id'],$creator,'review_decision','Creator Club review completed','A '.$kind.' was '.$next.'. Open your club to read the decision and any feedback.','creator-club.php?creator='.$creator);
-            if($kind==='post'&&$next==='approved'){$row['state']='approved';$row['revision']=$revision+1;az_creator_club_notify_post($db,$row,(int)$actor['id']);}
+            az_creator_club_queue($db,'decision:'.$kind.':'.$id.':'.($revision+1),(int)$actor['id'],$creator,'review_decision','Creator Club review completed','A '.$kind.' was '.($next==='scheduled'?'approved for scheduled publication':$next).'. Open your club to read the decision and any feedback.','creator-club.php?creator='.$creator);
+            if($kind==='post'&&$next==='approved'){$row['state']='approved';$row['revision']=$revision+1;if($publishing)$row['published_at']=$publishedAt;az_creator_club_notify_post($db,$row,(int)$actor['id']);}
         }else $db->prepare('INSERT INTO creator_club_review_events(id,object_type,object_id,actor_id,event,created_at) VALUES(?,?,?,?,?,?)')->execute([az_id(),$kind,$id,(int)$actor['id'],$next,$now]);
         return ['id'=>$id,'state'=>$next,'revision'=>$revision+1];
     });
@@ -182,6 +187,7 @@ function az_creator_club_is_following(?array $viewer,int $creator,?PDO $db=null)
 function az_creator_club_post(array $actor,string $tierId,?string $mediaId,string $title,string $body,?PDO $db=null,bool $rightsConfirmed=false,string $audience='tier'):array
 {
     $db??=az_db();$creator=(int)$actor['id'];
+    if(function_exists('az_creator_club_publishing_enabled')&&az_creator_club_publishing_enabled($db))return az_creator_club_save_post($actor,['tierId'=>$tierId,'mediaId'=>$mediaId,'title'=>$title,'body'=>$body,'rightsConfirmed'=>$rightsConfirmed,'audience'=>$audience],true,$db);
     return az_creator_club_write($db,function()use($db,$actor,$creator,$tierId,$mediaId,$title,$body,$rightsConfirmed,$audience){
         $db->prepare('UPDATE users SET status=status WHERE id=?')->execute([$creator]);
         [$tierId,$mediaId,$title,$body]=az_creator_club_validate_post($db,$actor,$tierId,$mediaId,$title,$body,$rightsConfirmed,$audience);
@@ -196,9 +202,11 @@ function az_creator_club_withdraw(array $actor,string $postId,int $revision,?PDO
 {
     if(!az_valid_id($postId)||$revision<1)throw new AzHttpError(400,'Invalid post.','invalid_post');$db??=az_db();
     az_creator_club_write($db,function()use($db,$actor,$postId,$revision){
-        $q=$db->prepare('SELECT * FROM creator_club_posts WHERE id=?');$q->execute([$postId]);$row=$q->fetch(PDO::FETCH_ASSOC);if(!$row)throw new AzHttpError(404,'Post not found.','not_found');
-        az_creator_club_require_creator($actor,(int)$row['creator_id'],$db);
-        $q=$db->prepare("UPDATE creator_club_posts SET state='withdrawn',revision=revision+1,updated_at=? WHERE id=? AND revision=? AND state IN ('pending','approved')");$q->execute([az_now(),$postId,$revision]);
+        $creator=(int)$actor['id'];$db->prepare('UPDATE users SET status=status WHERE id=?')->execute([$creator]);az_creator_club_require_creator($actor,$creator,$db);
+        $current=$db->getAttribute(PDO::ATTR_DRIVER_NAME)==='mysql'?' FOR UPDATE':'';
+        $q=$db->prepare('SELECT * FROM creator_club_posts WHERE id=? AND creator_id=?'.$current);$q->execute([$postId,$creator]);$row=$q->fetch(PDO::FETCH_ASSOC);if(!$row)throw new AzHttpError(404,'Post not found.','not_found');
+        $publishing=function_exists('az_creator_club_publishing_enabled')&&az_creator_club_publishing_enabled($db);
+        $q=$db->prepare("UPDATE creator_club_posts SET state='withdrawn',revision=revision+1,updated_at=?".($publishing?",publish_at=NULL,reviewed_by=NULL,reviewed_at=NULL,publish_error_code='',publish_error='',publish_checked_at=NULL":'')." WHERE id=? AND creator_id=? AND revision=? AND state IN (".($publishing?"'draft','pending','approved','scheduled','rejected'":"'pending','approved'").')');$q->execute([az_now(),$postId,$creator,$revision]);
         if($q->rowCount()!==1)throw new AzHttpError(409,'Post changed; reload.','stale_post');az_creator_club_audit($db,'post',$postId,(int)$actor['id'],'withdrawn');
     });
 }
@@ -227,6 +235,11 @@ function az_creator_club_can_view(?array $viewer,array $post,?PDO $db=null,?stri
     if($viewerId===$creator&&az_has_role($viewer,'model'))return true;
     if(az_has_role($viewer,'admin'))return true;
     if($post['state']!=='approved'||(int)($post['rights_confirmed']??0)!==1)return false;
+    $now??=az_now();
+    if(function_exists('az_creator_club_publishing_enabled')&&az_creator_club_publishing_enabled($db)){
+        if(empty($post['published_at'])||$post['published_at']>$now)return false;
+        try{az_creator_club_validate_media_revision($db,$post);}catch(AzHttpError){return false;}
+    }
     // A post's media stays restricted when its tier is suspended or creator deactivated.
     try {az_creator_club_creator($creator,$db);}catch(AzHttpError){return false;}
     if(az_creator_club_workspace_enabled($db)){
@@ -254,7 +267,11 @@ function az_creator_club_post_row(string $id,?array $viewer,?PDO $db=null):array
 function az_creator_club_posts(int $creator,?array $viewer,?PDO $db=null):array
 {
     if(!$viewer)return [];$db??=az_db();$isStaff=az_has_role($viewer,'admin')||((int)$viewer['id']===$creator&&az_has_role($viewer,'model'));
+    $publishing=function_exists('az_creator_club_publishing_enabled')&&az_creator_club_publishing_enabled($db);
     $sql='SELECT * FROM creator_club_posts p WHERE creator_id=?'.($isStaff?'':" AND state='approved'");$args=[$creator];
+    if(!$isStaff&&$publishing){
+        $sql.=' AND published_at IS NOT NULL AND published_at<=? AND (p.media_id IS NULL OR EXISTS(SELECT 1 FROM personal_media m WHERE m.id=p.media_id AND m.user_id=p.creator_id AND m.revision=p.media_revision))';$args[]=az_now();
+    }
     if(!$isStaff&&az_creator_club_workspace_enabled($db)){
         // Apply audiences before pagination so locked tier posts cannot bury older
         // posts that are actually available to a free follower.
@@ -265,7 +282,7 @@ function az_creator_club_posts(int $creator,?array $viewer,?PDO $db=null):array
         }
         $sql.=')';
     }
-    $sql.=' ORDER BY created_at DESC,id DESC LIMIT 60';$q=$db->prepare($sql);$q->execute($args);
+    $sql.=' ORDER BY '.($publishing?($isStaff?'updated_at':'published_at'):'created_at').' DESC,id DESC LIMIT 60';$q=$db->prepare($sql);$q->execute($args);
     // Recheck current authorization before exposing private title/body/media ID.
     return array_values(array_filter($q->fetchAll(PDO::FETCH_ASSOC),fn($post)=>az_creator_club_can_view($viewer,$post,$db)));
 }

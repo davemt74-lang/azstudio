@@ -9,7 +9,7 @@ $GLOBALS['az_config_cache']=['features'=>['creator_club_test_grants'=>false]];
 az_create_schema($db);
 $checks=0;
 function check159Agent(bool $condition,string $label):void {if(!$condition)throw new RuntimeException($label);$GLOBALS['checks']++;}
-check159Agent(az_schema_version($db)===55,'Fresh installations run both new migrations.');
+check159Agent(az_schema_version($db)===57,'Fresh installations run the homepage, Club workspace, publishing and feed migrations.');
 $insert=$db->prepare('INSERT INTO users(id,name,email,password_hash,created_at) VALUES(?,?,?,?,?)');
 foreach([[1,'Creator','model'],[2,'Fan One','fan'],[3,'Administrator','admin'],[4,'Fan Two','fan']] as [$id,$name,$role]){
     $insert->execute([$id,$name,'fixture'.$id.'@example.invalid','fixture-not-a-login-hash',az_now()]);

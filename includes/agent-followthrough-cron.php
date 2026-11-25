@@ -6,7 +6,9 @@ require_once __DIR__.'/bootstrap.php';
 try {
     if (!az_is_installed()) throw new RuntimeException('AZHottie installation is not configured.');
     az_db();
+    $clubPublishing=az_creator_club_publish_due(az_db(),50,'cron');
     $result=az_agent_followthrough_run();
+    $result['creatorClubs']=$clubPublishing;
     // Shared private hourly cron; failure in one specialist is reported, not silently ignored.
     $result['casting']=az_agent_casting_scan();
     $result['scheduling']=az_agent_schedule_scan();
@@ -23,7 +25,9 @@ try {
     // Best-effort health-data retention; never roll back assignment reminders.
     try {$result['liveDiagnosticsPruned']=az_live_agent_prune();}
     catch (Throwable $healthError){error_log('Live Agent retention failed: '.$healthError->getMessage());}
-    echo json_encode(['ok'=>true]+$result,JSON_UNESCAPED_SLASHES).PHP_EOL;
+    $result['truncated']=!empty($result['truncated'])||!empty($clubPublishing['truncated']);
+    echo json_encode(['ok'=>$clubPublishing['errors']===0]+$result,JSON_UNESCAPED_SLASHES).PHP_EOL;
+    if($clubPublishing['errors']>0)exit(1);
     exit($result['truncated']?2:0);
 } catch (Throwable $e) {
     error_log('AZHottie follow-through check failed: '.$e->getMessage());

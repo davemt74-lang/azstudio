@@ -7,7 +7,7 @@ function az_creator_club_workspace_enabled(PDO $db): bool
 }
 function az_creator_club_has_column(PDO $db,string $table,string $column):bool
 {
-    if(!in_array($table,['creator_club_tiers','creator_club_follows','creator_club_posts','creator_club_review_events'],true))throw new InvalidArgumentException('Invalid club schema table.');
+    if(!in_array($table,['creator_club_tiers','creator_club_follows','creator_club_posts','creator_club_review_events','personal_media'],true))throw new InvalidArgumentException('Invalid club schema table.');
     if($db->getAttribute(PDO::ATTR_DRIVER_NAME)==='mysql'){
         $q=$db->prepare('SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name=? AND column_name=?');$q->execute([$table,$column]);return (int)$q->fetchColumn()>0;
     }
@@ -101,6 +101,14 @@ function az_creator_club_validate_tier(string $title,string $description,int $ce
     if($title===''||strlen($title)>100||strlen($description)>1200||$cents<100||$cents>50000)throw new AzHttpError(400,'Provide a title, details and a proposed price between $1 and $500.','invalid_tier');
     return [$title,$description];
 }
+function az_creator_club_validate_media(PDO $db,string $mediaId,int $creator):array
+{
+    if(!az_valid_id($mediaId))throw new AzHttpError(404,'This personal video was not found.','not_found');
+    $current=$db->inTransaction()&&$db->getAttribute(PDO::ATTR_DRIVER_NAME)==='mysql'?' FOR UPDATE':'';
+    $q=$db->prepare('SELECT * FROM personal_media WHERE id=? AND user_id=?'.$current);$q->execute([$mediaId,$creator]);$row=$q->fetch(PDO::FETCH_ASSOC);
+    if(!$row)throw new AzHttpError(404,'This personal video was not found.','not_found');
+    return $row;
+}
 function az_creator_club_validate_post(PDO $db,array $actor,string $tierId,?string $mediaId,string $title,string $body,bool $rights,string $audience):array
 {
     $creator=(int)$actor['id'];az_creator_club_require_creator($actor,$creator,$db);
@@ -111,7 +119,7 @@ function az_creator_club_validate_post(PDO $db,array $actor,string $tierId,?stri
         $q=$db->prepare("SELECT 1 FROM creator_club_tiers WHERE id=? AND creator_id=? AND state='approved'".(az_creator_club_workspace_enabled($db)?' AND archived=0':'').$current);
         $q->execute([$tierId,$creator]);if(!$q->fetchColumn())throw new AzHttpError(403,'Choose an active approved tier.','tier_forbidden');
     }else $tierId='';
-    if($mediaId==='')$mediaId=null;if($mediaId!==null)az_personal_media_row($mediaId,$creator);
+    if($mediaId==='')$mediaId=null;if($mediaId!==null)az_creator_club_validate_media($db,$mediaId,$creator);
     $title=trim(preg_replace('/[\x00-\x1F\x7F]/u',' ',$title)??'');$body=trim($body);
     if(!$rights)throw new AzHttpError(400,'Confirm rights and participant consent before submitting.','rights_required');
     if($title===''||strlen($title)>160||strlen($body)>6000||($body===''&&$mediaId===null))throw new AzHttpError(400,'Provide a title and text or a private video.','invalid_post');
@@ -159,6 +167,7 @@ function az_creator_club_tier_archive(array $actor,string $id,int $revision,bool
 function az_creator_club_post_update(array $actor,string $id,int $revision,string $tierId,?string $mediaId,string $title,string $body,bool $rightsConfirmed,string $audience='tier',?PDO $db=null):array
 {
     $db??=az_db();$creator=(int)$actor['id'];
+    if(function_exists('az_creator_club_publishing_enabled')&&az_creator_club_publishing_enabled($db))return az_creator_club_save_post($actor,['id'=>$id,'revision'=>$revision,'tierId'=>$tierId,'mediaId'=>$mediaId,'title'=>$title,'body'=>$body,'rightsConfirmed'=>$rightsConfirmed,'audience'=>$audience],true,$db);
     if(!az_valid_id($id)||$revision<1)throw new AzHttpError(400,'Invalid post.','invalid_post');
     return az_creator_club_write($db,function()use($db,$actor,$creator,$id,$revision,$tierId,$mediaId,$title,$body,$rightsConfirmed,$audience){
         $db->prepare('UPDATE users SET status=status WHERE id=?')->execute([$creator]);
@@ -207,10 +216,11 @@ function az_creator_club_my_memberships(array $viewer,?PDO $db=null):array
 function az_creator_club_creator_stats(array $actor,?PDO $db=null):array
 {
     $db??=az_db();$creator=(int)$actor['id'];az_creator_club_require_creator($actor,$creator,$db);
-    $q=$db->prepare('SELECT COUNT(*) FROM creator_club_follows WHERE creator_id=?');$q->execute([$creator]);$stats=['followers'=>(int)$q->fetchColumn(),'tiers'=>0,'pending'=>0,'published'=>0,'rejected'=>0];
+    $q=$db->prepare('SELECT COUNT(*) FROM creator_club_follows WHERE creator_id=?');$q->execute([$creator]);$stats=['followers'=>(int)$q->fetchColumn(),'tiers'=>0,'draft'=>0,'pending'=>0,'scheduled'=>0,'published'=>0,'rejected'=>0,'withdrawn'=>0,'blocked'=>0];
     $q=$db->prepare('SELECT COUNT(*) FROM creator_club_tiers WHERE creator_id=? AND archived=0');$q->execute([$creator]);$stats['tiers']=(int)$q->fetchColumn();
     $q=$db->prepare('SELECT state,COUNT(*) AS total FROM creator_club_posts WHERE creator_id=? GROUP BY state');$q->execute([$creator]);
-    foreach($q->fetchAll(PDO::FETCH_ASSOC) as $row){if($row['state']==='approved')$stats['published']=(int)$row['total'];elseif(in_array($row['state'],['pending','rejected'],true))$stats[$row['state']]=(int)$row['total'];}
+    foreach($q->fetchAll(PDO::FETCH_ASSOC) as $row){if($row['state']==='approved')$stats['published']=(int)$row['total'];elseif(in_array($row['state'],['draft','pending','scheduled','rejected','withdrawn'],true))$stats[$row['state']]=(int)$row['total'];}
+    if(function_exists('az_creator_club_publishing_enabled')&&az_creator_club_publishing_enabled($db)){$q=$db->prepare("SELECT COUNT(*) FROM creator_club_posts WHERE creator_id=? AND state='scheduled' AND publish_error_code<>''");$q->execute([$creator]);$stats['blocked']=(int)$q->fetchColumn();}
     return $stats;
 }
 function az_creator_club_access_history(array $actor,?int $creator=null,?PDO $db=null):array
@@ -254,10 +264,13 @@ function az_creator_club_briefing(array $user,?PDO $db=null):array
         if($pending)$cards[]=az_agent_workspace_card('club_review','Review '.$pending.' Creator Club '.($pending===1?'submission':'submissions'),'Creator tiers and posts are waiting for a recorded staff decision.','creator-club-admin.php',1);
     }
     if(az_has_role($user,'model')){
-        $stats=az_creator_club_creator_stats($user,$db);$counts['clubFollowers']=$stats['followers'];$counts['clubPostsPublished']=$stats['published'];
+        $stats=az_creator_club_creator_stats($user,$db);$counts['clubFollowers']=$stats['followers'];$counts['clubPostsPublished']=$stats['published'];$counts['clubDrafts']=$stats['draft'];$counts['clubScheduled']=$stats['scheduled'];
         $q=$db->prepare("SELECT COUNT(*) FROM creator_club_tiers WHERE creator_id=? AND state='rejected' AND archived=0");$q->execute([$id]);$rejected=$stats['rejected']+(int)$q->fetchColumn();
         if($rejected)$cards[]=az_agent_workspace_card('club_feedback','Review Creator Club feedback','You have '.$rejected.' rejected '.($rejected===1?'submission':'submissions').'. Open your club to read feedback, edit and resubmit.','creator-club.php?creator='.$id,2);
         if($stats['pending'])$cards[]=az_agent_workspace_card('club_pending','Creator Club posts under review',$stats['pending'].' '.($stats['pending']===1?'post is':'posts are').' awaiting staff review.','creator-club.php?creator='.$id,4);
+        if($stats['draft'])$cards[]=az_agent_workspace_card('club_drafts','Continue your Creator Club drafts',$stats['draft'].' private '.($stats['draft']===1?'draft is':'drafts are').' saved. Finish a draft and submit it when it is ready for review.','creator-club.php?creator='.$id,4);
+        if($stats['blocked'])$cards[]=az_agent_workspace_card('club_schedule_attention','Review scheduled Creator Club posts',$stats['blocked'].' scheduled '.($stats['blocked']===1?'post needs':'posts need').' attention and remains private. Open your club to read the publication check.','creator-club.php?creator='.$id,2);
+        elseif($stats['scheduled'])$cards[]=az_agent_workspace_card('club_scheduled','Scheduled Creator Club posts',$stats['scheduled'].' reviewed '.($stats['scheduled']===1?'post is':'posts are').' waiting for the scheduled publication check. View timing and publisher status in your club.','creator-club.php?creator='.$id,4);
     }
     $q=$db->prepare('SELECT COUNT(*) FROM creator_club_follows WHERE fan_id=?');$q->execute([$id]);$count=(int)$q->fetchColumn();$counts['clubsFollowing']=$count;
     if($count)$cards[]=az_agent_workspace_card('club_following','Your Creator Clubs','You follow '.$count.' '.($count===1?'creator':'creators').'. Open My Clubs for available posts and alert preferences.','creator-club-workspace.php',4);
